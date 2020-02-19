@@ -16,7 +16,7 @@ void panic(const char* const format, ...) {
 
 
 
-bool formatC(std::string &fileName) {
+bool formatC(const  std::string &fileName) {
     if(fileName[fileName.length() - 1] != 'c') return false;
     else return true; 
 }

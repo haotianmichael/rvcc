@@ -6,7 +6,7 @@
 /*
    构造函数  列表初始化成员关键字 
  */
-Parser::Parser(std::string &fileName) : keywords({
+Parser::Parser(const std::string &fileName) : keywords({
         {"main", KW_MAIN},
         {"if", KW_IF}, 
         {"while", KW_WHILE}, 
@@ -17,7 +17,7 @@ Parser::Parser(std::string &fileName) : keywords({
         {"null", KW_NULL}
         }){
     fs.open(fileName);
-    if(fs.is_open() && formatC(fileName)) {    //输入以.c结尾的文件
+    if(!fs.is_open() && formatC(fileName)) {    //输入以.c结尾的文件
         panic("ParserError: Please open files with .c\n");
     } 
 }
@@ -29,7 +29,7 @@ Parser::Parser(std::string &fileName) : keywords({
 std::tuple<std::string, TOKEN> Parser::next() {
 
     char ctr = getNextChar();
-    if(ctr == EOF) return std::make_tuple("", SY_EOF);
+    if(ctr == EOF) return std::make_tuple("eof", SY_EOF);
 
     while(ctr == ' ' || ctr == '\n'  || ctr == '\t' || ctr == '\r') {
         if(ctr == '\n' || ctr == '\r') {
@@ -139,3 +139,15 @@ std::tuple<std::string, TOKEN> Parser::next() {
     panic("ParserError: Synax Error");
     return std::make_tuple("invalid", INVALD); 
 }
+
+
+void Parser::printLex() {
+
+    std::tuple<std::string, TOKEN> s;
+    do{
+        s = next(); 
+        std::cout << "[" << std::get<0>(s) << ", " <<  std::get<1>(s) << "]"  << std::endl;
+    }while(std::get<1>(s) != SY_EOF);
+}
+
+

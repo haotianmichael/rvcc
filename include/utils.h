@@ -4,4 +4,4 @@
 
 
 void panic(const char* const format, ...);
-bool formatC(std::string &fileName);
+bool formatC(const std::string &fileName);

@@ -14,8 +14,9 @@ class Parser
 
 
     public:
-        explicit Parser (std::string &fileName);
-        virtual ~Parser ();
+        explicit Parser (const std::string &fileName);
+        virtual ~Parser () {}
+        void printLex();   //词法分析测试函数
 
     private:
         //词法分析器
@@ -31,4 +32,5 @@ class Parser
         inline char getNextChar() { column++; return static_cast<char>(fs.get());}
         //读入下一个字符 不消耗
         inline char peekNextChar() {return static_cast<char>(fs.peek());}
+        //词法分析测试函数
 };

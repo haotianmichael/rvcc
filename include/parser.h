@@ -14,7 +14,7 @@ class Parser
 
 
     public:
-        explicit Parser (std::string fileName);
+        explicit Parser (std::string &fileName);
         virtual ~Parser ();
 
     private:
@@ -26,10 +26,9 @@ class Parser
         //文件输入流
         std::fstream fs;
         //当前第一行第零列
-        int column = 0, line = 1;
-        //读入下一个字符
-        char getNextChar() {
-            column++;
-            return static_cast<char>(fs.get());        
-        }
+        int column = 1, line = 1;
+        //读入下一个字符 并消耗
+        inline char getNextChar() { column++; return static_cast<char>(fs.get());}
+        //读入下一个字符 不消耗
+        inline char peekNextChar() {return static_cast<char>(fs.peek());}
 };

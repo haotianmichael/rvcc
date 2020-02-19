@@ -7,13 +7,14 @@ enum TOKEN{
      * 词法分析器返回的单词类别:
      * 标识符
      * 关键字
+     * 整数，字符字面值(常数)
      * 内置符号
      * */
     INVALD = 0,   //<invalid>
 
 
     /*
-     * 标识符
+     * 标识符  用户定义·
      * 用字符串常量直接表示
      */
     TK_IDENT,  
@@ -47,6 +48,9 @@ enum TOKEN{
     //关键字
     KW_INT,   //int
     KW_CHAR, //char
+    KW_STR, //char[]
+
+    KW_MAIN, //main
     KW_IF,    //if
     KW_ELSE,  //else
     KW_TRUE,   //true

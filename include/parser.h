@@ -21,6 +21,8 @@ class Parser
     private:
         //词法分析器  输出<词素, 值>
         std::tuple<P_Token, std::string> next(); 
+        //预处理器
+        std::string preprocessors();
         //哈希表存储关键字  
         const std::unordered_map<std::string, P_Token> keywords; 
 

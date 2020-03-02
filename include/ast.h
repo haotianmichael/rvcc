@@ -20,6 +20,11 @@ enum P_Token{
     TK_IDENT,  
 
     /*
+     * 预处理器  文件名
+     * */
+    TK_FILENAME,
+
+    /*
      * 内置符号 
      * 支持的运算比较少： 加减乘除  赋值   关系比较符  特殊符号
      *  ""和''表示字面值 本身没有什么价值  不用表示
@@ -39,6 +44,8 @@ enum P_Token{
 
     SY_COMMA,  // , 
     SY_SEMICOLON,   // ;
+    SY_ADDRESS,  //&
+    SY_PERCENT,  //%
     SY_LPAREN,   //  (
     SY_RPAREN,    // ) 
     SY_LBRACE,   // {  
@@ -49,6 +56,7 @@ enum P_Token{
     //关键字
     KW_INT,   //int
     KW_CHAR, //char
+    KW_CONST, //const
     KW_MAIN, //main
     KW_VOID, // void
     KW_IF,    //if

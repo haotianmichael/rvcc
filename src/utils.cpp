@@ -15,7 +15,7 @@ void panic(const char* const format, ...) {
 }
 
 
-
+//判断文件格式
 bool formatC(const  std::string &fileName) {
     if(fileName[fileName.length() - 1] != 'c') return false;
     else return true; 

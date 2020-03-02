@@ -9,6 +9,7 @@
 Parser::Parser(const std::string &fileName) : keywords({
         {"main", KW_MAIN},
         {"void", KW_VOID},
+        {"const", KW_CONST},
         {"if", KW_IF}, 
         {"while", KW_WHILE}, 
         {"else", KW_ELSE},
@@ -24,6 +25,45 @@ Parser::Parser(const std::string &fileName) : keywords({
         panic("ParserError: Please open files with .c\n");
     } 
 }
+
+/*
+   预处理器   格式：  #include <file.h>
+ */
+std::string Parser::preprocessors() {
+    std::string filename = "";
+    std::string tmp = "";
+    char ctr = peekNextChar();
+    while(ctr != 'i' && ctr != '\n') {
+        getNextChar(); 
+        ctr = peekNextChar();
+    }
+    if(ctr == '\n') panic("SynaxError: wrong filequote 2 at line %d, column %d", line, column);
+
+    //include
+    for(int i = 0; i < 7; i ++) {
+        ctr = getNextChar(); 
+        tmp += ctr; 
+    }
+
+    if(tmp != "include") panic("SynaxError: wrong filequote 1 at line %d, column %d", line, column);
+    else {
+        ctr = peekNextChar(); 
+        while(ctr != '<' && ctr != '\n') {
+            getNextChar();
+            ctr = peekNextChar(); 
+        } 
+        if(ctr == '\n') panic("SynaxError: wrong filequote 2 at line %d, column %d", line, column);
+        getNextChar();
+        ctr = getNextChar();
+        while(ctr != '>') {
+            filename +=  ctr;
+            ctr = getNextChar();
+        }    
+    }
+    return filename;
+}
+
+
 
 /*
    词法分析器
@@ -98,6 +138,16 @@ std::tuple<P_Token, std::string>  Parser::next(){
 
 
     /*内置符号*/
+
+
+    //预处理器   格式：  #include <file.h>
+    if(ctr == '#') {
+        std::string name = preprocessors(); 
+        return std::make_tuple(TK_FILENAME, name); 
+    }
+
+
+    //普通内置符号
     if(ctr == '+') return std::make_tuple(SY_PLUS, "+");
     if(ctr == '-') return std::make_tuple(SY_MINUS, "-");
     if(ctr == '*') return std::make_tuple(SY_TIMES, "*");
@@ -110,6 +160,8 @@ std::tuple<P_Token, std::string>  Parser::next(){
     if(ctr == ']') return std::make_tuple(SY_RBRACKET, "]");
     if(ctr == '{') return std::make_tuple(SY_LBRACE, "{");
     if(ctr == '}') return std::make_tuple(SY_RBRACE, "}");
+    if(ctr == '%') return std::make_tuple(SY_PERCENT, "%");
+    if(ctr == '&') return std::make_tuple(SY_ADDRESS, "&");
 
     if(ctr == '=') {
         char ctrn = peekNextChar();
@@ -167,3 +219,5 @@ void Parser::printLex() {
         std::cout << "[" << std::get<0>(s) << ", " <<  std::get<1>(s) << "]"  << std::endl;
     }while(std::get<0>(s) != TK_EOF);
 }
+
+

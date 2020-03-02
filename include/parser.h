@@ -19,10 +19,10 @@ class Parser
         void printLex();   //词法分析测试函数
 
     private:
-        //词法分析器
-        std::tuple<std::string, TOKEN> next(); 
-        //哈希表存储关键字
-        const std::unordered_map<std::string, TOKEN> keywords; 
+        //词法分析器  输出<词素, 值>
+        std::tuple<P_Token, std::string> next(); 
+        //哈希表存储关键字  
+        const std::unordered_map<std::string, P_Token> keywords; 
 
         //文件输入流
         std::fstream fs;
@@ -32,5 +32,4 @@ class Parser
         inline char getNextChar() { column++; return static_cast<char>(fs.get());}
         //读入下一个字符 不消耗
         inline char peekNextChar() {return static_cast<char>(fs.peek());}
-        //词法分析测试函数
 };

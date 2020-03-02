@@ -1,7 +1,7 @@
 #pragma  once
 
-
-enum TOKEN{
+//词素
+enum P_Token{
 
     /*
      * 词法分析器返回的单词类别:
@@ -11,7 +11,7 @@ enum TOKEN{
      * 内置符号
      * */
     INVALD = 0,   //<invalid>
-
+    TK_EOF,  // eof
 
     /*
      * 标识符  用户定义·
@@ -22,6 +22,7 @@ enum TOKEN{
     /*
      * 内置符号 
      * 支持的运算比较少： 加减乘除  赋值   关系比较符  特殊符号
+     *  ""和''表示字面值 本身没有什么价值  不用表示
      * */
     SY_PLUS,   // +
     SY_MINUS,  // -
@@ -37,20 +38,19 @@ enum TOKEN{
 
 
     SY_COMMA,  // , 
+    SY_SEMICOLON,   // ;
     SY_LPAREN,   //  (
     SY_RPAREN,    // ) 
     SY_LBRACE,   // {  
     SY_RBRACE,  //  } 
     SY_LBRACKET,   // [  
     SY_RBRACKET,  // ] 
-    SY_EOF,    //eof
 
     //关键字
     KW_INT,   //int
     KW_CHAR, //char
-    KW_STR, //char[]
-
     KW_MAIN, //main
+    KW_VOID, // void
     KW_IF,    //if
     KW_ELSE,  //else
     KW_TRUE,   //true
@@ -58,4 +58,14 @@ enum TOKEN{
     KW_WHILE,  //while
     KW_NULL,   //null
     KW_RETURN,   //return
+
+    
+
+    /*
+     *字面值 : 整数  字符串 字符
+     *
+     */
+    CONST_INT,    //32位整形
+    CONST_CHAR,    //8位字符型
+    CONST_STRING    //字符串常量
 };

@@ -17,6 +17,17 @@ class Parser
         explicit Parser (const std::string &fileName);
         virtual ~Parser () {}
         void printLex();   //词法分析测试函数
+    private:
+        //当前Token
+        std::tuple<P_Token, std::string> currentToken;
+        //得到当前Token的Token
+        inline P_Token getCurrentToken() const {
+            return std::get<0>(currentToken); 
+        }
+        //得到当前Token的词素
+        inline std::string getCurrentLexeme() {
+            return std::get<1>(currentToken); 
+        }
 
     private:
         //词法分析器  输出<词素, 值>

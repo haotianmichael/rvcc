@@ -30,15 +30,15 @@ class Parser
         //<程序> ::= [<常量说明>][<变量说明>][<函数定义部分>]<主函数>
         bool Parse_procedure();
         //<常量说明> ::= const<常量定义>;{const<常量定义>;}
-        bool Parse_constDescription();
+        bool Parse_constDescription(std::string funcName);
         /*<常量定义> ::= int<标识符>=<整数>{,<标识符>=<整数>}
           | char<标识符>=<整数>{,<标识符>=<整数>}*/
-        bool Parse_cnostDefinition();
+        bool Parse_cnostDefinition(std::string funcName);
         //<变量说明> ::= <变量定义>;{<变量定义>;}
-        bool Parse_varDescription();
+        bool Parse_varDescription(bool isGlobal, std::string funcName);
         /*<变量定义> ::= <类型标识符>(<标识符>|<标识符>'['<无符号整数>']')
             {,(<标识符> | <标识符> '['<无符号整数>']')}*/
-        bool Parse_varDefinition();
+        bool Parse_varDefinition(std::string funcName);
         //<有返回值函数定义> ::= <声明头部>'('<参数表>')''{'<复合语句>'}'
         bool Parse_haveReturnFuncDefinition();
         //<无返回值函数定义> ::= void'('<参数表>')''{'<复合语句>'}'
@@ -50,9 +50,9 @@ class Parser
 
 
         //<复合语句> ::= [<常量说明>][<变量说明>]{<语句>}
-        bool Parse_compoundStmt();
+        bool Parse_compoundStmt(std::string funcName);
         //<表达式> ::= [+ | -]<项>{<加法运算符><项>}
-        ExpressionRetValue Parse_expression();
+        ExpressionRetValue Parse_expression(std::string funcName);
         //<项> ::= <因子>{<乘法运算符><因子>}
         bool Parse_item(); 
         //<因子> ::= <标识符>['('<值参数表>')']|<标识符>'['<表达式>']'|'('<表达式>')'|<整数>|<字符>

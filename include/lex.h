@@ -111,7 +111,7 @@ enum ItemType{
 };
 
 //数据类型
-enum ValurType{
+enum ValueType{
     IntType,
     CharType,
     StringType

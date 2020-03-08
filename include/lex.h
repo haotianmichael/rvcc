@@ -1,4 +1,6 @@
 #pragma  once
+#include <iostream>
+#include <string>
 
 //词素
 enum P_Token{
@@ -77,3 +79,26 @@ enum P_Token{
     CONST_CHAR,    //8位字符型
     CONST_STRING    //字符串常量
 };
+
+
+
+//表达式返回值
+struct ExpressionRetValue{
+
+    std::string name;   //表达式返回的名字---> 统一规定。表达式都需需要一个反汇变量名
+    bool isSurable;   //是否确定
+//    ValueType type;  //值类型
+    int number;
+    char character;
+    bool isEmpty;   //是否是空的
+};
+
+
+//情况子语句返回
+struct SubCaseRet{
+    int constValue;
+    bool recognize;
+    std::string label;
+};
+
+

@@ -221,3 +221,21 @@ void Parser::printLex() {
 }
 
 
+/*语法分析器*/
+void Parser::parse() {
+    
+    currentToken = next();
+    P_Token nonterminal = std::get<0>(currentToken);
+    if(nonterminal == TK_EOF){
+        std::cout << "ParseAnalyze succeeded" << std::endl;
+        return;
+    }
+    //if(nonterminal == TK_FILENAME)  
+
+
+
+
+}
+
+
+

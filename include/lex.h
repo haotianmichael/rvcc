@@ -102,3 +102,30 @@ struct SubCaseRet{
 };
 
 
+//标识符类型
+enum ItemType{
+    Constant,  //常量
+    Variable,  //变量
+    Function,  //函数
+    Parament   //参数
+};
+
+//数据类型
+enum ValurType{
+    IntType,
+    CharType,
+    StringType
+};
+
+//函数类型
+enum ReturnFucType{
+    VoidType,
+    ReturnIntType,
+    ReturnCharType 
+};
+
+
+
+
+
+

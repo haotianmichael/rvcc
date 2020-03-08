@@ -3,6 +3,7 @@
 #include <fstream>
 #include <unordered_map>
 #include "lex.h"
+#include "intermediate.h"
 
 
 class Parser
@@ -44,7 +45,7 @@ class Parser
         //<无返回值函数定义> ::= void'('<参数表>')''{'<复合语句>'}'
         bool Parse_noReturnFuncDefinition();
         //<参数表> ::= <类型标识符><标识符>{,<类型标识符><标识符>}
-        bool Parse_paraList();
+        bool Parse_paraList(std::string funcName);
         //<声明头部> ::= int <标识符> | char <标识符>
         bool Parse_FunctionDeclarHead();
 
@@ -52,30 +53,30 @@ class Parser
         //<复合语句> ::= [<常量说明>][<变量说明>]{<语句>}
         bool Parse_compoundStmt(std::string funcName);
         //<表达式> ::= [+ | -]<项>{<加法运算符><项>}
-        ExpressionRetValue Parse_expression(std::string funcName);
+        ExpressionRetValue Parse_expression(std::string funcName, bool isCache, std::vector<FourYuanItem>& cache, int weight);
         //<项> ::= <因子>{<乘法运算符><因子>}
-        bool Parse_item(); 
+        bool Parse_item(std::vector<PostfixItem> &, std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight); 
         //<因子> ::= <标识符>['('<值参数表>')']|<标识符>'['<表达式>']'|'('<表达式>')'|<整数>|<字符>
-        bool Parse_factor();
+        bool Parse_factor(std::vector<PostfixItem> &, std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
         /*<语句> ::= <条件语句> | <循环语句> | <写语句>; | '{'<语句>'}' | <标识符>['('<值参数表>')'];
             | <赋值语句>; | <读语句>; | <写语句>; | <空>; |  <返回语句>*/
-        bool Parse_Stmt();
+        bool Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuanItem>&cache, int weight);
         //<赋值语句> ::= <标识符> = <表达式> | <标识符>'['<表达式>']'=<表达式>
-        bool Parse_assignStmt();
+        bool Parse_assignStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
         //<条件语句> ::= if'('<条件>')'<语句>else<语句>
-        bool Parse_conditionStmt();
+        bool Parse_conditionStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
         //<条件> ::= <表达式><关系运算符><表达式> | <表达式>
-        bool Parse_condition();
+        bool Parse_condition(std::string funcName,bool isCache, std::vector<FourYuanItem> &cache, int weight);
         //<循环语句> ::= while'('<条件>')'<语句>
-        bool Parse_loopStmt();
+        bool Parse_loopStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
         //<值参数表> ::= <表达式>{, <表达式>}
-        
+        std::vector<ValueType>  Parse_valueParamList(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
         //<读语句> ::= scanf‘(’<标识符>{,<标识符>}')'
-        bool Parse_scanf();
+        bool Parse_scanf(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
         //<写语句> ::= printf'('<字符串>,<表达式>')' | printf'('<字符串>')' | prinntf'('<表达式>')'
-        bool Parse_printf();
+        bool Parse_printf(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
         //<返回语句> ::= return['('<表达式>')']
-        bool Parse_returnStmt();
+        bool Parse_returnStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
         //<整数> ::= [ + | -]<无符号整数> | 0
         bool Parse_integer();
 

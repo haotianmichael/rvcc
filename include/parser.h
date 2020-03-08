@@ -40,6 +40,8 @@ class Parser
         /*<变量定义> ::= <类型标识符>(<标识符>|<标识符>'['<无符号整数>']')
             {,(<标识符> | <标识符> '['<无符号整数>']')}*/
         bool Parse_varDefinition(std::string funcName);
+        //<函数定义> ::= {<无返回值定义> | <有返回值函数>}
+        bool Parse_functionDefinition();
         //<有返回值函数定义> ::= <声明头部>'('<参数表>')''{'<复合语句>'}'
         bool Parse_haveReturnFuncDefinition();
         //<无返回值函数定义> ::= void'('<参数表>')''{'<复合语句>'}'

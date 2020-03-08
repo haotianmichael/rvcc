@@ -222,20 +222,40 @@ void Parser::printLex() {
 
 
 /*语法分析器*/
+//入口函数
 void Parser::parse() {
-    
+
     currentToken = next();
-    P_Token nonterminal = std::get<0>(currentToken);
-    if(nonterminal == TK_EOF){
-        std::cout << "ParseAnalyze succeeded" << std::endl;
-        return;
+    P_Token currentLexeme = std::get<0>(currentToken);
+    //currentLexeme = TK_FILENAME;   预处理直接忽略
+    if(currentLexeme == TK_EOF) {
+        std::cout << "SyntaxAnalysis successeed" << std::endl;
+        return ;
+    }else {
+        if(Parse_procedure())  return;
     }
-    //if(nonterminal == TK_FILENAME)  
+}
+
+//<程序> ::= [<常量说明>][<变量说明>][<函数定义部分>]<主函数>
+bool Parser::Parse_procedure() {
+
+    //全局常量声明
+    Parse_constDescription("Global");
+    //全局变量说明
+    Parse_varDescription(true,"Global");
+    
+
+
+
+
 
 
 
 
 }
+
+
+
 
 
 

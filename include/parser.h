@@ -27,7 +27,9 @@ class Parser
         }
 
     public:
-        /*递归下降子程序定义的分析过程*/
+        /*递归下降子程序定义的分析过程 
+          语法分析，直接生成中间代码——四元式 
+         */
         //<程序> ::= [<常量说明>][<变量说明>][<函数定义部分>]<主函数>
         bool Parse_procedure();
         //<常量说明> ::= const<常量定义>;{const<常量定义>;}
@@ -54,13 +56,7 @@ class Parser
 
         //<复合语句> ::= [<常量说明>][<变量说明>]{<语句>}
         bool Parse_compoundStmt(std::string funcName);
-        //<表达式> ::= [+ | -]<项>{<加法运算符><项>}
-        ExpressionRetValue Parse_expression(std::string funcName, bool isCache, std::vector<FourYuanItem>& cache, int weight);
-        //<项> ::= <因子>{<乘法运算符><因子>}
-        bool Parse_item(std::vector<PostfixItem> &, std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight); 
-        //<因子> ::= <标识符>['('<值参数表>')']|<标识符>'['<表达式>']'|'('<表达式>')'|<整数>|<字符>
-        bool Parse_factor(std::vector<PostfixItem> &, std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
-        /*<语句> ::= <条件语句> | <循环语句> | <写语句>; | '{'<语句>'}' | <标识符>['('<值参数表>')'];
+       /*<语句> ::= <条件语句> | <循环语句> | <写语句>; | '{'<语句>'}' | <标识符>['('<值参数表>')'];
             | <赋值语句>; | <读语句>; | <写语句>; | <空>; |  <返回语句>*/
         bool Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuanItem>&cache, int weight);
         //<赋值语句> ::= <标识符> = <表达式> | <标识符>'['<表达式>']'=<表达式>
@@ -73,6 +69,14 @@ class Parser
         bool Parse_loopStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
         //<值参数表> ::= <表达式>{, <表达式>}
         std::vector<ValueType>  Parse_valueParamList(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
+
+        //<表达式> ::= [+ | -]<项>{<加法运算符><项>}
+        ExpressionRetValue Parse_expression(std::string funcName, bool isCache, std::vector<FourYuanItem>& cache, int weight);
+        //<项> ::= <因子>{<乘法运算符><因子>}
+        bool Parse_item(std::vector<PostfixItem> &, std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight); 
+        //<因子> ::= <标识符>['('<值参数表>')']|<标识符>'['<表达式>']'|'('<表达式>')'|<整数>|<字符>
+        bool Parse_factor(std::vector<PostfixItem> &, std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
+
         //<读语句> ::= scanf‘(’<标识符>{,<标识符>}')'
         bool Parse_scanf(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
         //<写语句> ::= printf'('<字符串>,<表达式>')' | printf'('<字符串>')' | prinntf'('<表达式>')'

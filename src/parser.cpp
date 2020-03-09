@@ -225,10 +225,9 @@ void Parser::printLex() {
 //入口函数
 void Parser::parse() {
 
-    currentToken = next();
-    P_Token currentLexeme = std::get<0>(currentToken);
+    next();
     //currentLexeme = TK_FILENAME;   预处理直接忽略
-    if(currentLexeme == TK_EOF) {
+    if(getCurrentToken() == TK_EOF) {
         std::cout << "SyntaxAnalysis successeed" << std::endl;
         return ;
     }else {
@@ -243,17 +242,41 @@ bool Parser::Parse_procedure() {
     Parse_constDescription("Global");
     //全局变量说明
     Parse_varDescription(true,"Global");
-    
+    //检查函数说明
+    Parse_functionDefinition();
+
+    /*解析主函数main*/
+    if(getCurrentToken() == KW_INT) {  //检查这里的 next函数到底有没有被多执行一次
+        next(); 
+        if(getCurrentToken() != KW_MAIN) {
+            panic("SyntaxError: symbol _main can't be found at line %d, column %d", line, column);
+        }
+    }
+    next();  // (
+    if(getCurrentToken() != SY_LPAREN)
+        panic("SyntaxError: line %d, column %d", line, column);
+    next();    //  )  
+    if(getCurrentToken() != SY_RPAREN)  
+        panic("SyntaxError: line %d, column %d", line, column);
+    next();    // {
+    if(getCurrentToken() != SY_LBRACE) 
+        panic("SyntaxError: line %d, column %d", line, column);
 
 
+    //复合语句
+    Parse_compoundStmt("main");
 
-
-
-
-
-
+    return true;
 }
 
+//<常量说明> ::= const<常量定义>;{const<常量定义>;}
+bool Parser::Parse_constDescription(std::string funcName) {
+
+
+
+
+    return true;
+}
 
 
 

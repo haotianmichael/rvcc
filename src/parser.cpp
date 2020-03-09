@@ -225,13 +225,21 @@ void Parser::printLex() {
 //入口函数
 void Parser::parse() {
 
+    std::cout << "SyntaxAnalysis start..." << std::endl << std::endl;
     next();
     //currentLexeme = TK_FILENAME;   预处理直接忽略
     if(getCurrentToken() == TK_EOF) {
-        std::cout << "SyntaxAnalysis successeed" << std::endl;
+        std::cout << "Nothing to parse!" << std::endl;
         return ;
     }else {
-        if(Parse_procedure())  return;
+        //预处理器
+        while(getCurrentToken() == TK_FILENAME) {
+            std::string filename = getCurrentLexeme();    
+            std::cout << "Preprocessors: #include <" << filename << ">" << std::endl; 
+            next();
+        }
+        //解析
+        if(Parse_procedure())  return;   
     }
 }
 
@@ -242,41 +250,97 @@ bool Parser::Parse_procedure() {
     Parse_constDescription("Global");
     //全局变量说明
     Parse_varDescription(true,"Global");
-    //检查函数说明
+    //检查函数定义
     Parse_functionDefinition();
 
+    //在函数定义部分一定会识别到int main再返回 因此currentToken就是main
     /*解析主函数main*/
-    if(getCurrentToken() == KW_INT) {  //检查这里的 next函数到底有没有被多执行一次
-        next(); 
-        if(getCurrentToken() != KW_MAIN) {
-            panic("SyntaxError: symbol _main can't be found at line %d, column %d", line, column);
-        }
+    if(getCurrentToken() != KW_MAIN) {
+        panic("SyntaxError: symbol _main can't be found at line %d, column %d", line, column);
     }
+    //接着分析
     next();  // (
     if(getCurrentToken() != SY_LPAREN)
-        panic("SyntaxError: line %d, column %d", line, column);
+        panic("SyntaxError: main lack ( at line %d, column %d", line, column);
     next();    //  )  
     if(getCurrentToken() != SY_RPAREN)  
-        panic("SyntaxError: line %d, column %d", line, column);
+        panic("SyntaxError: main lack ) at  line %d, column %d", line, column);
     next();    // {
     if(getCurrentToken() != SY_LBRACE) 
-        panic("SyntaxError: line %d, column %d", line, column);
+        panic("SyntaxError: main lack { at line %d, column %d", line, column);
 
 
     //复合语句
+    FourYuanItem four;
+    four.type = FunctionDef;
+    four.FuncType = VoidType;
+    four.target = "main";
     Parse_compoundStmt("main");
 
-    return true;
+
+    next();  // } 
+    if(getCurrentToken() != SY_RBRACE)
+        panic("SyntaxError: main lack } at line %d, column %d", line, column);
+
+    return true;  //分析正常结束
 }
 
 //<常量说明> ::= const<常量定义>;{const<常量定义>;}
 bool Parser::Parse_constDescription(std::string funcName) {
 
+    //const
+    if(getCurrentToken() != KW_CONST)  return false;
+    next();
+    //解析<常量定义>
+    Parse_constDefinition(funcName);
+
+    next();  //  ;
+    if(getCurrentToken() != SY_SEMICOLON)
+        panic("SyntaxError: constDescription lack semicolon at line %d, column %d", line, column);
+
+    while(true) {   //  处理右递归
+
+        next();
+        if(getCurrentToken() != KW_CONST) break;  //正常break
+
+        next();
+        Parse_constDefinition(funcName);
+
+        next();   //  ;
+        if(getCurrentToken() != SY_SEMICOLON)
+            panic("SyntaxError: constDescription lack semicolon at line %d, column %d", line, column);
+
+    }
+
+    return true;
+}
+
+
+/*<常量说明> ::= int<标识符>=<帧数>{,<标识符>=<整数>}
+    | char<标识符>=<字符{,<标识符>=<字符>}>*/
+bool Parser::Parse_constDefinition(std::string funcName) {
 
 
 
     return true;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

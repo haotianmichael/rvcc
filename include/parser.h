@@ -36,7 +36,7 @@ class Parser
         bool Parse_constDescription(std::string funcName);
         /*<常量定义> ::= int<标识符>=<整数>{,<标识符>=<整数>}
           | char<标识符>=<整数>{,<标识符>=<整数>}*/
-        bool Parse_cnostDefinition(std::string funcName);
+        bool Parse_constDefinition(std::string funcName);
         //<变量说明> ::= <变量定义>;{<变量定义>;}
         bool Parse_varDescription(bool isGlobal, std::string funcName);
         /*<变量定义> ::= <类型标识符>(<标识符>|<标识符>'['<无符号整数>']')

@@ -652,10 +652,27 @@ bool Parser::Parse_paraList(std::string funcName) {
 }
 
 
+//<复合语句> ::= [<常量说明>][<变量说明>]{<语句>}
+bool Parser::Parse_compoundStmt(std::string funcName) {
+
+    Parse_constDeclaration(funcName);
+    Parse_varDeclaration(false, funcName);
+    std::vector<FourYuanItem> noUseCache;
+    while(true) {
+        if(!Parse_Stmt(funcName, false, noUseCache, 1))    //初始值为1
+               break;     
+    }
+    return true;
+}
 
 
 
+//<表达式> ::= [ + | -]<项>{<加法运算符><项>}
+ExpressionRetValue Parser::Parse_expression(std::string funcName, bool isCache, std::vector<FourYuanItem> & cache, int weight) {
 
+
+
+}
 
 
 

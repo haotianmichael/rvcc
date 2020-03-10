@@ -1,6 +1,7 @@
 #pragma  once
 #include <tuple>
 #include <fstream>
+#include <vector>
 #include <unordered_map>
 #include "lex.h"
 #include "intermediate.h"

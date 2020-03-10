@@ -278,7 +278,7 @@ bool Parser::Parse_procedure() {
     Parse_compoundStmt("main");
 
 
-    next();  // } 
+    // } 
     if(getCurrentToken() != SY_RBRACE)
         panic("SyntaxError: main lack } at line %d, column %d", line, column);
 
@@ -294,7 +294,7 @@ bool Parser::Parse_constDescription(std::string funcName) {
     //解析<常量定义>
     Parse_constDefinition(funcName);
 
-    next();  //  ;
+    //  ;
     if(getCurrentToken() != SY_SEMICOLON)
         panic("SyntaxError: constDescription lack semicolon at line %d, column %d", line, column);
 
@@ -306,22 +306,101 @@ bool Parser::Parse_constDescription(std::string funcName) {
         next();
         Parse_constDefinition(funcName);
 
-        next();   //  ;
+        //  ;
         if(getCurrentToken() != SY_SEMICOLON)
             panic("SyntaxError: constDescription lack semicolon at line %d, column %d", line, column);
 
     }
-
     return true;
 }
 
 
-/*<常量说明> ::= int<标识符>=<帧数>{,<标识符>=<整数>}
+/*<常量定义> ::= int<标识符>=<整数>{,<标识符>=<整数>}
     | char<标识符>=<字符{,<标识符>=<字符>}>*/
 bool Parser::Parse_constDefinition(std::string funcName) {
+    std::string id;
 
+    if(getCurrentToken() == KW_INT) {  //int
+        next();
+        if(getCurrentToken() != TK_IDENT) {
+            panic("SyntaxError: const definition not complete at line %d, column %d", line, column);
+            return false;
+        }
+        id = getCurrentLexeme();
+    
+        next();
+        if(getCurrentToken() != SY_ASSIGN) {   // = 
+            panic("syntaxError: const definition not complete at line %d, columnn %d", line, column); 
+            return false; 
+        }
+        
+        //整数
+        next();
+        Parse_integer();
+        /*填充符号表*/
 
+        //解析右递归
+        while(true) {
+            if(getCurrentToken() != SY_COMMA) break;  //正常退出
 
+            next();
+            if(getCurrentToken() != TK_IDENT)   //标识符
+                panic("SyntaxError: const definition not complete at line %d, column %d", line, column);
+            id = getCurrentLexeme();
+          
+            next();
+            if(getCurrentToken() != SY_ASSIGN)  // = 
+                panic("syntaxError: const definition not complete at line %d, columnn %d", line, column); 
+        
+            next();
+            Parse_integer();  //整数
+            /*填充符号表*/ 
+        }
+
+    }else if(getCurrentToken() == KW_CHAR){   //char
+        next();
+        if(getCurrentToken() != TK_IDENT)  {
+            panic("SyntaxError: const definition nont complete at line %d, column %d", line, column); 
+            return false;
+        }       
+        id = getCurrentLexeme();
+
+        next();
+        if(getCurrentToken() != SY_ASSIGN) {  // = 
+            panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
+            return false;
+        }
+
+        next();
+        if(getCurrentToken() != CONST_CHAR)   // 字符
+            panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
+        
+        /*填充符号表*/
+
+        //解析右递归
+        while(true) {
+            if(getCurrentToken() != SY_COMMA)  break;   //正常退出
+
+            next();
+            if(getCurrentToken() != TK_IDENT)   //标识符
+                panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
+            id = getCurrentLexeme();
+        
+            next();
+            if(getCurrentToken() != SY_ASSIGN) // = 
+                panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
+
+            next();
+            if(getCurrentToken() == CONST_CHAR)  //字符
+                panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
+
+            /*填充符号表*/
+        }
+    
+    }else {
+        panic("syntaxError: const definition not complete at line %d, column %d", line, column); 
+        return false;
+    }
     return true;
 }
 

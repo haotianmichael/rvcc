@@ -550,6 +550,13 @@ bool Parser::Parse_haveReturnFuncDefinition() {
         Parse_paraList(overallSymbol.Name); 
     }
 
+    // ) 
+    currentToken = next();
+    if(getCurrentToken() != SY_RPAREN) {
+        panic("SyntaxError: expects ) at line %d, column %d", line, column);
+        return false;
+    }
+
     //  {
     currentToken = next();
     if(getCurrentToken() != SY_LBRACE){
@@ -571,13 +578,36 @@ bool Parser::Parse_haveReturnFuncDefinition() {
 //<无返回值函数定义> ::= void<标识符>'('<参数表>')''{'<复合语句>'}'
 bool Parser::Parse_noReturnFuncDefinition() {
 
+    //参数
+    currentToken = next();
+    if(getCurrentToken() != SY_RPAREN) {
+        panic("SyntaxError: void not need paralist at line %d, column %d", line, column); 
+        return false; 
+    }
+
+    // )
+   currentToken  = next();
+   if(getCurrentToken() != SY_RPAREN) {
+        panic("SyntaxError: expects ) at line %d, column %d", line, column);
+        return false;
+   }
 
 
+   // {
+    currentToken = next();
+    if(getCurrentToken() == SY_LBRACE) {
+        panic("SyntaxError: lack compound in func at line %d, column %d", line, column);    
+    }
+
+    //复合语句
+    Parse_compoundStmt(overallSymbol.Name);
 
 
-
-
-
+    // }
+    currentToken = next(); 
+    if(getCurrentToken() != SY_RBRACE) {
+        panic("SyntaxError: funcDefiniton expects } at line %d, column %d", line, column); 
+    }
     return true;
 }
 

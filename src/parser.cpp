@@ -414,14 +414,12 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
         if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR || getCurrentToken() == KW_VOID) {
             currentToken = next();
             if(getCurrentToken() == KW_MAIN) return false;  //解析主函数
-            if(getCurrentToken() == TK_IDENT) {
+            if(getCurrentToken() == TK_IDENT) {   //全局变量 && 全局数组
                 overallName = getCurrentLexeme();   
                 currentToken = next();
                 if(getCurrentToken() == SY_LPAREN) {
                     return false;                //解析函数
-                }else if(getCurrentToken() == SY_ASSIGN || getCurrentToken() == SY_LBRACKET) {   //若是 = 则是全局变量 && [ 则是全局数组
-                    ;    //后面会解析 
-                }else panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
+                }
             }
         }    
     }
@@ -440,14 +438,12 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
             if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR || getCurrentToken() == KW_VOID) {
                 currentToken = next();
                 if(getCurrentToken() == KW_MAIN)  return false;         //解析主函数
-                if(getCurrentToken() == TK_IDENT) {
+                if(getCurrentToken() == TK_IDENT) {  //全局变量 && 全局数组
                     overallName = getCurrentLexeme();
                     currentToken = next();
                     if(getCurrentToken() == SY_LPAREN){
                         return false;    //解析函数
-                    }else if(getCurrentToken() == SY_ASSIGN || getCurrentToken() == SY_LBRACKET) {  //  =  [
-                        ;    //后面会解析
-                    }else panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
+                    }
                 }
             }
         } 
@@ -468,14 +464,13 @@ bool Parser::Parse_varDefinition(std::string funcName) {
 
     std::string id;
     int length, num = 0;
-    char cnum;
     if(getCurrentToken() == SY_LBRACKET) { //  [  全局数组
 
         currentToken = next(); 
         if(getCurrentToken() != CONST_INT) {
             panic("SyntaxError: varDefinition not complete at line %d, column %d", line, column); 
             return false; 
-        }else if(getCurrentToken() != CONST_INT) {
+        }else if(getCurrentToken() == CONST_INT) {
             std::string strnum = getCurrentLexeme(); 
             for(unsigned int i = 0; i < strnum.length(); i ++) {
                 num += strnum[i] - '0';  
@@ -485,26 +480,6 @@ bool Parser::Parse_varDefinition(std::string funcName) {
             if(num == 0)  
                 panic("SyntaxError: elements of array must be positive at line %d, column %d", line, column);
             length = num;   //数组长度
-        }
-
-    }else if(getCurrentToken() == SY_ASSIGN) {   // = 全局变量
-        id = overallName;  //当前变量的名称
-
-        currentToken = next();
-        if(getCurrentToken() == CONST_INT) {   //整数变量
-            for(unsigned int i = 0; i < getCurrentLexeme().length(); i ++) {
-                num += getCurrentLexeme()[i] - '0'; 
-                num *= 10; 
-            } 
-            num /= 10;
-        }else if(getCurrentToken() == CONST_CHAR) {  //字符变量
-            if(getCurrentLexeme().length() == 1) {
-                cnum  = getCurrentLexeme()[0];    
-            }else{
-                panic("SyntaxError: mutiple use of char at line %d, columne %d", line, column); 
-            } 
-        } else {
-            panic("SyntaxError: lack varDefinition at line %d, column %d", line, column); 
         }
     }
 
@@ -522,21 +497,25 @@ bool Parser::Parse_varDefinition(std::string funcName) {
         }
         id = getCurrentLexeme();
 
-        currentToken = next();  // = 
-        if(getCurrentToken() != SY_ASSIGN) {
-            panic("SyntaxError: varDefiniton lack = at line %d, columne %d", line, column); 
-            break; 
-        }
-
         currentToken = next();  // [
         if(getCurrentToken() != SY_LBRACKET) {
-        
-        
+            currentToken = next();
+            if(getCurrentToken() != CONST_INT) {
+                panic("SyntaxError: varDefinition not complete at line %d, column %d", line, column); 
+                return false; 
+            }else if(getCurrentToken() == CONST_INT) {
+                std::string strnum = getCurrentLexeme(); 
+                for(unsigned int i = 0; i < strnum.length(); i ++) {
+                    num += strnum[i] - '0'; 
+                    num *= 10; 
+                } 
+                num /= 10;
+                if(num == 0) 
+                    panic("SyntaxError: elements of array must be positive at line %d, column %d", line, column);
+                length = num;   //数组长度
+            }
         }
-
-
     }
-
     return true;
 }
 

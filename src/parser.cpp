@@ -430,7 +430,7 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
 
     currentToken = next();
     if(getCurrentToken() != SY_SEMICOLON)  //  ;
-        panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
+    panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
 
     //处理右递归
     while(true){
@@ -586,14 +586,14 @@ bool Parser::Parse_noReturnFuncDefinition() {
     }
 
     // )
-   currentToken  = next();
-   if(getCurrentToken() != SY_RPAREN) {
+    currentToken  = next();
+    if(getCurrentToken() != SY_RPAREN) {
         panic("SyntaxError: expects ) at line %d, column %d", line, column);
         return false;
-   }
+    }
 
 
-   // {
+    // {
     currentToken = next();
     if(getCurrentToken() == SY_LBRACE) {
         panic("SyntaxError: lack compound in func at line %d, column %d", line, column);    
@@ -612,6 +612,44 @@ bool Parser::Parse_noReturnFuncDefinition() {
 }
 
 
+//<参数表> ::= <类型标识符><标识符>{,<类型标识符><标识符>}
+bool Parser::Parse_paraList(std::string funcName) {
+
+    //类型标识符  int | char
+    currentToken = next();
+    if(getCurrentToken() != KW_INT && getCurrentToken() != KW_CHAR) {
+        panic("SyntaxError: paralist error at line %d, column %d", line, column);
+        return false; 
+    }
+
+    //标识符
+    currentToken = next();
+    if(getCurrentToken() != TK_IDENT) {
+        panic("SyntaxError: paralist error at line %d, column %d", line, column);
+        return false;
+    }
+
+
+    while(true) {
+        currentToken = next();
+        if(getCurrentToken() != SY_COMMA)  break;
+
+        currentToken = next();
+        if(getCurrentToken() != KW_INT && getCurrentToken() != KW_CHAR) {
+            panic("SyntaxError: paralist error at line %d, column %d", line, column);
+            return false;
+        }
+
+
+        currentToken = next();
+        if(getCurrentToken() != TK_IDENT){
+            panic("SyntaxError: paralist error at line %d, column %d", line, column);
+            return false; 
+        }
+    }
+
+    return true;
+}
 
 
 

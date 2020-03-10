@@ -17,8 +17,8 @@ class Parser
         void parse();
         //当前Token
         std::tuple<P_Token, std::string> currentToken;
-        //当前解析函数名称(解析main之前的函数定义&&全局变量定义)
-        std::string overallFuncName;
+        //当前解析函数/变量/数组名称(解析main之前的函数定义&&全局变量定义)
+        std::string overallName;
         //得到当前Token的Token
         inline P_Token getCurrentToken() const {
             return std::get<0>(currentToken); 

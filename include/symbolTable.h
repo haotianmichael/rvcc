@@ -16,13 +16,15 @@ class SymbolTable{
         int length;   //数组的长度  变量的设置为0
         int weight;   //只针对函数内部的简单变量以及参数有效
 
+        /*自顶向下递归分析符号表*/
+        
 
     public:
         SymbolTable(std::string id, std::string funcName);
 
         /*get*/
         inline int getOrder(){return order;}
-        inline std::string getId(){ return identifier;};
+        inline std::string getId(){ return identifier;}
         inline std::string getFuncName() {return functinoName;}
         inline ItemType getItemType() {return itemType;}
         inline ValueType getValueType() {return valueType;}

@@ -412,10 +412,11 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
     if(isGlobal) {
         currentToken = next();
         if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR || getCurrentToken() == KW_VOID) {
+            overallSymbol.type = getCurrentToken(); 
             currentToken = next();
             if(getCurrentToken() == KW_MAIN) return false;  //解析主函数
             if(getCurrentToken() == TK_IDENT) {   //全局变量 && 全局数组
-                overallName = getCurrentLexeme();   
+                overallSymbol.Name  = getCurrentLexeme();   
                 currentToken = next();
                 if(getCurrentToken() == SY_LPAREN) {
                     return false;                //解析函数
@@ -436,10 +437,11 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
         if(isGlobal) {
             currentToken = next();
             if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR || getCurrentToken() == KW_VOID) {
+                overallSymbol.type = getCurrentToken();
                 currentToken = next();
                 if(getCurrentToken() == KW_MAIN)  return false;         //解析主函数
                 if(getCurrentToken() == TK_IDENT) {  //全局变量 && 全局数组
-                    overallName = getCurrentLexeme();
+                    overallSymbol.Name = getCurrentLexeme();
                     currentToken = next();
                     if(getCurrentToken() == SY_LPAREN){
                         return false;    //解析函数
@@ -520,9 +522,43 @@ bool Parser::Parse_varDefinition(std::string funcName) {
 }
 
 
+/*目前静态区域只允许定义一个函数*/
+//<函数定义部分> ::= {<有返回值函数定义> | <无返回值函数定义>}
+bool Parser::Parse_functionDefinition() {
+
+    if(overallSymbol.type == KW_INT || overallSymbol.type == KW_CHAR) {
+        Parse_haveReturnFuncDefinition();  
+    }else if(overallSymbol.type == KW_VOID) {
+        Parse_noReturnFuncDefinition(); 
+    }else {
+        return false; 
+    }
+
+    return true;
+}
+
+
+//<有返回值函数定义> ::= <声明头部>'('<参数表>')''{'<复合语句>'}'
+bool Parser::Parse_haveReturnFuncDefinition() {
+
+
+    return true;
+}
 
 
 
+//<无返回值函数定义> ::= void<标识符>'('<参数表>')''{'<复合语句>'}'
+bool Parser::Parse_noReturnFuncDefinition() {
+
+
+
+
+
+
+
+
+    return true;
+}
 
 
 

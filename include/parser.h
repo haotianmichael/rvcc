@@ -17,6 +17,8 @@ class Parser
         void parse();
         //当前Token
         std::tuple<P_Token, std::string> currentToken;
+        //当前解析函数名称(解析main之前的函数定义&&全局变量定义)
+        std::string overallFuncName;
         //得到当前Token的Token
         inline P_Token getCurrentToken() const {
             return std::get<0>(currentToken); 
@@ -33,12 +35,12 @@ class Parser
         //<程序> ::= [<常量说明>][<变量说明>][<函数定义部分>]<主函数>
         bool Parse_procedure();
         //<常量说明> ::= const<常量定义>;{const<常量定义>;}
-        bool Parse_constDescription(std::string funcName);
+        bool Parse_constDeclaration(std::string funcName);
         /*<常量定义> ::= int<标识符>=<整数>{,<标识符>=<整数>}
           | char<标识符>=<整数>{,<标识符>=<整数>}*/
         bool Parse_constDefinition(std::string funcName);
         //<变量说明> ::= <变量定义>;{<变量定义>;}
-        bool Parse_varDescription(bool isGlobal, std::string funcName);
+        bool Parse_varDeclaration(bool isGlobal, std::string funcName);
         /*<变量定义> ::= <类型标识符>(<标识符>|<标识符>'['<无符号整数>']')
             {,(<标识符> | <标识符> '['<无符号整数>']')}*/
         bool Parse_varDefinition(std::string funcName);

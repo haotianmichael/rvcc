@@ -226,7 +226,7 @@ void Parser::printLex() {
 void Parser::parse() {
 
     std::cout << "SyntaxAnalysis start..." << std::endl << std::endl;
-    next();
+    currentToken = next();
     //currentLexeme = TK_FILENAME;   预处理直接忽略
     if(getCurrentToken() == TK_EOF) {
         std::cout << "Nothing to parse!" << std::endl;
@@ -236,7 +236,7 @@ void Parser::parse() {
         while(getCurrentToken() == TK_FILENAME) {
             std::string filename = getCurrentLexeme();    
             std::cout << "Preprocessors: #include <" << filename << ">" << std::endl; 
-            next();
+            currentToken = next();
         }
         //解析
         if(Parse_procedure())  return;   
@@ -247,9 +247,9 @@ void Parser::parse() {
 bool Parser::Parse_procedure() {
 
     //全局常量声明
-    Parse_constDescription("Global");
+    Parse_constDeclaration("Global");
     //全局变量说明
-    Parse_varDescription(true,"Global");
+    Parse_varDeclaration(true,"Global");
     //检查函数定义
     Parse_functionDefinition();
 
@@ -259,13 +259,13 @@ bool Parser::Parse_procedure() {
         panic("SyntaxError: symbol _main can't be found at line %d, column %d", line, column);
     }
     //接着分析
-    next();  // (
+    currentToken = next();  // (
     if(getCurrentToken() != SY_LPAREN)
         panic("SyntaxError: main lack ( at line %d, column %d", line, column);
-    next();    //  )  
+    currentToken = next();    //  )  
     if(getCurrentToken() != SY_RPAREN)  
         panic("SyntaxError: main lack ) at  line %d, column %d", line, column);
-    next();    // {
+    currentToken = next();    // {
     if(getCurrentToken() != SY_LBRACE) 
         panic("SyntaxError: main lack { at line %d, column %d", line, column);
 
@@ -286,29 +286,29 @@ bool Parser::Parse_procedure() {
 }
 
 //<常量说明> ::= const<常量定义>;{const<常量定义>;}
-bool Parser::Parse_constDescription(std::string funcName) {
+bool Parser::Parse_constDeclaration(std::string funcName) {
 
     //const
     if(getCurrentToken() != KW_CONST)  return false;
-    next();
+    currentToken = next();
     //解析<常量定义>
     Parse_constDefinition(funcName);
 
     //  ;
     if(getCurrentToken() != SY_SEMICOLON)
-        panic("SyntaxError: constDescription lack semicolon at line %d, column %d", line, column);
+        panic("SyntaxError: constDeclaration lack semicolon at line %d, column %d", line, column);
 
     while(true) {   //  处理右递归
 
-        next();
+        currentToken = next();
         if(getCurrentToken() != KW_CONST) break;  //正常break
 
-        next();
+        currentToken = next();
         Parse_constDefinition(funcName);
 
         //  ;
         if(getCurrentToken() != SY_SEMICOLON)
-            panic("SyntaxError: constDescription lack semicolon at line %d, column %d", line, column);
+            panic("SyntaxError: constDeclaration lack semicolon at line %d, column %d", line, column);
 
     }
     return true;
@@ -316,26 +316,26 @@ bool Parser::Parse_constDescription(std::string funcName) {
 
 
 /*<常量定义> ::= int<标识符>=<整数>{,<标识符>=<整数>}
-    | char<标识符>=<字符{,<标识符>=<字符>}>*/
+  | char<标识符>=<字符{,<标识符>=<字符>}>*/
 bool Parser::Parse_constDefinition(std::string funcName) {
     std::string id;
-
+    id = funcName;  //忽略
     if(getCurrentToken() == KW_INT) {  //int
-        next();
+        currentToken = next();
         if(getCurrentToken() != TK_IDENT) {
             panic("SyntaxError: const definition not complete at line %d, column %d", line, column);
             return false;
         }
         id = getCurrentLexeme();
-    
-        next();
+
+        currentToken = next();
         if(getCurrentToken() != SY_ASSIGN) {   // = 
             panic("syntaxError: const definition not complete at line %d, columnn %d", line, column); 
             return false; 
         }
-        
+
         //整数
-        next();
+        currentToken = next();
         Parse_integer();
         /*填充符号表*/
 
@@ -343,68 +343,122 @@ bool Parser::Parse_constDefinition(std::string funcName) {
         while(true) {
             if(getCurrentToken() != SY_COMMA) break;  //正常退出
 
-            next();
+            currentToken = next();
             if(getCurrentToken() != TK_IDENT)   //标识符
                 panic("SyntaxError: const definition not complete at line %d, column %d", line, column);
             id = getCurrentLexeme();
-          
-            next();
+
+            currentToken = next();
             if(getCurrentToken() != SY_ASSIGN)  // = 
                 panic("syntaxError: const definition not complete at line %d, columnn %d", line, column); 
-        
-            next();
+
+            currentToken  = next();
             Parse_integer();  //整数
             /*填充符号表*/ 
         }
 
     }else if(getCurrentToken() == KW_CHAR){   //char
-        next();
+        currentToken = next();
         if(getCurrentToken() != TK_IDENT)  {
             panic("SyntaxError: const definition nont complete at line %d, column %d", line, column); 
             return false;
         }       
         id = getCurrentLexeme();
 
-        next();
+        currentToken = next();
         if(getCurrentToken() != SY_ASSIGN) {  // = 
             panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
             return false;
         }
 
-        next();
+        currentToken = next();
         if(getCurrentToken() != CONST_CHAR)   // 字符
             panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
-        
+
         /*填充符号表*/
 
         //解析右递归
         while(true) {
             if(getCurrentToken() != SY_COMMA)  break;   //正常退出
 
-            next();
+            currentToken = next();
             if(getCurrentToken() != TK_IDENT)   //标识符
                 panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
             id = getCurrentLexeme();
-        
-            next();
+
+            currentToken = next();
             if(getCurrentToken() != SY_ASSIGN) // = 
                 panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
 
-            next();
+            currentToken = next();
             if(getCurrentToken() == CONST_CHAR)  //字符
                 panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
 
             /*填充符号表*/
         }
-    
+
     }else {
-        panic("syntaxError: const definition not complete at line %d, column %d", line, column); 
+        panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
         return false;
     }
     return true;
 }
 
 
+//<变量说明> ::= <变量定义>;{<变量定义>;}
+bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
+
+    //在main之前定义   函数 &&  全局变量
+    std::string tmpName = funcName;
+    if(isGlobal) {
+        currentToken = next();
+        if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR || getCurrentToken() == KW_VOID) {
+            currentToken = next();
+            if(getCurrentToken() == KW_MAIN) return false;  //解析主函数
+            if(getCurrentToken() == TK_IDENT) {
+                tmpName = getCurrentLexeme();   
+                currentToken = next();
+                if(getCurrentToken() == SY_LPAREN) {
+                    overallFuncName = tmpName;  //若是函数 保存当前解析的函数名称
+                    return false;                //解析函数
+                } else if(getCurrentToken() == SY_ASSIGN || getCurrentToken() == SY_LBRACKET) {   //若是 = 则是全局变量 && [ 则是全局数组
+                    ;    //后面会解析 
+                }else panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
+            }
+        }    
+    }
+
+    //解析全局变量   全局数组
+    if(!Parse_varDefinition(funcName)) return false;
+
+    currentToken = next();
+    if(getCurrentToken() != SY_SEMICOLON)  //  ;
+        panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
+
+    //处理右递归
+    while(true){
+        if(isGlobal) {
+            currentToken = next();
+            if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR || getCurrentToken() == KW_VOID) {
+                currentToken = next();
+                if(getCurrentToken() == KW_MAIN)  return false;         //解析主函数
+                if(getCurrentToken() == SY_LPAREN){
+                    overallFuncName = tmpName; 
+                    return false; 
+                }else if(getCurrentToken() == SY_ASSIGN || getCurrentToken() == SY_LBRACKET) {  //  =  [
+                    ;    //后面会解析
+                }else panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
+            }
+        } 
+        if(!Parse_varDefinition(funcName))  return false;
+        
+        currentToken = next();
+        if(getCurrentToken() != SY_SEMICOLON) //  ;
+            panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
+    }
+
+    return true;
+}
 
 
 

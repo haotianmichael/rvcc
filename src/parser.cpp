@@ -672,9 +672,6 @@ bool Parser::Parse_compoundStmt(std::string funcName) {
 //<表达式> ::= [ + | -]<项>{<加法运算符><项>}
 ExpressionRetValue Parser::Parse_expression(std::string funcName, bool isCache, std::vector<FourYuanItem> & cache, int weight) {
 
-    bool isSure = false;
-    int expResult= 0;
-    ValueType type;
     std::vector<PostfixItem> tar, obj;
     ExpressionRetValue returnValue;
 
@@ -818,9 +815,32 @@ bool Parser::Parse_assignStmt(std::string funcName, std::string id, bool isCache
 
 
 //<条件语句> ::= if'('<条件>')'<语句>else <语句>
-bool Parser::Parse_condition(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weigth) {
+bool Parser::Parse_conditionStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
 
+    if(getCurrentToken() != KW_IF)  {
+        return false; 
+    }
 
+    //识别 （
+    currentToken = next();
+    if(getCurrentToken() != SY_LPAREN) {
+        panic("SytaxErro: lack ( at line %d, column %d", line, column); 
+        return false; 
+    }
+
+    //识别<条件>
+    Parse_condition(funcName, isCache, cache, weight);
+
+    //代码生成
+
+    //)
+   currentToken = next();
+  if(getCurrentToken() != SY_RPAREN) {
+        panic("SytaxErro: lack )  at line %d, column %d", line, column); 
+        return false; 
+  } 
+
+  //分析语句
 
 
 }

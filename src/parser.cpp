@@ -526,7 +526,7 @@ bool Parser::Parse_varDefinition(std::string funcName) {
 //<函数定义部分> ::= {<有返回值函数定义> | <无返回值函数定义>}
 bool Parser::Parse_functionDefinition() {
 
-    if(overallSymbol.type == KW_INT || overallSymbol.type == KW_CHAR) {
+    if(overallSymbol.type == KW_INT || overallSymbol.type == KW_CHAR) {  //因为全局变量解析一定会被执行，所以overallSymbol一定会被赋值
         Parse_haveReturnFuncDefinition();  
     }else if(overallSymbol.type == KW_VOID) {
         Parse_noReturnFuncDefinition(); 
@@ -670,9 +670,192 @@ bool Parser::Parse_compoundStmt(std::string funcName) {
 //<表达式> ::= [ + | -]<项>{<加法运算符><项>}
 ExpressionRetValue Parser::Parse_expression(std::string funcName, bool isCache, std::vector<FourYuanItem> & cache, int weight) {
 
+    bool isSure = false;
+    int expResult= 0;
+    ValueType type;
+    std::vector<PostfixItem> tar, obj;
+    ExpressionRetValue returnValue;
+
+
+    //[+ | -]
+    currentToken = next();
+    if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS)  {
+        //生成代码相关 
+    
+    }
+
+    Parse_item(tar, funcName, isCache, cache, weight);
+    while(true) {
+        currentToken = next(); 
+        if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
+            //生成代码相关 
+        } 
+    
+        Parse_item(tar, funcName, isCache, cache, weight); 
+    }
+
+    //表达式计算
+
+    return returnValue;
+}
+
+
+//<项> ::= <因子>{<乘法运算符><因子>}
+bool Parser::Parse_item(std::vector<PostfixItem> &obj, std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
+
+    Parse_factor(obj, funcName, isCache, cache, weight);
+
+    while(true) {
+        currentToken = next(); 
+        if(getCurrentToken() == SY_TIMES || getCurrentToken() == SY_DEV) {
+        
+        
+        } 
+        //因子
+        Parse_factor(obj, funcName, isCache, cache, weight);
+    }
+
+    return true;
+}
+
+
+//<因子> ::= <标识符>['('<值参数表>')'] | <标识符> '['<表达式>']' | '('<表达式>')' | <整数> | <字母>
+bool Parser::Parse_factor(std::vector<PostfixItem> &obj, std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
+    PostfixItem item;
+    ExpressionRetValue term2;
+    FourYuanItem term3;
+    std::string id;
+
+    switch (getCurrentToken()) {
+        case TK_IDENT:
+            
+
+
+
+            break;
+        case SY_PLUS:
+        case SY_MINUS:
+            break;
+
+        default:
+            
+    }
+
+}
+
+
+
+/*<语句> ::= <条件语句> | <循环语句> | ’{‘{<语句>}'}' | <标识符>['('<值参数表>')'];
+        | <赋值语句>; | <读语句>; | <写语句>; | ; | <返回语句>;  */
+bool Parser::Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
+
+
 
 
 }
+
+
+
+
+
+//<赋值语句> ::= <标识符>=<表达式> | <标识符>'['<表达式>']'=<表达式>
+//实际分析的是  = <表达式> | '['<表达式>']'=<表达式>
+bool Parser::Parse_assignStmt(std::string funcName, std::string id, bool isCache, std::vector<FourYuanItem>& cache, int weight) {
+
+
+
+}
+
+
+
+
+//<条件语句> ::= if'('<条件>')'<语句>else <语句>
+bool Parser::Parse_condition(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weigth) {
+
+
+
+
+}
+
+
+//<条件> ::= <表达式><关系运算符><表达式> | <表达式>
+//<关系运算符> ::= < | <= | > | >= | != | ==
+std::string Parser::Parse_condition(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
+
+
+
+
+
+
+}
+
+
+
+//<循环语句> ::= while'('<条件>')'<语句>
+bool Parser::Parse_loopStmt(std::string funcName, bool isCache, std::vector<FourYuanItem>& cache, int weight) {
+
+
+
+}
+
+
+
+
+//<值参数表> ::= <表达式>{,<表达式>}
+std::vector<ValueType> Parser::Parse_valueParamList(std::string funcName, bool isCache, std::vector<FourYuanItem>& cache, int weight) {
+
+
+
+
+}
+
+
+//<读语句> ::= scanf'('<标识符>{,<标识符>}')'
+bool Parser::Parse_scanf(std::string funcName, bool isCache, std::vector<FourYuanItem>&cache, int weight) {
+
+
+
+
+}
+
+
+//<写语句> ::= printf'('<字符串>,<表达式>')' | printf'('<字符串>')' | printf '('<表达式>')'
+bool Parser::Parse_printf(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
+
+
+
+
+}
+
+
+
+
+//<返回语句> ::= return ['('<表达式>')']
+bool Parser::Parse_returnStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
+
+
+
+
+}
+
+
+
+//<整数> ::= [+ | -]<无符号整数> | 0
+//注意。0前面不能有任何正负号
+bool Parser::Parse_integer() {
+
+
+
+}
+
+
+//<声明头部> ::= int<标识符> | char <标识符>
+bool Parser::Parse_FunctionDeclarHead() {
+
+
+
+}
+
 
 
 

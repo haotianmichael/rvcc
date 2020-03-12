@@ -94,14 +94,6 @@ struct ExpressionRetValue{
 };
 
 
-//情况子语句返回
-struct SubCaseRet{
-    int constValue;
-    bool recognize;
-    std::string label;
-};
-
-
 //标识符类型
 enum ItemType{
     Constant,  //常量

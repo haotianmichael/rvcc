@@ -66,7 +66,7 @@ class Parser
             | <赋值语句>; | <读语句>; | <写语句>; | <空>; |  <返回语句>*/
         bool Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuanItem>&cache, int weight);
         //<赋值语句> ::= <标识符> = <表达式> | <标识符>'['<表达式>']'=<表达式>
-        bool Parse_assignStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
+        bool Parse_assignStmt(std::string funcName, std::string id, bool isCache, std::vector<FourYuanItem> &cache, int weight);
         //<条件语句> ::= if'('<条件>')'<语句>else<语句>
         bool Parse_conditionStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
         //<条件> ::= <表达式><关系运算符><表达式> | <表达式>

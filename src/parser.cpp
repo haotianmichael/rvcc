@@ -772,14 +772,32 @@ bool Parser::Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuan
             if(getCurrentToken() != SY_RBRACE) 
                 panic("SyntaxError: Statement lack } at line %d, column %d", line, column);
             break;
-        case TK_IDENT:
+        case TK_IDENT:   //赋值语句和调用语句
             
             break;
-            case 
+        case KW_SCANF:
+            Parse_scanf(funcName, isCache, cache, weight);
+            if(getCurrentToken() != SY_SEMICOLON)
+                panic("SyntaxError: Statemtn lack ; at line %d, column %d", line, column);
+            break;
+        case KW_PRINTF:
+            Parse_printf(funcName, isCache, cache, weight);
+            currentToken = next();
+            if(getCurrentToken() != SY_SEMICOLON)
+                panic("SyntaxError: Statemtn lack ; at line %d, column %d", line, column);
+            break;
+        case SY_SEMICOLON:   //空语句
+            break;
+        case KW_RETURN:   
+            Parse_returnStmt(funcName, isCache, cache, weight);
+            currentToken = next();
+            if(getCurrentToken() != SY_SEMICOLON) 
+                panic("SyntaxError: Statemtn lack ; at line %d, column %d", line, column);
+            break;
         default:
-            
+            return false;
+            break;
     }
-
 
     return true;
 }

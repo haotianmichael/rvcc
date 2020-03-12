@@ -18,7 +18,9 @@ Parser::Parser(const std::string &fileName) : keywords({
         {"return", KW_RETURN},
         {"int", KW_INT},
         {"char", KW_CHAR},
-        {"null", KW_NULL,}
+        {"null", KW_NULL,},
+        {"scanf", KW_SCANF},
+        {"printf", KW_PRINTF} 
         }){
     fs.open(fileName);
     if(!fs.is_open() && formatC(fileName)) {    //输入以.c结尾的文件
@@ -726,6 +728,7 @@ bool Parser::Parse_factor(std::vector<PostfixItem> &obj, std::string funcName, b
     FourYuanItem term3;
     std::string id;
 
+    currentToken = next();
     switch (getCurrentToken()) {
         case TK_IDENT:
             
@@ -749,9 +752,36 @@ bool Parser::Parse_factor(std::vector<PostfixItem> &obj, std::string funcName, b
         | <赋值语句>; | <读语句>; | <写语句>; | ; | <返回语句>;  */
 bool Parser::Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
 
+    FourYuanItem four;
+    four.type = FunctionCall;
+
+    currentToken = next();
+    switch (getCurrentToken()) {
+        case KW_IF:
+            Parse_conditionStmt(funcName, isCache, cache, weight); 
+            break;
+        case KW_WHILE:
+            Parse_loopStmt(funcName, isCache, cache, weight);
+            break;
+        case SY_LBRACE:
+            while(true) {
+                if(!Parse_Stmt(funcName, isCache, cache, weight)) 
+                    break;
+            } 
+            currentToken = next();
+            if(getCurrentToken() != SY_RBRACE) 
+                panic("SyntaxError: Statement lack } at line %d, column %d", line, column);
+            break;
+        case TK_IDENT:
+            
+            break;
+            case 
+        default:
+            
+    }
 
 
-
+    return true;
 }
 
 

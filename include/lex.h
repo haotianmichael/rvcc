@@ -68,7 +68,8 @@ enum P_Token{
     KW_WHILE,  //while
     KW_NULL,   //null
     KW_RETURN,   //return
-
+    KW_SCANF,
+    KW_PRINTF,
     
 
     /*

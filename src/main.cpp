@@ -10,6 +10,6 @@ int main(int argc, char *argv[])
 {
     if(argc < 2) cout << "ERROR" << endl;
     Parser p(argv[1]);
-    p.printLex();
+    p.printParser();
     return 0;
 }

@@ -23,9 +23,11 @@ Parser::Parser(const std::string &fileName) : keywords({
         {"printf", KW_PRINTF} 
         }){
     fs.open(fileName);
-    if(!fs.is_open() && formatC(fileName)) {    //输入以.c结尾的文件
+    if(!fs.is_open()) {
+        panic("ParserError: can't open files"); 
+    }else if(!formatC(fileName)) {
         panic("ParserError: Please open files with .c\n");
-    } 
+    }
 }
 
 /*
@@ -343,6 +345,7 @@ bool Parser::Parse_constDefinition(std::string funcName) {
 
         //解析右递归
         while(true) {
+            currentToken = next();
             if(getCurrentToken() != SY_COMMA) break;  //正常退出
 
             currentToken = next();
@@ -662,7 +665,7 @@ bool Parser::Parse_compoundStmt(std::string funcName) {
     std::vector<FourYuanItem> noUseCache;
     while(true) {
         if(!Parse_Stmt(funcName, false, noUseCache, 1))    //初始值为1
-               break;     
+            break;     
     }
     return true;
 }
@@ -680,7 +683,7 @@ ExpressionRetValue Parser::Parse_expression(std::string funcName, bool isCache, 
     currentToken = next();
     if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS)  {
         //生成代码相关 
-    
+
     }
 
     Parse_item(tar, funcName, isCache, cache, weight);
@@ -689,7 +692,7 @@ ExpressionRetValue Parser::Parse_expression(std::string funcName, bool isCache, 
         if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
             //生成代码相关 
         } 
-    
+
         Parse_item(tar, funcName, isCache, cache, weight); 
     }
 
@@ -707,8 +710,8 @@ bool Parser::Parse_item(std::vector<PostfixItem> &obj, std::string funcName, boo
     while(true) {
         currentToken = next(); 
         if(getCurrentToken() == SY_TIMES || getCurrentToken() == SY_DEV) {
-        
-        
+
+
         } 
         //因子
         Parse_factor(obj, funcName, isCache, cache, weight);
@@ -728,7 +731,7 @@ bool Parser::Parse_factor(std::vector<PostfixItem> &obj, std::string funcName, b
     currentToken = next();
     switch (getCurrentToken()) {
         case TK_IDENT:
-            
+
 
 
 
@@ -738,7 +741,8 @@ bool Parser::Parse_factor(std::vector<PostfixItem> &obj, std::string funcName, b
             break;
 
         default:
-            
+            ;
+
     }
 
 }
@@ -746,7 +750,7 @@ bool Parser::Parse_factor(std::vector<PostfixItem> &obj, std::string funcName, b
 
 
 /*<语句> ::= <条件语句> | <循环语句> | ’{‘{<语句>}'}' | <标识符>['('<值参数表>')'];
-        | <赋值语句>; | <读语句>; | <写语句>; | ; | <返回语句>;  */
+  | <赋值语句>; | <读语句>; | <写语句>; | ; | <返回语句>;  */
 bool Parser::Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
 
     FourYuanItem four;
@@ -770,7 +774,7 @@ bool Parser::Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuan
                 panic("SyntaxError: Statement lack } at line %d, column %d", line, column);
             break;
         case TK_IDENT:   //赋值语句和调用语句
-            
+
             break;
         case KW_SCANF:
             Parse_scanf(funcName, isCache, cache, weight);
@@ -834,13 +838,13 @@ bool Parser::Parse_conditionStmt(std::string funcName, bool isCache, std::vector
     //代码生成
 
     //)
-   currentToken = next();
-  if(getCurrentToken() != SY_RPAREN) {
+    currentToken = next();
+    if(getCurrentToken() != SY_RPAREN) {
         panic("SytaxErro: lack )  at line %d, column %d", line, column); 
         return false; 
-  } 
+    } 
 
-  //分析语句
+    //分析语句
 
 
 }
@@ -925,6 +929,24 @@ bool Parser::Parse_FunctionDeclarHead() {
 }
 
 
+void Parser::printParser() {
 
+    std::cout << "SyntaxAnalysisTest start..." << std::endl; 
+    currentToken = next();
+    if(getCurrentToken() == TK_EOF) panic("Nothing to parse...");
+    else{ 
+        //预处理器
+        while(getCurrentToken() == TK_FILENAME) {
+            std::string name = getCurrentLexeme();        
+            std::cout << "#include<" << name << ">" << std::endl; 
+            currentToken = next();
+        }    
+        std::cout << "###########################Start ####################################" << std::endl << std::endl << std::endl;
+        Parse_constDeclaration("Global"); 
+    
+    }
+    std::cout << "SyntaxAnalysis succeeded!" << std::endl;
+    return;
+}
 
 

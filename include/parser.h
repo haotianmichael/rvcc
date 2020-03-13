@@ -3,6 +3,7 @@
 #include <fstream>
 #include <vector>
 #include <unordered_map>
+#include <iostream>
 #include "lex.h"
 #include "intermediate.h"
 
@@ -13,6 +14,7 @@ class Parser
         explicit Parser (const std::string &fileName);
         virtual ~Parser () {}
         void printLex();   //词法分析测试函数
+        void printParser();  //语法分析器测试函数  
     private:
         //语法分析器    
         void parse();

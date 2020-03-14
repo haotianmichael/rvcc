@@ -491,6 +491,10 @@ bool Parser::Parse_varDefinition(std::string funcName) {
                 panic("SyntaxError: elements of array must be positive at line %d, column %d", line, column);
             length = num;   //数组长度
         }
+        currentToken = next();
+        if(getCurrentToken() != SY_RBRACKET)    //   ] 
+            panic("SyntaxError: varDefinition not complete at line %d, column %d", line, column); 
+        currentToken = next();
     }else if(getCurrentToken() == SY_SEMICOLON) {    // ;
         return true; 
     }
@@ -525,6 +529,10 @@ bool Parser::Parse_varDefinition(std::string funcName) {
                     panic("SyntaxError: elements of array must be positive at line %d, column %d", line, column);
                 length = num;   //数组长度
             }
+            currentToken = next();
+            if(getCurrentToken() != SY_RBRACKET) 
+                panic("SyntaxError: varDefinition not complete at line %d, column %d", line, column); 
+            currentToken = next(); 
         }else if(getCurrentToken() == SY_SEMICOLON) break;
     }
     return true;

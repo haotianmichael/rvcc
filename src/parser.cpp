@@ -316,7 +316,8 @@ bool Parser::Parse_constDeclaration(std::string funcName) {
             panic("SyntaxError: constDeclaration lack semicolon at line %d, column %d", line, column);
 
     }
-    std::cout << "Parse_constDeclaration Over..." << std::endl << std::endl;
+    
+    std::cout  << "Parse_constDeclaration Over..." << std::endl << std::endl;
     return true;
 }
 
@@ -416,9 +417,9 @@ bool Parser::Parse_constDefinition(std::string funcName) {
 //<变量说明> ::= <变量定义>;{<变量定义>;}
 bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
  
+    std::cout <<  "Parse_varDeclaration Start..." << std::endl;
     //在main之前定义   函数 &&  全局变量 && 全局数组
     if(isGlobal) {
-        currentToken = next();
         if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR || getCurrentToken() == KW_VOID) {
             overallSymbol.type = getCurrentToken(); 
             currentToken = next();
@@ -430,20 +431,19 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
                     return false;                //解析函数
                 }
             }
-        }    
+        }
     }
 
-    //解析全局变量   全局数组
+    //解析全局变量   全局数组  [    ,    ;
     if(!Parse_varDefinition(funcName)) return false;
 
-    currentToken = next();
     if(getCurrentToken() != SY_SEMICOLON)  //  ;
-    panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
+        panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
 
     //处理右递归
     while(true){
+        currentToken = next();
         if(isGlobal) {
-            currentToken = next();
             if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR || getCurrentToken() == KW_VOID) {
                 overallSymbol.type = getCurrentToken();
                 currentToken = next();
@@ -455,15 +455,15 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
                         return false;    //解析函数
                     }
                 }
-            }
+            }else break;
         } 
         if(!Parse_varDefinition(funcName))  return false;
 
-        currentToken = next();
         if(getCurrentToken() != SY_SEMICOLON) //  ;
-        panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
+            panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
     }
 
+    std::cout << "Parse_varDeclaration Over..." << std::endl << std::endl;
     return true;
 }
 
@@ -491,12 +491,13 @@ bool Parser::Parse_varDefinition(std::string funcName) {
                 panic("SyntaxError: elements of array must be positive at line %d, column %d", line, column);
             length = num;   //数组长度
         }
+    }else if(getCurrentToken() == SY_SEMICOLON) {    // ;
+        return true; 
     }
 
     while(true) {
 
         // ,
-        currentToken = next(); 
         if(getCurrentToken() != SY_COMMA) break;
 
         //标识符
@@ -508,7 +509,7 @@ bool Parser::Parse_varDefinition(std::string funcName) {
         id = getCurrentLexeme();
 
         currentToken = next();  // [
-        if(getCurrentToken() != SY_LBRACKET) {
+        if(getCurrentToken() == SY_LBRACKET) {
             currentToken = next();
             if(getCurrentToken() != CONST_INT) {
                 panic("SyntaxError: varDefinition not complete at line %d, column %d", line, column); 
@@ -524,7 +525,7 @@ bool Parser::Parse_varDefinition(std::string funcName) {
                     panic("SyntaxError: elements of array must be positive at line %d, column %d", line, column);
                 length = num;   //数组长度
             }
-        }
+        }else if(getCurrentToken() == SY_SEMICOLON) break;
     }
     return true;
 }

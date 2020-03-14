@@ -316,7 +316,7 @@ bool Parser::Parse_constDeclaration(std::string funcName) {
             panic("SyntaxError: constDeclaration lack semicolon at line %d, column %d", line, column);
 
     }
-    
+
     std::cout  << "Parse_constDeclaration Over..." << std::endl << std::endl;
     return true;
 }
@@ -416,7 +416,7 @@ bool Parser::Parse_constDefinition(std::string funcName) {
 
 //<变量说明> ::= <变量定义>;{<变量定义>;}
 bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
- 
+
     std::cout <<  "Parse_varDeclaration Start..." << std::endl;
     //在main之前定义   函数 &&  全局变量 && 全局数组
     if(isGlobal) {
@@ -431,14 +431,14 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
                     return false;                //解析函数
                 }
             }
-        }
+        }else if(getCurrentToken() == TK_EOF) return false;    //当没有全局声明的时候直接返回   意味着后面没有东西了， 因为全局声明可以检测到main函数的
     }
 
     //解析全局变量   全局数组  [    ,    ;
     if(!Parse_varDefinition(funcName)) return false;
 
     if(getCurrentToken() != SY_SEMICOLON)  //  ;
-        panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
+    panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
 
     //处理右递归
     while(true){
@@ -460,7 +460,7 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
         if(!Parse_varDefinition(funcName))  return false;
 
         if(getCurrentToken() != SY_SEMICOLON) //  ;
-            panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
+        panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
     }
 
     std::cout << "Parse_varDeclaration Over..." << std::endl << std::endl;
@@ -543,6 +543,8 @@ bool Parser::Parse_varDefinition(std::string funcName) {
 //<函数定义部分> ::= {<有返回值函数定义> | <无返回值函数定义>}
 bool Parser::Parse_functionDefinition() {
 
+    std::cout <<  "Parse_functionDefinition Start..." << std::endl;
+
     if(overallSymbol.type == KW_INT || overallSymbol.type == KW_CHAR) {  //因为全局变量解析一定会被执行，所以overallSymbol一定会被赋值
         Parse_haveReturnFuncDefinition();  
     }else if(overallSymbol.type == KW_VOID) {
@@ -551,6 +553,7 @@ bool Parser::Parse_functionDefinition() {
         return false; 
     }
 
+    std::cout <<  "Parse_functionDefinition Over..." << std::endl << std::endl;
     return true;
 }
 
@@ -563,14 +566,15 @@ bool Parser::Parse_haveReturnFuncDefinition() {
 
     //参数
     currentToken = next();
-    if(getCurrentToken() != SY_RPAREN) {
+    if(getCurrentToken() == SY_RPAREN) {  //无参数
+        ;
+    }else {    //参数列表
         Parse_paraList(overallSymbol.Name); 
     }
 
-    // ) 
-    currentToken = next();
+    // 参数列表出来检测  ) 
     if(getCurrentToken() != SY_RPAREN) {
-        panic("SyntaxError: expects ) at line %d, column %d", line, column);
+        panic("SyntaxError: FunctionDefiniton expects ) at line %d, column %d", line, column);
         return false;
     }
 
@@ -581,7 +585,7 @@ bool Parser::Parse_haveReturnFuncDefinition() {
     }
 
     //复合语句
-    Parse_compoundStmt(overallSymbol.Name);
+    //Parse_compoundStmt(overallSymbol.Name);
 
     // } 
     currentToken = next();
@@ -597,27 +601,26 @@ bool Parser::Parse_noReturnFuncDefinition() {
 
     //参数
     currentToken = next();
-    if(getCurrentToken() != SY_RPAREN) {
-        panic("SyntaxError: void not need paralist at line %d, column %d", line, column); 
-        return false; 
+    if(getCurrentToken() == SY_RPAREN) {   //无参数
+        ;
+    }else {   //参数列表
+        Parse_paraList(overallSymbol.Name);
     }
 
-    // )
-    currentToken  = next();
+    // 有参数之后再次判断)
     if(getCurrentToken() != SY_RPAREN) {
-        panic("SyntaxError: expects ) at line %d, column %d", line, column);
+        panic("SyntaxError: FunctionDefiniton expects ) at line %d, column %d", line, column);
         return false;
     }
 
-
     // {
     currentToken = next();
-    if(getCurrentToken() == SY_LBRACE) {
+    if(getCurrentToken() != SY_LBRACE) {
         panic("SyntaxError: lack compound in func at line %d, column %d", line, column);    
     }
 
     //复合语句
-    Parse_compoundStmt(overallSymbol.Name);
+    //Parse_compoundStmt(overallSymbol.Name);
 
 
     // }
@@ -633,7 +636,6 @@ bool Parser::Parse_noReturnFuncDefinition() {
 bool Parser::Parse_paraList(std::string funcName) {
 
     //类型标识符  int | char
-    currentToken = next();
     if(getCurrentToken() != KW_INT && getCurrentToken() != KW_CHAR) {
         panic("SyntaxError: paralist error at line %d, column %d", line, column);
         return false; 
@@ -649,19 +651,24 @@ bool Parser::Parse_paraList(std::string funcName) {
 
     while(true) {
         currentToken = next();
-        if(getCurrentToken() != SY_COMMA)  break;
+        if(getCurrentToken() == SY_RPAREN)  break;
+        else if(getCurrentToken() == SY_COMMA) {
 
-        currentToken = next();
-        if(getCurrentToken() != KW_INT && getCurrentToken() != KW_CHAR) {
+            currentToken = next();
+            if(getCurrentToken() != KW_INT && getCurrentToken() != KW_CHAR) {
+                panic("SyntaxError: paralist error at line %d, column %d", line, column);
+                return false;
+            }
+
+
+            currentToken = next();
+            if(getCurrentToken() != TK_IDENT){
+                panic("SyntaxError: paralist error at line %d, column %d", line, column);
+                return false; 
+            }
+        }else {
             panic("SyntaxError: paralist error at line %d, column %d", line, column);
             return false;
-        }
-
-
-        currentToken = next();
-        if(getCurrentToken() != TK_IDENT){
-            panic("SyntaxError: paralist error at line %d, column %d", line, column);
-            return false; 
         }
     }
 
@@ -969,7 +976,7 @@ void Parser::printParser() {
         Parse_constDeclaration("Global"); 
         Parse_varDeclaration(true, "Global");
         Parse_functionDefinition();
-    
+
     }
     std::cout << "SyntaxAnalysis succeeded!" << std::endl;
     return;

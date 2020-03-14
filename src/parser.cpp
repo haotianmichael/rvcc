@@ -292,13 +292,14 @@ bool Parser::Parse_procedure() {
 //<常量说明> ::= const<常量定义>;{const<常量定义>;}
 bool Parser::Parse_constDeclaration(std::string funcName) {
 
+    std::cout << "Parse_constDeclaration Start..." << std::endl;
     //const
     if(getCurrentToken() != KW_CONST)  return false;
     currentToken = next();
     //解析<常量定义>
     Parse_constDefinition(funcName);
 
-    //  ;
+    // ;
     if(getCurrentToken() != SY_SEMICOLON)
         panic("SyntaxError: constDeclaration lack semicolon at line %d, column %d", line, column);
 
@@ -315,6 +316,7 @@ bool Parser::Parse_constDeclaration(std::string funcName) {
             panic("SyntaxError: constDeclaration lack semicolon at line %d, column %d", line, column);
 
     }
+    std::cout << "Parse_constDeclaration Over..." << std::endl << std::endl;
     return true;
 }
 
@@ -384,6 +386,7 @@ bool Parser::Parse_constDefinition(std::string funcName) {
 
         //解析右递归
         while(true) {
+            currentToken = next();
             if(getCurrentToken() != SY_COMMA)  break;   //正常退出
 
             currentToken = next();
@@ -396,13 +399,13 @@ bool Parser::Parse_constDefinition(std::string funcName) {
                 panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
 
             currentToken = next();
-            if(getCurrentToken() == CONST_CHAR)  //字符
+            if(getCurrentToken() != CONST_CHAR)  //字符
                 panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
 
             /*填充符号表*/
         }
 
-    }else {
+    }else{
         panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
         return false;
     }
@@ -412,7 +415,7 @@ bool Parser::Parse_constDefinition(std::string funcName) {
 
 //<变量说明> ::= <变量定义>;{<变量定义>;}
 bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
-
+ 
     //在main之前定义   函数 &&  全局变量 && 全局数组
     if(isGlobal) {
         currentToken = next();
@@ -943,6 +946,7 @@ void Parser::printParser() {
         }    
         std::cout << "###########################Start ####################################" << std::endl << std::endl << std::endl;
         Parse_constDeclaration("Global"); 
+        Parse_varDeclaration(true, "Global");
     
     }
     std::cout << "SyntaxAnalysis succeeded!" << std::endl;

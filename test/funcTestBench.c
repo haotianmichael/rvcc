@@ -2,5 +2,5 @@
 #include <algorithm>
 #include <stdio.h>
 
-void func(int a, int c, char x) {
+void func(int a, int b[], int c[10], char x[]) {
 }

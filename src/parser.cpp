@@ -651,8 +651,8 @@ bool Parser::Parse_paraList(std::string funcName) {
 
     while(true) {
         currentToken = next();
-        if(getCurrentToken() == SY_RPAREN)  break;
-        else if(getCurrentToken() == SY_COMMA) {
+        if(getCurrentToken() == SY_RPAREN)  break;  // ) 参数结束 
+        else if(getCurrentToken() == SY_COMMA) {   //  , 继续解析
 
             currentToken = next();
             if(getCurrentToken() != KW_INT && getCurrentToken() != KW_CHAR) {
@@ -666,7 +666,27 @@ bool Parser::Parse_paraList(std::string funcName) {
                 panic("SyntaxError: paralist error at line %d, column %d", line, column);
                 return false; 
             }
-        }else {
+        }else if(getCurrentToken() == SY_LBRACKET) {    //   [ 参数类型为数组
+            /*参数数组可以没有数字  int func(int a[]);*/
+            currentToken = next();
+            if(getCurrentToken() == SY_RBRACKET){   //无数字
+                ; 
+            }else if(getCurrentToken() == CONST_INT) {  //有数字
+                std::string strnum = getCurrentLexeme();
+                int num = 0;
+                for(unsigned int i = 0; i < strnum.length(); i ++) {
+                    num += strnum[i] - '0'; 
+                    num *= 10; 
+                } 
+                num /= 10;
+                if(num <= 0) panic("SyntaxError: elements of array must be positive at line %d, column %d", line, column);
+
+                currentToken = next();
+                if(getCurrentToken() != SY_RBRACKET)
+                    panic("SyntaxError: paralist lack ]  at line %d, column %d", line, column);
+
+            }else  panic("SyntaxError: paralist error at line %d, column %d", line, column); 
+        }else{
             panic("SyntaxError: paralist error at line %d, column %d", line, column);
             return false;
         }

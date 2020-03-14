@@ -757,6 +757,7 @@ bool Parser::Parse_factor(std::vector<PostfixItem> &obj, std::string funcName, b
 
     }
 
+    return true;
 }
 
 
@@ -825,6 +826,7 @@ bool Parser::Parse_assignStmt(std::string funcName, std::string id, bool isCache
 
 
 
+    return true;
 }
 
 
@@ -859,6 +861,7 @@ bool Parser::Parse_conditionStmt(std::string funcName, bool isCache, std::vector
     //分析语句
 
 
+    return true;
 }
 
 
@@ -871,6 +874,7 @@ std::string Parser::Parse_condition(std::string funcName, bool isCache, std::vec
 
 
 
+    return "";
 }
 
 
@@ -880,6 +884,7 @@ bool Parser::Parse_loopStmt(std::string funcName, bool isCache, std::vector<Four
 
 
 
+    return true;
 }
 
 
@@ -887,6 +892,7 @@ bool Parser::Parse_loopStmt(std::string funcName, bool isCache, std::vector<Four
 
 //<值参数表> ::= <表达式>{,<表达式>}
 std::vector<ValueType> Parser::Parse_valueParamList(std::string funcName, bool isCache, std::vector<FourYuanItem>& cache, int weight) {
+
 
 
 
@@ -900,6 +906,7 @@ bool Parser::Parse_scanf(std::string funcName, bool isCache, std::vector<FourYua
 
 
 
+    return true;
 }
 
 
@@ -909,6 +916,7 @@ bool Parser::Parse_printf(std::string funcName, bool isCache, std::vector<FourYu
 
 
 
+    return true;
 }
 
 
@@ -920,6 +928,7 @@ bool Parser::Parse_returnStmt(std::string funcName, bool isCache, std::vector<Fo
 
 
 
+    return true;
 }
 
 
@@ -930,6 +939,7 @@ bool Parser::Parse_integer() {
 
 
 
+    return true;
 }
 
 
@@ -938,9 +948,11 @@ bool Parser::Parse_FunctionDeclarHead() {
 
 
 
+    return true;
 }
 
 
+//语法分析器测试函数
 void Parser::printParser() {
 
     std::cout << "SyntaxAnalysisTest start..." << std::endl; 
@@ -956,6 +968,7 @@ void Parser::printParser() {
         std::cout << "###########################Start ####################################" << std::endl << std::endl << std::endl;
         Parse_constDeclaration("Global"); 
         Parse_varDeclaration(true, "Global");
+        Parse_functionDefinition();
     
     }
     std::cout << "SyntaxAnalysis succeeded!" << std::endl;

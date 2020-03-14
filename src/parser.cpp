@@ -327,7 +327,7 @@ bool Parser::Parse_constDeclaration(std::string funcName) {
 bool Parser::Parse_constDefinition(std::string funcName) {
     std::string id;
     id = funcName;  //忽略
-    if(getCurrentToken() == KW_INT) {  //int
+    if(getCurrentToken() == KW_INT){  //int
         currentToken = next();
         if(getCurrentToken() != TK_IDENT) {
             panic("SyntaxError: const definition not complete at line %d, column %d", line, column);
@@ -428,6 +428,7 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
                 overallSymbol.Name  = getCurrentLexeme();   
                 currentToken = next();
                 if(getCurrentToken() == SY_LPAREN) {
+                    std::cout << "Parse_varDeclaration Over..." << std::endl << std::endl;
                     return false;                //解析函数
                 }
             }
@@ -452,6 +453,7 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
                     overallSymbol.Name = getCurrentLexeme();
                     currentToken = next();
                     if(getCurrentToken() == SY_LPAREN){
+                        std::cout << "Parse_varDeclaration Over..." << std::endl << std::endl;
                         return false;    //解析函数
                     }
                 }
@@ -545,6 +547,10 @@ bool Parser::Parse_functionDefinition() {
 
     std::cout <<  "Parse_functionDefinition Start..." << std::endl;
 
+    if(getCurrentToken() == TK_EOF){
+        std::cout <<  "Parse_functionDefinition Over..." << std::endl << std::endl;
+        return false; 
+    } 
     if(overallSymbol.type == KW_INT || overallSymbol.type == KW_CHAR) {  //因为全局变量解析一定会被执行，所以overallSymbol一定会被赋值
         Parse_haveReturnFuncDefinition();  
     }else if(overallSymbol.type == KW_VOID) {
@@ -553,6 +559,25 @@ bool Parser::Parse_functionDefinition() {
         return false; 
     }
 
+    while(true) {
+        currentToken = next();    
+        if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR || getCurrentToken() == KW_VOID) {
+            overallSymbol.type = getCurrentToken();  
+            currentToken = next();
+            if(getCurrentToken() == KW_MAIN) return false;
+            else if(getCurrentToken() != TK_IDENT) {
+                panic("SyntaxError: functionDefinition needs name at line %d, column %d", line, column); 
+            } 
+            overallSymbol.Name = getCurrentLexeme();
+            currentToken = next();
+            if(getCurrentToken() == SY_LPAREN) {  //解析函数
+                if(overallSymbol.type == KW_INT || overallSymbol.type == KW_CHAR) 
+                    Parse_haveReturnFuncDefinition();
+                else if(overallSymbol.type == KW_VOID)
+                    Parse_noReturnFuncDefinition();
+            }
+        }else break;
+    }
     std::cout <<  "Parse_functionDefinition Over..." << std::endl << std::endl;
     return true;
 }
@@ -626,10 +651,23 @@ bool Parser::Parse_noReturnFuncDefinition() {
     // }
     currentToken = next(); 
     if(getCurrentToken() != SY_RBRACE) {
-        panic("SyntaxError: funcDefiniton expects } at line %d, column %d", line, column); 
+        panic("SyntaxError: funcDefinition expects } at line %d, column %d", line, column); 
     }
     return true;
 }
+
+//<声明头部> ::= int<标识符> | char<标识符>
+bool Parser::Parse_FunctionDeclarHead() {
+
+    //函数返回值
+    if(overallSymbol.type != KW_INT && overallSymbol.type != KW_CHAR)
+        panic("SyntaxError: funcDefinition's returnValue error at line %d, column %d", line, column);
+
+    //函数名称
+    std::string funcName = overallSymbol.Name;
+    return true;
+}
+
 
 
 //<参数表> ::= <类型标识符><标识符>{,<类型标识符><标识符>}
@@ -710,7 +748,6 @@ bool Parser::Parse_compoundStmt(std::string funcName) {
 }
 
 
-
 //<表达式> ::= [ + | -]<项>{<加法运算符><项>}
 ExpressionRetValue Parser::Parse_expression(std::string funcName, bool isCache, std::vector<FourYuanItem> & cache, int weight) {
 
@@ -720,7 +757,7 @@ ExpressionRetValue Parser::Parse_expression(std::string funcName, bool isCache, 
 
     //[+ | -]
     currentToken = next();
-    if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS)  {
+    if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS){
         //生成代码相关 
 
     }
@@ -969,14 +1006,6 @@ bool Parser::Parse_integer() {
     return true;
 }
 
-
-//<声明头部> ::= int<标识符> | char <标识符>
-bool Parser::Parse_FunctionDeclarHead() {
-
-
-
-    return true;
-}
 
 
 //语法分析器测试函数

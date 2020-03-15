@@ -766,10 +766,10 @@ bool Parser::Parse_compoundStmt(std::string funcName) {
     Parse_constDeclaration(funcName);
     Parse_varDeclaration(false, funcName);
     std::vector<FourYuanItem> noUseCache;
-   /* while(true) {*/
-        //if(!Parse_Stmt(funcName, false, noUseCache, 1))    //初始值为1
-            //break;     
-    /*}*/
+    while(true) {
+        if(!Parse_Stmt(funcName, false, noUseCache, 1))    //初始值为1
+            break;     
+    }
     return true;
 }
 
@@ -852,70 +852,47 @@ bool Parser::Parse_factor(std::vector<PostfixItem> &obj, std::string funcName, b
 
 
 
-/*<语句> ::= <条件语句> | <循环语句> | ’{‘{<语句>}'}' | <标识符>['('<值参数表>')'];
+/*<语句> ::= <条件语句> | <循环语句> |  <标识符>['('<值参数表>')'];
   | <赋值语句>; | <读语句>; | <写语句>; | ; | <返回语句>;  */
 bool Parser::Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
 
     FourYuanItem four;
     four.type = FunctionCall;
 
-    currentToken = next();
+    //紧接着constDeclaration 和 varDeclaration  最后一步是!next
     switch (getCurrentToken()) {
-        case KW_IF:
+        case KW_IF:   //<条件语句>
             Parse_conditionStmt(funcName, isCache, cache, weight); 
             break;
-        case KW_WHILE:
+        case KW_WHILE:    //<循环语句>
             Parse_loopStmt(funcName, isCache, cache, weight);
             break;
-        case SY_LBRACE:
-            while(true) {
-                if(!Parse_Stmt(funcName, isCache, cache, weight)) 
-                    break;
-            } 
-            currentToken = next();
-            if(getCurrentToken() != SY_RBRACE) 
-                panic("SyntaxError: Statement lack } at line %d, column %d", line, column);
-            break;
-        case TK_IDENT:   //赋值语句和调用语句
-
-            break;
-        case KW_SCANF:
+       case KW_SCANF:   //<读语句>
             Parse_scanf(funcName, isCache, cache, weight);
             if(getCurrentToken() != SY_SEMICOLON)
                 panic("SyntaxError: Statemtn lack ; at line %d, column %d", line, column);
             break;
-        case KW_PRINTF:
+        case KW_PRINTF:    //<写语句>
             Parse_printf(funcName, isCache, cache, weight);
             currentToken = next();
             if(getCurrentToken() != SY_SEMICOLON)
                 panic("SyntaxError: Statemtn lack ; at line %d, column %d", line, column);
             break;
-        case SY_SEMICOLON:   //空语句
+        case SY_SEMICOLON:   //<空语句>
             break;
-        case KW_RETURN:   
+        case KW_RETURN:     //<返回语句>
             Parse_returnStmt(funcName, isCache, cache, weight);
             currentToken = next();
             if(getCurrentToken() != SY_SEMICOLON) 
                 panic("SyntaxError: Statemtn lack ; at line %d, column %d", line, column);
             break;
+        case TK_IDENT:   //调用语句   赋值语句
+
+            break;
         default:
             return false;
             break;
     }
-
-    return true;
-}
-
-
-
-
-
-//<赋值语句> ::= <标识符>=<表达式> | <标识符>'['<表达式>']'=<表达式>
-//实际分析的是  = <表达式> | '['<表达式>']'=<表达式>
-bool Parser::Parse_assignStmt(std::string funcName, std::string id, bool isCache, std::vector<FourYuanItem>& cache, int weight) {
-
-
-
     return true;
 }
 
@@ -1015,6 +992,16 @@ bool Parser::Parse_printf(std::string funcName, bool isCache, std::vector<FourYu
 //<返回语句> ::= return ['('<表达式>')']
 bool Parser::Parse_returnStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
 
+
+
+
+    return true;
+}
+
+
+//<赋值语句> ::= <标识符>=<表达式> | <标识符>'['<表达式>']'=<表达式>
+//实际分析的是  = <表达式> | '['<表达式>']'=<表达式>
+bool Parser::Parse_assignStmt(std::string funcName, std::string id, bool isCache, std::vector<FourYuanItem>& cache, int weight) {
 
 
 

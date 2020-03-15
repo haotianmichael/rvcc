@@ -64,7 +64,7 @@ class Parser
 
         //<复合语句> ::= [<常量说明>][<变量说明>]{<语句>}
         bool Parse_compoundStmt(std::string funcName);
-       /*<语句> ::= <条件语句> | <循环语句> | <写语句>; | '{'<语句>'}' | <标识符>['('<值参数表>')'];
+       /*<语句> ::= <条件语句> | <循环语句> | <写语句>; | <标识符>['('<值参数表>')'];
             | <赋值语句>; | <读语句>; | <写语句>; | <空>; |  <返回语句>*/
         bool Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuanItem>&cache, int weight);
         //<赋值语句> ::= <标识符> = <表达式> | <标识符>'['<表达式>']'=<表达式>

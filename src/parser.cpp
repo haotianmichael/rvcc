@@ -316,7 +316,6 @@ bool Parser::Parse_constDeclaration(std::string funcName) {
             panic("SyntaxError: constDeclaration lack semicolon at line %d, column %d", line, column);
 
     }
-
     std::cout  << "Parse_constDeclaration Over..." << std::endl << std::endl;
     return true;
 }
@@ -418,7 +417,7 @@ bool Parser::Parse_constDefinition(std::string funcName) {
 bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
 
     std::cout <<  "Parse_varDeclaration Start..." << std::endl;
-    //在main之前定义   函数 &&  全局变量 && 全局数组
+    //在main之前全局定义   函数 &&  全局变量 && 全局数组
     if(isGlobal) {
         if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR || getCurrentToken() == KW_VOID) {
             overallSymbol.type = getCurrentToken(); 
@@ -433,6 +432,20 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
                 }
             }
         }else if(getCurrentToken() == TK_EOF) return false;    //当没有全局声明的时候直接返回   意味着后面没有东西了， 因为全局声明可以检测到main函数的
+    }else {   //局部变量  数组
+        if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR) {
+            overallSymbol.type =  getCurrentToken();    
+            currentToken = next();
+            if(getCurrentToken() == KW_MAIN) {   //局部不可能出现main
+                panic("SyntaxError: duplicate definition of mainn at line %d, column %d", line, column); 
+            }else if(getCurrentToken() == TK_IDENT) {   //局部变量  数组
+                overallSymbol.Name = getCurrentLexeme(); 
+                currentToken = next();
+                if(getCurrentToken() == SY_LPAREN) {  //局部不可能出现函数声明
+                    panic("SyntaxError: function declaration shows at local area at line %d, column %d", line, column); 
+                } 
+            }
+        }else return false;
     }
 
     //解析全局变量   全局数组  [    ,    ;
@@ -458,6 +471,20 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
                     }
                 }
             }else break;
+        }else {  //局部变量右递归
+            if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR) {
+                overallSymbol.type = getCurrentToken(); 
+                currentToken = next();
+                if(getCurrentToken() == KW_MAIN) {
+                    panic("SyntaxError: duplicate definition of mainn at line %d, column %d", line, column); 
+                }else if(getCurrentToken() == TK_IDENT) {
+                    overallSymbol.Name = getCurrentLexeme();    
+                    currentToken = next();
+                    if(getCurrentToken() == SY_LPAREN) {
+                        panic("SyntaxError: function declaration shows at local area at line %d, column %d", line, column); 
+                    } 
+                } 
+            }else break; 
         } 
         if(!Parse_varDefinition(funcName))  return false;
 
@@ -610,10 +637,9 @@ bool Parser::Parse_haveReturnFuncDefinition() {
     }
 
     //复合语句
-    //Parse_compoundStmt(overallSymbol.Name);
+    Parse_compoundStmt(overallSymbol.Name);
 
     // } 
-    currentToken = next();
     if(getCurrentToken() != SY_RBRACE) {
         panic("SyntaxError: funcDefiniton expects } at line %d, column %d", line, column); 
     }
@@ -645,11 +671,10 @@ bool Parser::Parse_noReturnFuncDefinition() {
     }
 
     //复合语句
-    //Parse_compoundStmt(overallSymbol.Name);
+    Parse_compoundStmt(overallSymbol.Name);
 
 
     // }
-    currentToken = next(); 
     if(getCurrentToken() != SY_RBRACE) {
         panic("SyntaxError: funcDefinition expects } at line %d, column %d", line, column); 
     }
@@ -737,13 +762,14 @@ bool Parser::Parse_paraList(std::string funcName) {
 //<复合语句> ::= [<常量说明>][<变量说明>]{<语句>}
 bool Parser::Parse_compoundStmt(std::string funcName) {
 
+    currentToken = next();
     Parse_constDeclaration(funcName);
     Parse_varDeclaration(false, funcName);
     std::vector<FourYuanItem> noUseCache;
-    while(true) {
-        if(!Parse_Stmt(funcName, false, noUseCache, 1))    //初始值为1
-            break;     
-    }
+   /* while(true) {*/
+        //if(!Parse_Stmt(funcName, false, noUseCache, 1))    //初始值为1
+            //break;     
+    /*}*/
     return true;
 }
 

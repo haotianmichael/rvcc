@@ -899,7 +899,7 @@ bool Parser::Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuan
 
 
 
-//<条件语句> ::= if'('<条件>')'<语句>else <语句>
+//<条件语句> ::= if'('<条件>')'<语句>else<语句>
 bool Parser::Parse_conditionStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
 
     if(getCurrentToken() != KW_IF)  {
@@ -925,8 +925,37 @@ bool Parser::Parse_conditionStmt(std::string funcName, bool isCache, std::vector
         return false; 
     } 
 
-    //分析语句
+    currentToken = next();   //   {
+    if(getCurrentToken() != SY_LBRACE) {
+        panic("SytaxErro: lack  {  at line %d, column %d", line, column); 
+        return false;
+    }
 
+    //分析语句
+    Parse_Stmt(funcName, isCache, cache, weight);
+
+    if(getCurrentToken() != SY_RBRACE) {   // } 
+        panic("SytaxErro: lack  } at line %d, column %d", line, column); 
+        return false; 
+    }
+
+    currentToken = next();
+    if(getCurrentToken() != KW_ELSE) {
+        return true;    //没有else 条件语句直接退出
+    }else {
+        currentToken = next(); 
+        if(getCurrentToken() != SY_LBRACE) {
+            panic("SytaxErro: lack  {  at line %d, column %d", line, column); 
+            return false; 
+        } 
+
+        Parse_Stmt(funcName, isCache, cache, weight);
+
+        if(getCurrentToken() != SY_RBRACE) {
+            panic("SytaxErro: lack  } at line %d, column %d", line, column); 
+            return false; 
+        }
+    }
 
     return true;
 }

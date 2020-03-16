@@ -229,7 +229,7 @@ void Parser::printLex() {
 //入口函数
 void Parser::parse() {
 
-    std::cout << "SyntaxAnalysis start..." << std::endl << std::endl;
+    std::cout << "SyntaxAnalysis Start..." << std::endl << std::endl;
     currentToken = next();
     //currentLexeme = TK_FILENAME;   预处理直接忽略
     if(getCurrentToken() == TK_EOF) {
@@ -242,9 +242,10 @@ void Parser::parse() {
             std::cout << "Preprocessors: #include <" << filename << ">" << std::endl; 
             currentToken = next();
         }
+        std::cout << "###########################Start ####################################" << std::endl << std::endl << std::endl;
         //解析
         if(Parse_procedure())  {
-            std::cout << "SyntaxAnalysis start..." << std::endl << std::endl;
+            std::cout << std::endl<< std::endl << "SyntaxAnalysis succeeded!..." << std::endl << std::endl;
             return;
         }
     }
@@ -1157,24 +1158,8 @@ bool Parser::Parse_integer() {
 //语法分析器测试函数
 void Parser::printParser() {
 
-    std::cout << "SyntaxAnalysisTest start..." << std::endl; 
-    currentToken = next();
-    if(getCurrentToken() == TK_EOF) panic("Nothing to parse...");
-    else{ 
-        //预处理器
-        while(getCurrentToken() == TK_FILENAME) {
-            std::string name = getCurrentLexeme();        
-            std::cout << "#include<" << name << ">" << std::endl; 
-            currentToken = next();
-        }    
-        std::cout << "###########################Start ####################################" << std::endl << std::endl << std::endl;
-        Parse_constDeclaration("Global"); 
-        Parse_varDeclaration(true, "Global");
-        Parse_functionDefinition();
-
-    }
-    std::cout << "SyntaxAnalysis succeeded!" << std::endl;
-    return;
+  parse();
+  return;
 }
 
 

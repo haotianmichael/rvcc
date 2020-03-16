@@ -11,7 +11,7 @@
 | **loopTestBench.c**         | **<循环语句说明>** | 格式`while(){}`；                                            |
 | **scanfTestBench.c**        | **<读语句>**       | 格式`scanf(identA, identB, ...);`                            |
 | **printfTestBench.c**       | **<写语句>**       | 格式`printf(<字符串常量> | <表达式>);`                       |
-| **compoundStmtTestBench.c** | **<语句>**         | 支持多语句的函数定义;                                        |
+| **compoundStmtTestBench.c** | **<语句>**         | 支持多语句的函数定义;`main`完成定义；                        |
 |                             |                    |                                                              |
 |                             |                    |                                                              |
 |                             |                    |                                                              |

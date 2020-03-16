@@ -845,7 +845,7 @@ bool Parser::Parse_conditionStmt(std::string funcName, bool isCache, std::vector
 
     //代码生成
 
-    //)
+    // )
     if(getCurrentToken() != SY_RPAREN) {
         panic("SytaxErro: lack )  at line %d, column %d", line, column); 
         return false; 
@@ -922,7 +922,6 @@ ExpressionRetValue Parser::Parse_expression(std::string funcName, bool isCache, 
     std::vector<PostfixItem> tar, obj;
     ExpressionRetValue returnValue;
 
-
     //[+ | -]
     currentToken = next();
     if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS){
@@ -930,8 +929,8 @@ ExpressionRetValue Parser::Parse_expression(std::string funcName, bool isCache, 
 
     }else {
         Parse_item(tar, funcName, isCache, cache, weight);
+        std::cout << getCurrentLexeme() << std::endl;
         while(true) {
-            currentToken = next();
             if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
                 //生成代码相关
             }else break; 
@@ -940,7 +939,6 @@ ExpressionRetValue Parser::Parse_expression(std::string funcName, bool isCache, 
     }
 
     //表达式计算
-
     return returnValue;
 }
 
@@ -951,7 +949,6 @@ bool Parser::Parse_item(std::vector<PostfixItem> &obj, std::string funcName, boo
     Parse_factor(obj, funcName, isCache, cache, weight);
 
     while(true) {
-        currentToken = next();
         if(getCurrentToken() == SY_TIMES || getCurrentToken() == SY_DEV) {
 
 
@@ -1100,12 +1097,11 @@ bool Parser::Parse_printf(std::string funcName, bool isCache, std::vector<FourYu
 
     currentToken = next();
     if(getCurrentToken() == CONST_STRING) {   //字符串常量
-
+        currentToken = next();    //    )
     }else {
         Parse_expression(funcName, isCache, cache, weight);    //  表达式
     }
 
-    currentToken = next();    //    )
     if(getCurrentToken() != SY_RPAREN) {
         panic("SyntaxError: lack  )  at line %d, column %d", line, column); 
     } 

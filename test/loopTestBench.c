@@ -8,7 +8,7 @@ int func(int a, int b, char c[]) {
     int varA, varB, varC; 
 
     
-    while() {
+    while(csA != csB) {
     
     }
 

@@ -14,14 +14,14 @@ int func(int a, int b, char c[]) {
     int vara, varb, varc;
     int vard;
 
-    if() {
+    if(cosA > cosB) {
     
     }else {
     
     }
 
 
-    while() {
+    while(coC != cosB) {
     
     
     }
@@ -29,6 +29,7 @@ int func(int a, int b, char c[]) {
 
     printf("haotian is a good man");
     printf("he have bad life");
+    printf(cosA + cosB);
 
     scanf(x, y, z);
 

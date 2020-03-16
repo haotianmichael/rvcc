@@ -798,7 +798,6 @@ bool Parser::Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuan
             break;
         case KW_PRINTF:    //<写语句>
             Parse_printf(funcName, isCache, cache, weight);
-            currentToken = next();
             if(getCurrentToken() != SY_SEMICOLON)
                 panic("SyntaxError: Statemtn lack ; at line %d, column %d", line, column);
             break;
@@ -817,6 +816,7 @@ bool Parser::Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuan
             return false;
             break;
     }
+    currentToken = next();    //开始检测下一个语句  或者   } 
     return true;
 }
 
@@ -1031,9 +1031,40 @@ std::vector<ValueType> Parser::Parse_valueParamList(std::string funcName, bool i
 //<读语句> ::= scanf'('<标识符>{,<标识符>}')'
 bool Parser::Parse_scanf(std::string funcName, bool isCache, std::vector<FourYuanItem>&cache, int weight) {
 
+    if(getCurrentToken() != KW_SCANF) {
+        return false; 
+    }
 
+    currentToken = next();   //   (
+    if(getCurrentToken() != SY_LPAREN) {
+        panic("SyntaxError: lack  ( at line %d, column %d", line, column); 
+    }
 
+    currentToken = next();
+    if(getCurrentToken() != TK_IDENT){
+        panic("SyntaxError: scanf needs para at line %d, column %d", line, column); 
+    }
 
+    while(true) {
+        currentToken = next(); 
+        if(getCurrentToken() != SY_COMMA){    //   ,
+             break; 
+        }else{
+            currentToken = next();
+            if(getCurrentToken() != TK_IDENT) {
+                panic("SyntaxError: scanf needs para at line %d, column %d", line, column); 
+            }
+        }
+    }
+
+    //   ) 
+    if(getCurrentToken() != SY_RPAREN) {
+        panic("SyntaxError: lack  ( at line %d, column %d", line, column); 
+    }
+    currentToken = next();
+    if(getCurrentToken() != SY_SEMICOLON) {
+        panic("SyntaxError: lack  ; at line %d, column %d", line, column); 
+    }
     return true;
 }
 

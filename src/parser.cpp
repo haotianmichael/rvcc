@@ -242,7 +242,7 @@ void Parser::parse() {
             std::cout << "Preprocessors: #include <" << filename << ">" << std::endl; 
             currentToken = next();
         }
-        std::cout << "###########################Start ####################################" << std::endl << std::endl << std::endl;
+        std::cout << "###########################Start " << std::endl << std::endl << std::endl;
         //解析
         if(Parse_procedure())  {
             std::cout << std::endl<< std::endl << "SyntaxAnalysis succeeded!..." << std::endl << std::endl;
@@ -285,7 +285,7 @@ bool Parser::Parse_procedure() {
     Parse_compoundStmt("main");
 
 
-    // } 
+    //  } 
     if(getCurrentToken() != SY_RBRACE)
         panic("SyntaxError: main lack } at line %d, column %d", line, column);
 
@@ -929,7 +929,7 @@ ExpressionRetValue Parser::Parse_expression(std::string funcName, bool isCache, 
 
     }else {
         Parse_item(tar, funcName, isCache, cache, weight);
-        std::cout << getCurrentLexeme() << std::endl;
+        //std::cout << getCurrentLexeme() << std::endl;
         while(true) {
             if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
                 //生成代码相关

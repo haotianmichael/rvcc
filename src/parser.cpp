@@ -5,7 +5,7 @@
 
 /*
    构造函数  列表初始化成员关键字 
- */
+*/
 Parser::Parser(const std::string &fileName) : keywords({
         {"main", KW_MAIN},
         {"void", KW_VOID},
@@ -32,7 +32,7 @@ Parser::Parser(const std::string &fileName) : keywords({
 
 /*
    预处理器   格式：  #include <file.h>
- */
+*/
 std::string Parser::preprocessors() {
     std::string filename = "";
     std::string tmp = "";
@@ -243,7 +243,10 @@ void Parser::parse() {
             currentToken = next();
         }
         //解析
-        if(Parse_procedure())  return;   
+        if(Parse_procedure())  {
+            std::cout << "SyntaxAnalysis start..." << std::endl << std::endl;
+            return;
+        }
     }
 }
 
@@ -272,7 +275,6 @@ bool Parser::Parse_procedure() {
     currentToken = next();    // {
     if(getCurrentToken() != SY_LBRACE) 
         panic("SyntaxError: main lack { at line %d, column %d", line, column);
-
 
     //复合语句
     FourYuanItem four;
@@ -766,11 +768,10 @@ bool Parser::Parse_compoundStmt(std::string funcName) {
     Parse_constDeclaration(funcName);
     Parse_varDeclaration(false, funcName);
     std::vector<FourYuanItem> noUseCache;
-    Parse_Stmt(funcName, false, noUseCache, 1);
-/*    while(true) {*/
-        //if(!Parse_Stmt(funcName, false, noUseCache, 1))    //初始值为1
-            //break;     
-    /*}*/
+    while(true) {
+        if(!Parse_Stmt(funcName, false, noUseCache, 1))    //初始值为1
+            break;     
+    }
     return true;
 }
 
@@ -1093,7 +1094,7 @@ bool Parser::Parse_printf(std::string funcName, bool isCache, std::vector<FourYu
         panic("SyntaxError: lack  )  at line %d, column %d", line, column); 
     } 
 
-    currentToken = next();
+    currentToken = next();   //   ;
     if(getCurrentToken() != SY_SEMICOLON) {
         panic("SyntaxError: lack  ; at line %d, column %d", line, column); 
     }
@@ -1121,6 +1122,11 @@ bool Parser::Parse_returnStmt(std::string funcName, bool isCache, std::vector<Fo
     if(getCurrentToken() != SY_RPAREN) {
         panic("SyntaxError: lack  )  at line %d, column %d", line, column); 
     }
+
+    currentToken = next();
+    if(getCurrentToken() != SY_SEMICOLON) {
+        panic("SyntaxError: lack ; at line %d, colunm, %d", line, column); 
+    }
     return true;
 }
 
@@ -1140,6 +1146,7 @@ bool Parser::Parse_assignStmt(std::string funcName, std::string id, bool isCache
 //注意。0前面不能有任何正负号
 bool Parser::Parse_integer() {
 
+    //符号表内容  判断数字
 
 
     return true;

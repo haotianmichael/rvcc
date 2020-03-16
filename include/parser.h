@@ -72,7 +72,7 @@ class Parser
         //<条件语句> ::= if'('<条件>')'<语句>else<语句>
         bool Parse_conditionStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
         //<条件> ::= <表达式><关系运算符><表达式> | <表达式>
-        std::string  Parse_condition(std::string funcName,bool isCache, std::vector<FourYuanItem> &cache, int weight);
+        bool Parse_condition(std::string funcName,bool isCache, std::vector<FourYuanItem> &cache, int weight);
         //<循环语句> ::= while'('<条件>')'<语句>
         bool Parse_loopStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
         //<值参数表> ::= <表达式>{, <表达式>}

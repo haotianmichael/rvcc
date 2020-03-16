@@ -5,7 +5,7 @@
 
 /*
    构造函数  列表初始化成员关键字 
-*/
+ */
 Parser::Parser(const std::string &fileName) : keywords({
         {"main", KW_MAIN},
         {"void", KW_VOID},
@@ -32,7 +32,7 @@ Parser::Parser(const std::string &fileName) : keywords({
 
 /*
    预处理器   格式：  #include <file.h>
-*/
+ */
 std::string Parser::preprocessors() {
     std::string filename = "";
     std::string tmp = "";
@@ -793,7 +793,7 @@ bool Parser::Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuan
         case KW_WHILE:    //<循环语句>
             Parse_loopStmt(funcName, isCache, cache, weight);
             break;
-       case KW_SCANF:   //<读语句>
+        case KW_SCANF:   //<读语句>
             Parse_scanf(funcName, isCache, cache, weight);
             if(getCurrentToken() != SY_SEMICOLON)
                 panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
@@ -820,7 +820,7 @@ bool Parser::Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuan
     }
     currentToken = next();    //开始检测下一个语句  或者   } 
     return true;
-}
+    }
 
 
 
@@ -833,7 +833,7 @@ bool Parser::Parse_conditionStmt(std::string funcName, bool isCache, std::vector
         return false; 
     }
 
-    //识别 （
+    //识别 (
     currentToken = next();
     if(getCurrentToken() != SY_LPAREN) {
         panic("SytaxErro: lack ( at line %d, column %d", line, column); 
@@ -846,7 +846,6 @@ bool Parser::Parse_conditionStmt(std::string funcName, bool isCache, std::vector
     //代码生成
 
     //)
-    currentToken = next();
     if(getCurrentToken() != SY_RPAREN) {
         panic("SytaxErro: lack )  at line %d, column %d", line, column); 
         return false; 
@@ -864,119 +863,133 @@ bool Parser::Parse_conditionStmt(std::string funcName, bool isCache, std::vector
     currentToken = next();
     if(getCurrentToken() != SY_RBRACE) {   // } 
         panic("SytaxError: lack  } at line %d, column %d", line, column); 
+    return false; 
+}
+
+currentToken = next();
+if(getCurrentToken() != KW_ELSE) {
+    return true;    //没有else 条件语句直接退出
+}else {
+    currentToken = next(); 
+    if(getCurrentToken() != SY_LBRACE) {
+        panic("SytaxErro: lack  {  at line %d, column %d", line, column); 
         return false; 
-    }
+    } 
+
+    Parse_Stmt(funcName, isCache, cache, weight);
 
     currentToken = next();
-    if(getCurrentToken() != KW_ELSE) {
-        return true;    //没有else 条件语句直接退出
-    }else {
-        currentToken = next(); 
-        if(getCurrentToken() != SY_LBRACE) {
-            panic("SytaxErro: lack  {  at line %d, column %d", line, column); 
-            return false; 
-        } 
-
-        Parse_Stmt(funcName, isCache, cache, weight);
-
-        currentToken = next();
-        if(getCurrentToken() != SY_RBRACE) {
-            panic("SytaxErro: lack  } at line %d, column %d", line, column); 
-            return false; 
-        }
+    if(getCurrentToken() != SY_RBRACE) {
+        panic("SytaxErro: lack  } at line %d, column %d", line, column); 
+        return false; 
     }
+}
 
-    std::cout <<  "Parse_conditionStmt Over..." << std::endl;
-    return true;
+std::cout <<  "Parse_conditionStmt Over..." << std::endl;
+return true;
 }
 
 
 //<条件> ::= <表达式><关系运算符><表达式> | <表达式>
 //<关系运算符> ::= < | <= | > | >= | != | ==
-std::string Parser::Parse_condition(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
+bool Parser::Parse_condition(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
 
+    Parse_expression(funcName, isCache, cache, weight);
 
+    currentToken = next();
+    if(getCurrentToken() == SY_RPAREN) {   //表达式
+        return true;
+    }else {
+        if(getCurrentToken() != SY_GE && getCurrentToken() != SY_GT 
+                && getCurrentToken() != SY_LE && getCurrentToken() != SY_LT
+                && getCurrentToken() != SY_EQ && getCurrentToken() != SY_NE) {
+            panic("SyntaxError: wrong operator at line %d, column %d", line, column); 
+        }else {
+            Parse_expression(funcName, isCache, cache, weight); 
+            currentToken = next();
+            if(getCurrentToken() != SY_RPAREN) 
+                panic("SyntaxError: lack )  at line %d, column %d", line, column);
+        }
+    }
 
-
-
-    return "";
+    return true;
 }
 
 
 
 //<表达式> ::= [ + | -]<项>{<加法运算符><项>}
 ExpressionRetValue Parser::Parse_expression(std::string funcName, bool isCache, std::vector<FourYuanItem> & cache, int weight) {
-    
+
     std::vector<PostfixItem> tar, obj;
     ExpressionRetValue returnValue;
-    
-    
+
+
     //[+ | -]
     currentToken = next();
     if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS){
         //生成代码相关
-        
+
     }
-    
+
     Parse_item(tar, funcName, isCache, cache, weight);
     while(true) {
         currentToken = next();
         if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
             //生成代码相关
         }
-        
+
         Parse_item(tar, funcName, isCache, cache, weight);
     }
-    
+
     //表达式计算
-    
+
     return returnValue;
 }
 
 
 //<项> ::= <因子>{<乘法运算符><因子>}
 bool Parser::Parse_item(std::vector<PostfixItem> &obj, std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
-    
+
     Parse_factor(obj, funcName, isCache, cache, weight);
-    
+
     while(true) {
         currentToken = next();
         if(getCurrentToken() == SY_TIMES || getCurrentToken() == SY_DEV) {
-            
-            
+
+
         }
         //因子
         Parse_factor(obj, funcName, isCache, cache, weight);
     }
-    
+
     return true;
 }
 
 
-//<因子> ::= <标识符>['('<值参数表>')'] | <标识符> '['<表达式>']' | '('<表达式>')' | <整数> | <字母>
+//<因子> ::= <标识符>['('<值参数表>')'] | <标识符> '['<表达式>']' | <整数> | <字符>
 bool Parser::Parse_factor(std::vector<PostfixItem> &obj, std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
     PostfixItem item;
     ExpressionRetValue term2;
     FourYuanItem term3;
     std::string id;
-    
+
     currentToken = next();
     switch (getCurrentToken()) {
         case TK_IDENT:
-            
-            
-            
-            
+
+
+
+
             break;
         case SY_PLUS:
         case SY_MINUS:
             break;
-            
+
         default:
             ;
-            
+
     }
-    
+
     return true;
 }
 
@@ -996,7 +1009,6 @@ bool Parser::Parse_loopStmt(std::string funcName, bool isCache, std::vector<Four
 
     Parse_condition(funcName, isCache, cache, weight);
 
-    currentToken = next();    //  ) 
     if(getCurrentToken() != SY_RPAREN) {
         panic("SyntaxError: lack  ) at line %d, column %d", line, column); 
     }
@@ -1050,7 +1062,7 @@ bool Parser::Parse_scanf(std::string funcName, bool isCache, std::vector<FourYua
     while(true) {
         currentToken = next(); 
         if(getCurrentToken() != SY_COMMA){    //   ,
-             break; 
+            break; 
         }else{
             currentToken = next();
             if(getCurrentToken() != TK_IDENT) {
@@ -1085,7 +1097,7 @@ bool Parser::Parse_printf(std::string funcName, bool isCache, std::vector<FourYu
 
     currentToken = next();
     if(getCurrentToken() == CONST_STRING) {   //字符串常量
-    
+
     }else {
         Parse_expression(funcName, isCache, cache, weight);    //  表达式
     }
@@ -1158,8 +1170,8 @@ bool Parser::Parse_integer() {
 //语法分析器测试函数
 void Parser::printParser() {
 
-  parse();
-  return;
+    parse();
+    return;
 }
 
 

@@ -794,12 +794,12 @@ bool Parser::Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuan
        case KW_SCANF:   //<读语句>
             Parse_scanf(funcName, isCache, cache, weight);
             if(getCurrentToken() != SY_SEMICOLON)
-                panic("SyntaxError: Statemtn lack ; at line %d, column %d", line, column);
+                panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
             break;
         case KW_PRINTF:    //<写语句>
             Parse_printf(funcName, isCache, cache, weight);
             if(getCurrentToken() != SY_SEMICOLON)
-                panic("SyntaxError: Statemtn lack ; at line %d, column %d", line, column);
+                panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
             break;
         case SY_SEMICOLON:   //<空语句>
             break;
@@ -807,7 +807,7 @@ bool Parser::Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuan
             Parse_returnStmt(funcName, isCache, cache, weight);
             currentToken = next();
             if(getCurrentToken() != SY_SEMICOLON) 
-                panic("SyntaxError: Statemtn lack ; at line %d, column %d", line, column);
+                panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
             break;
         case TK_IDENT:   //调用语句   赋值语句
 
@@ -1069,12 +1069,34 @@ bool Parser::Parse_scanf(std::string funcName, bool isCache, std::vector<FourYua
 }
 
 
-//<写语句> ::= printf'('<字符串>,<表达式>')' | printf'('<字符串>')' | printf '('<表达式>')'
+//<写语句> ::= printf'('<字符串>')' | printf '('<表达式>')'
 bool Parser::Parse_printf(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
 
+    if(getCurrentToken() != KW_PRINTF) {
+        return false; 
+    }
 
+    currentToken = next();    //    (
+    if(getCurrentToken() != SY_LPAREN) {
+        panic("SyntaxError: lack  ( at line %d, column %d", line, column); 
+    }
 
+    currentToken = next();
+    if(getCurrentToken() == CONST_STRING) {   //字符串常量
+    
+    }else {
+        Parse_expression(funcName, isCache, cache, weight);    //  表达式
+    }
 
+    currentToken = next();    //    )
+    if(getCurrentToken() != SY_RPAREN) {
+        panic("SyntaxError: lack  )  at line %d, column %d", line, column); 
+    } 
+
+    currentToken = next();
+    if(getCurrentToken() != SY_SEMICOLON) {
+        panic("SyntaxError: lack  ; at line %d, column %d", line, column); 
+    }
     return true;
 }
 
@@ -1084,9 +1106,21 @@ bool Parser::Parse_printf(std::string funcName, bool isCache, std::vector<FourYu
 //<返回语句> ::= return ['('<表达式>')']
 bool Parser::Parse_returnStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
 
+    if(getCurrentToken() != KW_RETURN) {
+        return false; 
+    }
 
+    currentToken = next();
+    if(getCurrentToken() != SY_LPAREN) {
+        panic("SyntaxError: lack  ( at line %d, column %d", line, column); 
+    }
 
+    Parse_expression(funcName, isCache, cache, weight);
 
+    currentToken = next();
+    if(getCurrentToken() != SY_RPAREN) {
+        panic("SyntaxError: lack  )  at line %d, column %d", line, column); 
+    }
     return true;
 }
 

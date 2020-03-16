@@ -9,8 +9,8 @@
 | **funcTestBench.c**      | **<函数说明>**     | 参数表支持混合声明`int func(int a, int b[10], char c[]){}`;支持连续定义; |
 | **conditionTestBench.c** | **<条件语句说明>** | 仅仅支持`if(){}else{}`格式；                                 |
 | **loopTestBench.c**      | **<循环语句说明>** | 格式`while(){}`；                                            |
-|                          |                    |                                                              |
-|                          |                    |                                                              |
+| **scanfTestBench.c**     | **<读语句>**       | 格式`scanf(identA, identB, ...);`                            |
+| **printfTestBench.c**    | **<写语句>**       | 格式`printf(<字符串常量> | <表达式>);`                       |
 |                          |                    |                                                              |
 |                          |                    |                                                              |
 |                          |                    |                                                              |

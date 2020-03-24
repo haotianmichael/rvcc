@@ -1,4 +1,4 @@
-#### PL/0扩展文法
+#### 1. PL/0扩展输入文法
 
 ```
         /*Lexer*/
@@ -46,7 +46,6 @@
 <表达式> ::= [+ | -]<项>{<加减运算符><项>} 
 <项> ::= <因子>{<乘除运算符><因子>}
 <因子> ::= <标识符>['('<值参数表>')'] | <标识符> '['<表达式>']' | <整数> | <字符>
-
 <读语句> ::= scanf'('<标识符>{, <标识符>}')'
 <写语句> ::= printf'('<字符串>')' | printf '('<表达式>')'
 <返回语句> ::= return['('<表达式>')']
@@ -60,3 +59,56 @@
 * 语句: if, while, =, func, 
 * 补待充: 丰富数据类型， for, switch
 * 变量声明时均不可直接赋值，全局变量由系统初始化为0，局部变量由赋值语句完成  <错误样例>: int a = 9;
+
+
+
+
+
+####2. SDT属性翻译文法 
+
+##### 2.1 常量声明语句
+
+<const del>  $\rightarrow$  const  <type>$\uparrow$t   <entity>$\uparrow$n   =  <const expr>$\uparrow$c, s   **@insert $\downarrow$t, n, c, s;**
+
+<type> $\uparrow$ t    $\rightarrow$   int$\uparrow$t  |   char$\uparrow$t   
+
+<const expr>$\uparrow$c, s   $\rightarrow$  <integer const>$\uparrow$c,s   | <char const>$\uparrow$c,s
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -62,8 +62,9 @@
 
 
 
-
 #### 2. SDT属性翻译文法
+
+**Note:   Gitpages can't analyse LaTeX  completely, Please download to local.**
 
 ##### 2.1 常量声明语句
 
@@ -72,6 +73,16 @@
 <type> $\uparrow$ t    $\rightarrow$   int$\uparrow$t  |   char$\uparrow$t   
 
 <const expr>$\uparrow$c, s   $\rightarrow$  <integer const>$\uparrow$c,s   | <char const>$\uparrow$c,s
+
+
+
+##### 2.2 变量声明语句
+
+<svar del> $\rightarrow$   <type> $\uparrow$t, i  <entity>$\uparrow$n  **@svardef $\downarrow$t,i,n   @allocsv$\downarrow$i ;**
+
+<type> $\rightarrow$  int$\uparrow$t,i | char$\uparrow$t,i
+
+
 
 
 

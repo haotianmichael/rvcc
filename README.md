@@ -62,9 +62,17 @@
 
 
 
+
+
+
+
+
+
+
+
 #### 2. SDT属性翻译文法
 
-**Note:   Gitpages can't analyse LaTeX  completely, Please download to local.**
+**note:   gitpages can't parse  $LaTeX$  completely, please download to local.​**
 
 ##### 2.1 常量声明语句
 
@@ -81,6 +89,14 @@
 <svar del> $\rightarrow$   <type> $\uparrow$t, i  <entity>$\uparrow$n  **@svardef $\downarrow$t,i,n   @allocsv$\downarrow$i ;**
 
 <type> $\rightarrow$  int$\uparrow$t,i | char$\uparrow$t,i
+
+
+
+##### 2.3 数组变量声明语句
+
+<array del> $\uparrow$k  **@init$\uparrow$j**  <entity>$\uparrow$n  
+
+
 
 
 

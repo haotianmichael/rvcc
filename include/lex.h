@@ -116,9 +116,3 @@ enum ReturnFucType{
     ReturnIntType,
     ReturnCharType 
 };
-
-
-
-
-
-

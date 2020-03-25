@@ -68,7 +68,7 @@
 
 ## 2. SDT属性翻译文法
 
-**note:   gitpages can't parse  *LaTeX​*  completely, please download to local.​  **
+** note:   gitpages can't parse  *LaTeX​*  completely, please download to local.​  **
 
 
 
@@ -92,7 +92,17 @@
 
 ##### 2.3 数组变量声明语句
 
-<array del> $\uparrow$k  **@init$\uparrow$j**  <entity>$\uparrow$n  
+<array del> $\rightarrow$  <type>$\uparrow$t  <entity>$\uparrow$n  [<dem>$\uparrow$j,k] **@symbinsert$\downarrow$j, k, n, t;**
+
+<type>  $\rightarrow$   int$\uparrow$t | char$\uparrow$t
+
+<dem> $\rightarrow$ int$\uparrow$j,k
+
+
+
+
+
+
 
 
 

@@ -66,11 +66,11 @@
 
 
 
-## 2. SDT属性翻译文法
+## 2. SDT属性翻译文法  
 
-** note:   gitpages can't parse  *LaTeX​*  completely, please download to local.​  **
+  
 
-
+**note: gitpages can't parse *Latex* completely, please download to local.**
 
 ##### 2.1 常量声明语句
 
@@ -96,7 +96,9 @@
 
 <type>  $\rightarrow$   int$\uparrow$t | char$\uparrow$t
 
-<dem> $\rightarrow$ int$\uparrow$j,k
+<dem> $\rightarrow$ int$\uparrow$j,k.
+
+
 
 
 

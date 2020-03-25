@@ -1,4 +1,4 @@
-#### 1. PL/0扩展输入文法
+## 1. PL/0扩展输入文法
 
 ```
         /*Lexer*/
@@ -60,19 +60,17 @@
 * 补待充: 丰富数据类型， for, switch
 * 变量声明时均不可直接赋值，全局变量由系统初始化为0，局部变量由赋值语句完成  <错误样例>: int a = 9;
 
+  
+
+​    
 
 
 
+## 2. SDT属性翻译文法
+
+**note:   gitpages can't parse  *LaTeX​*  completely, please download to local.​  **
 
 
-
-
-
-
-
-#### 2. SDT属性翻译文法
-
-**note:   gitpages can't parse  $LaTeX$  completely, please download to local.​**
 
 ##### 2.1 常量声明语句
 
@@ -82,13 +80,13 @@
 
 <const expr>$\uparrow$c, s   $\rightarrow$  <integer const>$\uparrow$c,s   | <char const>$\uparrow$c,s
 
-
+ 
 
 ##### 2.2 变量声明语句
 
 <svar del> $\rightarrow$   <type> $\uparrow$t, i  <entity>$\uparrow$n  **@svardef $\downarrow$t,i,n   @allocsv$\downarrow$i ;**
 
-<type> $\rightarrow$  int$\uparrow$t,i | char$\uparrow$t,i
+<type> $\rightarrow$  int$\uparrow$t,i | char$\uparrow$t,i.   
 
 
 

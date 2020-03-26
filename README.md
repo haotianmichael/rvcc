@@ -142,6 +142,14 @@
 
 
 
+##### 2.6 赋值语句处理
+
+<assignstat> $\rightarrow$  **@setL$\downarrow$L**  <variable> $\downarrow$L$\uparrow$t
+
+​								  **@resetL$\uparrow$L** <expr>$\uparrow$ **@stroin$\downarrow$t, s**
+
+
+
 
 
 

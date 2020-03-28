@@ -254,10 +254,11 @@ void Parser::parse() {
 //<程序> ::= [<常量说明>][<变量说明>][<函数定义部分>]<主函数>
 bool Parser::Parse_procedure() {
 
+    /*说明语句----------填符号表*/
     //全局常量声明
-    Parse_constDeclaration("Global");
+    Parse_constDeclaration();
     //全局变量说明
-    Parse_varDeclaration(true,"Global");
+    Parse_varDeclaration(true);
     //检查函数定义
     Parse_functionDefinition();
 
@@ -277,12 +278,9 @@ bool Parser::Parse_procedure() {
     if(getCurrentToken() != SY_LBRACE) 
         panic("SyntaxError: main lack { at line %d, column %d", line, column);
 
+    /*执行语句----------查表，生成中间代码*/
     //复合语句
-    FourYuanItem four;
-    four.type = FunctionDef;
-    four.FuncType = VoidType;
-    four.target = "main";
-    Parse_compoundStmt("main");
+    Parse_compoundStmt();
 
 
     //  } 
@@ -293,14 +291,14 @@ bool Parser::Parse_procedure() {
 }
 
 //<常量说明> ::= const<常量定义>;{const<常量定义>;}
-bool Parser::Parse_constDeclaration(std::string funcName) {
+bool Parser::Parse_constDeclaration() {
 
     std::cout << "Parse_constDeclaration Start..." << std::endl;
     //const
     if(getCurrentToken() != KW_CONST)  return false;
     currentToken = next();
     //解析<常量定义>
-    Parse_constDefinition(funcName);
+    Parse_constDefinition();
 
     // ;
     if(getCurrentToken() != SY_SEMICOLON)
@@ -312,7 +310,7 @@ bool Parser::Parse_constDeclaration(std::string funcName) {
         if(getCurrentToken() != KW_CONST) break;  //正常break
 
         currentToken = next();
-        Parse_constDefinition(funcName);
+        Parse_constDefinition();
 
         //  ;
         if(getCurrentToken() != SY_SEMICOLON)
@@ -326,9 +324,8 @@ bool Parser::Parse_constDeclaration(std::string funcName) {
 
 /*<常量定义> ::= int<标识符>=<整数>{,<标识符>=<整数>}
   | char<标识符>=<字符{,<标识符>=<字符>}>*/
-bool Parser::Parse_constDefinition(std::string funcName) {
+bool Parser::Parse_constDefinition() {
     std::string id;
-    id = funcName;  //忽略
     if(getCurrentToken() == KW_INT){  //int
         currentToken = next();
         if(getCurrentToken() != TK_IDENT) {
@@ -370,7 +367,7 @@ bool Parser::Parse_constDefinition(std::string funcName) {
     }else if(getCurrentToken() == KW_CHAR){   //char
         currentToken = next();
         if(getCurrentToken() != TK_IDENT)  {
-            panic("SyntaxError: const definition nont complete at line %d, column %d", line, column); 
+            panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
             return false;
         }       
         id = getCurrentLexeme();
@@ -417,7 +414,7 @@ bool Parser::Parse_constDefinition(std::string funcName) {
 
 
 //<变量说明> ::= <变量定义>;{<变量定义>;}
-bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
+bool Parser::Parse_varDeclaration(bool isGlobal) {
 
     std::cout <<  "Parse_varDeclaration Start..." << std::endl;
     //在main之前全局定义   函数 &&  全局变量 && 全局数组
@@ -452,7 +449,7 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
     }
 
     //解析全局变量   全局数组  [    ,    ;
-    if(!Parse_varDefinition(funcName)) return false;
+    if(!Parse_varDefinition()) return false;
 
     if(getCurrentToken() != SY_SEMICOLON)  //  ;
     panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
@@ -479,7 +476,7 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
                 overallSymbol.type = getCurrentToken(); 
                 currentToken = next();
                 if(getCurrentToken() == KW_MAIN) {
-                    panic("SyntaxError: duplicate definition of mainn at line %d, column %d", line, column); 
+                    panic("SyntaxError: duplicate definition of main at line %d, column %d", line, column); 
                 }else if(getCurrentToken() == TK_IDENT) {
                     overallSymbol.Name = getCurrentLexeme();    
                     currentToken = next();
@@ -489,7 +486,7 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
                 } 
             }else break; 
         } 
-        if(!Parse_varDefinition(funcName))  return false;
+        if(!Parse_varDefinition())  return false;
 
         if(getCurrentToken() != SY_SEMICOLON) //  ;
         panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
@@ -502,7 +499,7 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string funcName) {
 
 /*<变量定义> ::= <类型标识符>(<标识符> | <标识符>'['<无符号整数>']')
   {, (<标识符> | <标识符> '['<无符号整数>']')} */
-bool Parser::Parse_varDefinition(std::string funcName) {
+bool Parser::Parse_varDefinition() {
 
     std::string id;
     int length, num = 0;
@@ -624,7 +621,7 @@ bool Parser::Parse_haveReturnFuncDefinition() {
     if(getCurrentToken() == SY_RPAREN) {  //无参数
         ;
     }else {    //参数列表
-        Parse_paraList(overallSymbol.Name); 
+        Parse_paraList(); 
     }
 
     // 参数列表出来检测  ) 
@@ -640,7 +637,7 @@ bool Parser::Parse_haveReturnFuncDefinition() {
     }
 
     //复合语句
-    Parse_compoundStmt(overallSymbol.Name);
+    Parse_compoundStmt();
 
     // } 
     if(getCurrentToken() != SY_RBRACE) {
@@ -658,7 +655,7 @@ bool Parser::Parse_noReturnFuncDefinition() {
     if(getCurrentToken() == SY_RPAREN) {   //无参数
         ;
     }else {   //参数列表
-        Parse_paraList(overallSymbol.Name);
+        Parse_paraList();
     }
 
     // 有参数之后再次判断)
@@ -674,7 +671,7 @@ bool Parser::Parse_noReturnFuncDefinition() {
     }
 
     //复合语句
-    Parse_compoundStmt(overallSymbol.Name);
+    Parse_compoundStmt();
 
 
     // }
@@ -699,7 +696,7 @@ bool Parser::Parse_FunctionDeclarHead() {
 
 
 //<参数表> ::= <类型标识符><标识符>{,<类型标识符><标识符>}
-bool Parser::Parse_paraList(std::string funcName) {
+bool Parser::Parse_paraList() {
 
     //类型标识符  int | char
     if(getCurrentToken() != KW_INT && getCurrentToken() != KW_CHAR) {
@@ -763,14 +760,13 @@ bool Parser::Parse_paraList(std::string funcName) {
 
 
 //<复合语句> ::= [<常量说明>][<变量说明>]{<语句>}
-bool Parser::Parse_compoundStmt(std::string funcName) {
+bool Parser::Parse_compoundStmt() {
 
     currentToken = next();
-    Parse_constDeclaration(funcName);
-    Parse_varDeclaration(false, funcName);
-    std::vector<FourYuanItem> noUseCache;
+    Parse_constDeclaration();
+    Parse_varDeclaration(false);
     while(true) {
-        if(!Parse_Stmt(funcName, false, noUseCache, 1))    //初始值为1
+        if(!Parse_Stmt())    //初始值为1
             break;     
     }
     return true;
@@ -780,33 +776,31 @@ bool Parser::Parse_compoundStmt(std::string funcName) {
 
 /*<语句> ::= <条件语句> | <循环语句> |  <标识符>['('<值参数表>')'];
   | <赋值语句>; | <读语句>; | <写语句>; | ; | <返回语句>;  */
-bool Parser::Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
+bool Parser::Parse_Stmt() {
 
-    FourYuanItem four;
-    four.type = FunctionCall;
 
     //紧接着constDeclaration 和 varDeclaration  最后一步是!next
     switch (getCurrentToken()) {
         case KW_IF:   //<条件语句>
-            Parse_conditionStmt(funcName, isCache, cache, weight); 
+            Parse_conditionStmt(); 
             break;
         case KW_WHILE:    //<循环语句>
-            Parse_loopStmt(funcName, isCache, cache, weight);
+            Parse_loopStmt();
             break;
         case KW_SCANF:   //<读语句>
-            Parse_scanf(funcName, isCache, cache, weight);
+            Parse_scanf();
             if(getCurrentToken() != SY_SEMICOLON)
                 panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
             break;
         case KW_PRINTF:    //<写语句>
-            Parse_printf(funcName, isCache, cache, weight);
+            Parse_printf();
             if(getCurrentToken() != SY_SEMICOLON)
                 panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
             break;
         case SY_SEMICOLON:   //<空语句>
             break;
         case KW_RETURN:     //<返回语句>
-            Parse_returnStmt(funcName, isCache, cache, weight);
+            Parse_returnStmt();
             currentToken = next();
             if(getCurrentToken() != SY_SEMICOLON) 
                 panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
@@ -826,7 +820,7 @@ bool Parser::Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuan
 
 
 //<条件语句> ::= if'('<条件>')'<语句>else<语句>
-bool Parser::Parse_conditionStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
+bool Parser::Parse_conditionStmt() {
 
     std::cout <<  "Parse_conditionStmt Start..." << std::endl;
     if(getCurrentToken() != KW_IF)  {
@@ -841,7 +835,7 @@ bool Parser::Parse_conditionStmt(std::string funcName, bool isCache, std::vector
     }
 
     //识别<条件>
-    Parse_condition(funcName, isCache, cache, weight);
+    Parse_condition();
 
     //代码生成
 
@@ -858,7 +852,7 @@ bool Parser::Parse_conditionStmt(std::string funcName, bool isCache, std::vector
     }
 
     //分析语句
-    Parse_Stmt(funcName, isCache, cache, weight);
+    Parse_Stmt();
 
     currentToken = next();
     if(getCurrentToken() != SY_RBRACE) {   // } 
@@ -876,7 +870,7 @@ if(getCurrentToken() != KW_ELSE) {
         return false; 
     } 
 
-    Parse_Stmt(funcName, isCache, cache, weight);
+    Parse_Stmt();
 
     currentToken = next();
     if(getCurrentToken() != SY_RBRACE) {
@@ -892,9 +886,9 @@ return true;
 
 //<条件> ::= <表达式><关系运算符><表达式> | <表达式>
 //<关系运算符> ::= < | <= | > | >= | != | ==
-bool Parser::Parse_condition(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
+bool Parser::Parse_condition() {
 
-    Parse_expression(funcName, isCache, cache, weight);
+    Parse_expression();
 
     if(getCurrentToken() == SY_RPAREN) {   //表达式
         return true;
@@ -904,7 +898,7 @@ bool Parser::Parse_condition(std::string funcName, bool isCache, std::vector<Fou
                 && getCurrentToken() != SY_EQ && getCurrentToken() != SY_NE) {
             panic("SyntaxError: wrong operator at line %d, column %d", line, column); 
         }else {
-            Parse_expression(funcName, isCache, cache, weight); 
+            Parse_expression(); 
 
             if(getCurrentToken() != SY_RPAREN) 
                 panic("SyntaxError: lack )  at line %d, column %d", line, column);
@@ -917,10 +911,8 @@ bool Parser::Parse_condition(std::string funcName, bool isCache, std::vector<Fou
 
 
 //<表达式> ::= [ + | -]<项>{<加法运算符><项>}
-ExpressionRetValue Parser::Parse_expression(std::string funcName, bool isCache, std::vector<FourYuanItem> & cache, int weight) {
+bool Parser::Parse_expression() {
 
-    std::vector<PostfixItem> tar, obj;
-    ExpressionRetValue returnValue;
 
     //[+ | -]
     currentToken = next();
@@ -928,25 +920,25 @@ ExpressionRetValue Parser::Parse_expression(std::string funcName, bool isCache, 
         //生成代码相关
 
     }else {
-        Parse_item(tar, funcName, isCache, cache, weight);
+        Parse_item();
         //std::cout << getCurrentLexeme() << std::endl;
         while(true) {
             if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
                 //生成代码相关
             }else break; 
-            Parse_item(tar, funcName, isCache, cache, weight);
+            Parse_item();
         }
     }
 
     //表达式计算
-    return returnValue;
+    return true;
 }
 
 
 //<项> ::= <因子>{<乘法运算符><因子>}
-bool Parser::Parse_item(std::vector<PostfixItem> &obj, std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
+bool Parser::Parse_item() {
 
-    Parse_factor(obj, funcName, isCache, cache, weight);
+    Parse_factor();
 
     while(true) {
         if(getCurrentToken() == SY_TIMES || getCurrentToken() == SY_DEV) {
@@ -954,7 +946,7 @@ bool Parser::Parse_item(std::vector<PostfixItem> &obj, std::string funcName, boo
 
         }else break;
         //因子
-        Parse_factor(obj, funcName, isCache, cache, weight);
+        Parse_factor();
     }
 
     return true;
@@ -962,11 +954,7 @@ bool Parser::Parse_item(std::vector<PostfixItem> &obj, std::string funcName, boo
 
 
 //<因子> ::= <标识符>['('<值参数表>')'] | <标识符> '['<表达式>']' | <整数> | <字符>
-bool Parser::Parse_factor(std::vector<PostfixItem> &obj, std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
-    PostfixItem item;
-    ExpressionRetValue term2;
-    FourYuanItem term3;
-    std::string id;
+bool Parser::Parse_factor() {
 
     switch (getCurrentToken()) {
         case TK_IDENT:    //标识符   ————>  变量   函数   数组
@@ -995,7 +983,7 @@ bool Parser::Parse_factor(std::vector<PostfixItem> &obj, std::string funcName, b
 
 
 //<循环语句> ::= while'('<条件>')'<语句>
-bool Parser::Parse_loopStmt(std::string funcName, bool isCache, std::vector<FourYuanItem>& cache, int weight) {
+bool Parser::Parse_loopStmt() {
 
     std::cout << "Parse_loopStmt Start..." << std::endl;
     if(getCurrentToken() != KW_WHILE) {
@@ -1007,7 +995,7 @@ bool Parser::Parse_loopStmt(std::string funcName, bool isCache, std::vector<Four
         panic("SyntaxError: lack  ( at line %d, column %d", line, column); 
     }
 
-    Parse_condition(funcName, isCache, cache, weight);
+    Parse_condition();
 
     if(getCurrentToken() != SY_RPAREN) {
         panic("SyntaxError: lack  ) at line %d, column %d", line, column); 
@@ -1018,7 +1006,7 @@ bool Parser::Parse_loopStmt(std::string funcName, bool isCache, std::vector<Four
         panic("SyntaxError: lack  { at line %d, column %d", line, column); 
     }
 
-    Parse_Stmt(funcName, isCache, cache, weight);
+    Parse_Stmt();
 
     currentToken = next();   //   } 
     if(getCurrentToken() != SY_RBRACE) {
@@ -1033,17 +1021,17 @@ bool Parser::Parse_loopStmt(std::string funcName, bool isCache, std::vector<Four
 
 
 //<值参数表> ::= <表达式>{,<表达式>}
-std::vector<ValueType> Parser::Parse_valueParamList(std::string funcName, bool isCache, std::vector<FourYuanItem>& cache, int weight) {
+bool  Parser::Parse_valueParamList() {
 
 
 
 
-
+    return true;
 }
 
 
 //<读语句> ::= scanf'('<标识符>{,<标识符>}')'
-bool Parser::Parse_scanf(std::string funcName, bool isCache, std::vector<FourYuanItem>&cache, int weight) {
+bool Parser::Parse_scanf() {
 
     if(getCurrentToken() != KW_SCANF) {
         return false; 
@@ -1084,7 +1072,7 @@ bool Parser::Parse_scanf(std::string funcName, bool isCache, std::vector<FourYua
 
 
 //<写语句> ::= printf'('<字符串>')' | printf '('<表达式>')'
-bool Parser::Parse_printf(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
+bool Parser::Parse_printf() {
 
     if(getCurrentToken() != KW_PRINTF) {
         return false; 
@@ -1099,7 +1087,7 @@ bool Parser::Parse_printf(std::string funcName, bool isCache, std::vector<FourYu
     if(getCurrentToken() == CONST_STRING) {   //字符串常量
         currentToken = next();    //    )
     }else {
-        Parse_expression(funcName, isCache, cache, weight);    //  表达式
+        Parse_expression();    //  表达式
     }
 
     if(getCurrentToken() != SY_RPAREN) {
@@ -1117,7 +1105,7 @@ bool Parser::Parse_printf(std::string funcName, bool isCache, std::vector<FourYu
 
 
 //<返回语句> ::= return ['('<表达式>')']
-bool Parser::Parse_returnStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight) {
+bool Parser::Parse_returnStmt() {
 
     if(getCurrentToken() != KW_RETURN) {
         return false; 
@@ -1128,7 +1116,7 @@ bool Parser::Parse_returnStmt(std::string funcName, bool isCache, std::vector<Fo
         panic("SyntaxError: lack  ( at line %d, column %d", line, column); 
     }
 
-    Parse_expression(funcName, isCache, cache, weight);
+    Parse_expression();
 
     currentToken = next();
     if(getCurrentToken() != SY_RPAREN) {
@@ -1145,7 +1133,7 @@ bool Parser::Parse_returnStmt(std::string funcName, bool isCache, std::vector<Fo
 
 //<赋值语句> ::= <标识符>=<表达式> | <标识符>'['<表达式>']'=<表达式>
 //实际分析的是  = <表达式> | '['<表达式>']'=<表达式>
-bool Parser::Parse_assignStmt(std::string funcName, std::string id, bool isCache, std::vector<FourYuanItem>& cache, int weight) {
+bool Parser::Parse_assignStmt() {
 
         
 

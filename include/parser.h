@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <iostream>
 #include "lex.h"
-#include "intermediate.h"
 
 
 class Parser
@@ -41,15 +40,15 @@ class Parser
         //<程序> ::= [<常量说明>][<变量说明>][<函数定义部分>]<主函数>
         bool Parse_procedure();
         //<常量说明> ::= const<常量定义>;{const<常量定义>;}
-        bool Parse_constDeclaration(std::string funcName);
+        bool Parse_constDeclaration();
         /*<常量定义> ::= int<标识符>=<整数>{,<标识符>=<整数>}
           | char<标识符>=<整数>{,<标识符>=<整数>}*/
-        bool Parse_constDefinition(std::string funcName);
+        bool Parse_constDefinition();
         //<变量说明> ::= <变量定义>;{<变量定义>;}
-        bool Parse_varDeclaration(bool isGlobal, std::string funcName);
+        bool Parse_varDeclaration(bool isGlobal);
         /*<变量定义> ::= <类型标识符>(<标识符>|<标识符>'['<无符号整数>']')
             {,(<标识符> | <标识符> '['<无符号整数>']')}*/
-        bool Parse_varDefinition(std::string funcName);
+        bool Parse_varDefinition();
         //<函数定义> ::= {<无返回值定义> | <有返回值函数>}
         bool Parse_functionDefinition();
         //<有返回值函数定义> ::= <声明头部>'('<参数表>')''{'<复合语句>'}'
@@ -57,40 +56,40 @@ class Parser
         //<无返回值函数定义> ::= void'('<参数表>')''{'<复合语句>'}'
         bool Parse_noReturnFuncDefinition();
         //<参数表> ::= <类型标识符><标识符>{,<类型标识符><标识符>}
-        bool Parse_paraList(std::string funcName);
+        bool Parse_paraList();
         //<声明头部> ::= int <标识符> | char <标识符>
         bool Parse_FunctionDeclarHead();
 
 
         //<复合语句> ::= [<常量说明>][<变量说明>]{<语句>}
-        bool Parse_compoundStmt(std::string funcName);
+        bool Parse_compoundStmt();
        /*<语句> ::= <条件语句> | <循环语句> | <写语句>; | <标识符>['('<值参数表>')'];
             | <赋值语句>; | <读语句>; | <写语句>; | <空>; |  <返回语句>*/
-        bool Parse_Stmt(std::string funcName, bool isCache, std::vector<FourYuanItem>&cache, int weight);
+        bool Parse_Stmt();
         //<赋值语句> ::= <标识符> = <表达式> | <标识符>'['<表达式>']'=<表达式>
-        bool Parse_assignStmt(std::string funcName, std::string id, bool isCache, std::vector<FourYuanItem> &cache, int weight);
+        bool Parse_assignStmt();
         //<条件语句> ::= if'('<条件>')'<语句>else<语句>
-        bool Parse_conditionStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
+        bool Parse_conditionStmt();
         //<条件> ::= <表达式><关系运算符><表达式> | <表达式>
-        bool Parse_condition(std::string funcName,bool isCache, std::vector<FourYuanItem> &cache, int weight);
+        bool Parse_condition();
         //<循环语句> ::= while'('<条件>')'<语句>
-        bool Parse_loopStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
+        bool Parse_loopStmt();
         //<值参数表> ::= <表达式>{, <表达式>}
-        std::vector<ValueType>  Parse_valueParamList(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
+        bool Parse_valueParamList();
 
         //<表达式> ::= [+ | -]<项>{<加法运算符><项>}
-        ExpressionRetValue Parse_expression(std::string funcName, bool isCache, std::vector<FourYuanItem>& cache, int weight);
+        bool Parse_expression();
         //<项> ::= <因子>{<乘法运算符><因子>}
-        bool Parse_item(std::vector<PostfixItem> &, std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight); 
+        bool Parse_item(); 
         //<因子> ::= <标识符>['('<值参数表>')']|<标识符>'['<表达式>']'|'('<表达式>')'|<整数>|<字符>
-        bool Parse_factor(std::vector<PostfixItem> &, std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
+        bool Parse_factor();
 
         //<读语句> ::= scanf‘(’<标识符>{,<标识符>}')'
-        bool Parse_scanf(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
+        bool Parse_scanf();
         //<写语句> ::= printf'('<字符串>,<表达式>')' | printf'('<字符串>')' | prinntf'('<表达式>')'
-        bool Parse_printf(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
+        bool Parse_printf();
         //<返回语句> ::= return['('<表达式>')']
-        bool Parse_returnStmt(std::string funcName, bool isCache, std::vector<FourYuanItem> &cache, int weight);
+        bool Parse_returnStmt();
         //<整数> ::= [ + | -]<无符号整数> | 0
         bool Parse_integer();
 

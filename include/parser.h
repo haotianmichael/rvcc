@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <iostream>
 #include "lex.h"
+#include "symbolTable.h"
 
 
 class Parser
@@ -32,6 +33,11 @@ class Parser
         inline std::string getCurrentLexeme() {
             return std::get<1>(currentToken); 
         }
+
+    private:
+        /*符号表*/
+        symbolTable __symbolTable;
+
 
     public:
         /*递归下降子程序定义的分析过程 

@@ -81,3 +81,22 @@ enum P_Token{
     CONST_STRING    //字符串常量
 };
 
+//funcitem_函数返回值类型
+enum funcReturnType{
+    frt_voidType,
+    frt_charType,
+    frt_intType
+};
+
+//localItem 种类
+enum localMold{
+    lm_constant,    //常量
+    lm_variable    //变量
+};
+
+//localItem   arrayItem 数据类型
+enum itemType{
+   it_voidType,
+   it_charType,
+   it_intType
+};

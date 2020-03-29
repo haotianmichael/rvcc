@@ -2,15 +2,14 @@
 #include "lex.h"
 
 /*
-    中间代码设计
-        四元式
-            QuaterOpcode src1  src2  res 
-            [操作码] [源操作数1]  [源操作数2]  [结果]
-*/
+   中间代码设计
+   四元式
+   QuaterOpcode src1  src2  res 
+   [操作码] [源操作数1]  [源操作数2]  [结果]
+ */
 
 //四元式操作码
-enum QuaterOpcode{
-
+enum FourYuanOpcode{
 
     /*计算指令*/
     ADD,    //res = src1 + src2
@@ -18,6 +17,7 @@ enum QuaterOpcode{
     MUL,    //res = src1 * src2
     DIV,    //res = src1 / src2
     NEG,    //res = -src1
+    ASS,    //res = src1
 
 
     /*跳转指令*/
@@ -41,15 +41,26 @@ enum QuaterOpcode{
     BEGIN,  //函数入口
     END,  //函数出口
 
-
 };
 
 
-class QuaterInstr{
 
+class FourYuanInstr
+{
+    public:
+        FourYuanInstr (FourYuanOpcode opcode, std::string left, std::string right);
+        virtual ~FourYuanInstr ();
+        void printFourYuan();
 
+        /*get*/
+        std::string getleft();
+        std::string getright();
+        FourYuanOpcode getopcode();
 
+    private:
+        FourYuanOpcode __opcode;
+        std::string __left;
+        std::string __right;
 };
-
 
 

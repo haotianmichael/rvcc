@@ -9,6 +9,7 @@ class symbolTable
     public:
         symbolTable ();
         virtual ~symbolTable ();
+        void printTable();   //打印符号表
         
         /*填表操作*/
         bool insertTable(symbolType st);  //填表

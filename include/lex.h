@@ -81,6 +81,16 @@ enum P_Token{
     CONST_STRING    //字符串常量
 };
 
+
+//符号表类型
+enum symbolType{
+    st_funcType,
+    st_arrayType,
+    st_procType,
+    st_localType    
+};
+
+
 //funcitem_函数返回值类型
 enum funcReturnType{
     frt_voidType,
@@ -91,7 +101,8 @@ enum funcReturnType{
 //localItem 种类
 enum localMold{
     lm_constant,    //常量
-    lm_variable    //变量
+    lm_variable,    //变量
+    lm_param  //参数 
 };
 
 //localItem   arrayItem 数据类型

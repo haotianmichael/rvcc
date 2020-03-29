@@ -57,7 +57,7 @@ class localItem : public symbolItem {
 };
 
 
-//数组
+//数组-一维
 class arrayItem : public symbolItem
 {
     public:
@@ -65,4 +65,6 @@ class arrayItem : public symbolItem
         virtual ~arrayItem ();
 
     private:
+        int length;   //数组长度
 };
+

@@ -18,6 +18,7 @@ class symbolItem
         virtual ~symbolItem () {}
     private:
         symbolType _st;   //当前符号表类型
+        int current_level;   //符号表作用域层次
         std::string _name;   //常量，变量，函数，数组    
 };
 

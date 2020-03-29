@@ -27,6 +27,5 @@ class symbolTable
 
 
     private:
-        int current_level;   //符号表作用域层次
         std::vector<symbolItem> __symbolItem;    //符号表项
 };

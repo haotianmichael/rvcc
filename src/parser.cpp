@@ -230,6 +230,11 @@ void Parser::printLex() {
 void Parser::parse() {
 
     std::cout << "SyntaxAnalysis Start..." << std::endl << std::endl;
+
+    /*初始化符号表*/
+    this->__symbolTable = new symbolTable();
+
+
     currentToken = next();
     //currentLexeme = TK_FILENAME;   预处理直接忽略
     if(getCurrentToken() == TK_EOF) {

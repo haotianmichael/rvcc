@@ -36,7 +36,7 @@ class Parser
 
     private:
         /*符号表*/
-        symbolTable __symbolTable;
+        symbolTable *__symbolTable;
         static int __symbolIndex;   //符号表访问索引
 
     public:

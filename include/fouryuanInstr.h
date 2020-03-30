@@ -53,9 +53,9 @@ class FourYuanInstr
         void printFourYuan();
 
         /*get*/
-        std::string getleft();
-        std::string getright();
-        FourYuanOpcode getopcode();
+        inline std::string getleft() { return __left;};
+        inline std::string getright() { return __right;}
+        inline FourYuanOpcode getopcode() { return __opcode;}
 
     private:
         FourYuanOpcode __opcode;

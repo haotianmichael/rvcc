@@ -68,11 +68,14 @@ class arrayItem : public symbolItem
 
         /*get*/
         inline int getLength() { return _length;}
+        inline itemType getType() { return _it;}
 
         /*set*/
         inline void setLength(int length) { _length = length;}
+        inline void setIt(itemType it) { _it = it;}
 
     private:
+        itemType _it;   //具体数据类型
         int _length;   //数组长度
 };
 

@@ -1,4 +1,4 @@
-#include "../include/intermediate.h"
+#include "../include/fouryuanInstr.h"
 
 //构造函数
 FourYuanInstr::FourYuanInstr(FourYuanOpcode opcode, std::string left, std::string right) {

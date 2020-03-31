@@ -3,6 +3,8 @@
 
 
 
+
+
 /*
    构造函数  列表初始化成员关键字 
  */
@@ -330,14 +332,16 @@ bool Parser::Parse_constDeclaration(std::string scope) {
 /*<常量定义> ::= int<标识符>=<整数>{,<标识符>=<整数>}
   | char<标识符>=<字符{,<标识符>=<字符>}>*/
 bool Parser::Parse_constDefinition(std::string scope) {
-    std::string id;
+    std::string constname = "";
+    int value = ERROR_CODE;
+    char cvalue = ' ';
     if(getCurrentToken() == KW_INT){  //int
         currentToken = next();
         if(getCurrentToken() != TK_IDENT) {
             panic("SyntaxError: const definition not complete at line %d, column %d", line, column);
             return false;
         }
-        id = getCurrentLexeme();
+        constname = getCurrentLexeme();
 
         currentToken = next();
         if(getCurrentToken() != SY_ASSIGN) {   // = 
@@ -347,9 +351,9 @@ bool Parser::Parse_constDefinition(std::string scope) {
 
         //整数
         currentToken = next();
-        int value = Parse_integer();
+        value = Parse_integer();
         /*填充符号表*/
-        __symbolTable->pushSymbolItem(scope, id, lm_constant, value);
+        __symbolTable->pushSymbolItem(scope, constname, lm_constant, value);
         //解析右递归
         while(true) {
             currentToken = next();
@@ -358,24 +362,25 @@ bool Parser::Parse_constDefinition(std::string scope) {
             currentToken = next();
             if(getCurrentToken() != TK_IDENT)   //标识符
                 panic("SyntaxError: const definition not complete at line %d, column %d", line, column);
-            id = getCurrentLexeme();
+            constname = getCurrentLexeme();
 
             currentToken = next();
             if(getCurrentToken() != SY_ASSIGN)  // = 
                 panic("syntaxError: const definition not complete at line %d, columnn %d", line, column); 
 
             currentToken  = next();
-            Parse_integer();  //整数
+            value = Parse_integer();  //整数
             /*填充符号表*/ 
+            __symbolTable->pushSymbolItem(scope, constname, lm_constant, value);
         }
-
-    }else if(getCurrentToken() == KW_CHAR){   //char
+        //char
+    }else if(getCurrentToken() == KW_CHAR){   
         currentToken = next();
         if(getCurrentToken() != TK_IDENT)  {
             panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
             return false;
         }       
-        id = getCurrentLexeme();
+        constname  = getCurrentLexeme();
 
         currentToken = next();
         if(getCurrentToken() != SY_ASSIGN) {  // = 
@@ -389,8 +394,8 @@ bool Parser::Parse_constDefinition(std::string scope) {
 
         /*填充符号表*/
         std::string str  = getCurrentLexeme();
-        char cvalue = str[0];
-        __symbolTable->pushSymbolItem(scope, id, lm_constant, cvalue);
+        cvalue = str[0];
+        __symbolTable->pushSymbolItem(scope, constname, lm_constant, cvalue);
         //解析右递归
         while(true) {
             currentToken = next();
@@ -399,7 +404,7 @@ bool Parser::Parse_constDefinition(std::string scope) {
             currentToken = next();
             if(getCurrentToken() != TK_IDENT)   //标识符
                 panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
-            id = getCurrentLexeme();
+            constname  = getCurrentLexeme();
 
             currentToken = next();
             if(getCurrentToken() != SY_ASSIGN) // = 
@@ -410,6 +415,9 @@ bool Parser::Parse_constDefinition(std::string scope) {
                 panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
 
             /*填充符号表*/
+            std::string str = getCurrentLexeme();
+            cvalue = str[0];
+            __symbolTable->pushSymbolItem(scope, constname, lm_constant, cvalue);
         }
 
     }else{

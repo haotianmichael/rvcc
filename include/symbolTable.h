@@ -11,7 +11,10 @@ class symbolTable
         virtual ~symbolTable() {}
         void printTable();   //打印符号表
         
-        /*填表操作*/
+        /*填表操作
+            scope  符号表的作用域
+            itemname 当前标识符的名称
+         */
         bool ispushSymbolItem(std::string scope, std::string itemname);  //检查是否重复定义
         bool pushSymbolItem(std::string scope, std::string itemname, localMold mold, int value);  //int 类型localItem
         bool pushSymbolItem(std::string scope, std::string itemname, localMold mold, char value);   //char 类型 localItem

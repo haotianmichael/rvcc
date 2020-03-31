@@ -7,6 +7,7 @@
 #include "lex.h"
 #include "symbolTable.h"
 
+const int ERROR_CODE  = -2147483648;  //错误码
 
 class Parser
 {

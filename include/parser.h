@@ -24,7 +24,7 @@ class Parser
         //全局解析函数/变量/数组名称(解析main之前的函数定义&&全局变量定义)
         struct { //在全局解析中一定会被填
             std::string Name;
-            P_Token type;
+            itemType type;
         }overallSymbol;
         //得到当前Token的Token
         inline P_Token getCurrentToken() const {

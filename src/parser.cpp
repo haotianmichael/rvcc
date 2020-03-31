@@ -435,7 +435,13 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
     //在main之前全局定义   函数 &&  全局变量 && 全局数组
     if(isGlobal) {
         if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR || getCurrentToken() == KW_VOID) {
-            overallSymbol.type = getCurrentToken(); 
+            if(getCurrentToken() == KW_INT) {
+                overallSymbol.type = it_intType;  
+            }else if(getCurrentToken() == KW_CHAR) {
+                overallSymbol.type = it_charType; 
+            }else {
+                panic("SyntaxError:  unknown dataType at line %d, column %d", line, column);
+            }
             currentToken = next();
             if(getCurrentToken() == KW_MAIN) return false;  //解析主函数
             if(getCurrentToken() == TK_IDENT) {   //全局变量 && 全局数组
@@ -449,7 +455,13 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
         }else if(getCurrentToken() == TK_EOF) return false;    //当没有全局声明的时候直接返回   意味着后面没有东西了， 因为全局声明可以检测到main函数的
     }else {   //局部变量  数组
         if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR) {
-            overallSymbol.type =  getCurrentToken();    
+            if(getCurrentToken() == KW_INT) {
+                overallSymbol.type = it_intType; 
+            }else if(getCurrentToken() == KW_CHAR) {
+                overallSymbol.type = it_charType; 
+            }else {
+                panic("SyntaxError:  unknown dataType at line %d, column %d", line, column);
+            }
             currentToken = next();
             if(getCurrentToken() == KW_MAIN) {   //局部不可能出现main
                 panic("SyntaxError: duplicate definition of mainn at line %d, column %d", line, column); 
@@ -474,7 +486,13 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
         currentToken = next();
         if(isGlobal) {
             if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR || getCurrentToken() == KW_VOID) {
-                overallSymbol.type = getCurrentToken();
+                if(getCurrentToken() == KW_INT) {
+                    overallSymbol.type = it_intType; 
+                }else if(getCurrentToken() == KW_CHAR) {
+                    overallSymbol.type = it_charType; 
+                }else {
+                    panic("SyntaxError:  unknown dataType at line %d, column %d", line, column);
+                }
                 currentToken = next();
                 if(getCurrentToken() == KW_MAIN)  return false;         //解析主函数
                 if(getCurrentToken() == TK_IDENT) {  //全局变量 && 全局数组
@@ -488,7 +506,13 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
             }else break;
         }else {  //局部变量右递归
             if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR) {
-                overallSymbol.type = getCurrentToken(); 
+                if(getCurrentToken() == KW_INT) {
+                    overallSymbol.type = it_intType; 
+                }else if(getCurrentToken() == KW_CHAR) {
+                    overallSymbol.type = it_charType; 
+                }else {
+                    panic("SyntaxError:  unknown dataType at line %d, column %d", line, column);
+                }
                 currentToken = next();
                 if(getCurrentToken() == KW_MAIN) {
                     panic("SyntaxError: duplicate definition of main at line %d, column %d", line, column); 
@@ -516,7 +540,6 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
   {, (<标识符> | <标识符> '['<无符号整数>']')} */
 bool Parser::Parse_varDefinition(std::string scope) {
 
-    std::string id;
     int length, num = 0;
     if(getCurrentToken() == SY_LBRACKET) { //  [  全局数组
 
@@ -524,7 +547,7 @@ bool Parser::Parse_varDefinition(std::string scope) {
         if(getCurrentToken() != CONST_INT) {
             panic("SyntaxError: varDefinition not complete at line %d, column %d", line, column); 
             return false; 
-        }else if(getCurrentToken() == CONST_INT) {
+        }else{
             std::string strnum = getCurrentLexeme(); 
             for(unsigned int i = 0; i < strnum.length(); i ++) {
                 num += strnum[i] - '0';  
@@ -538,8 +561,17 @@ bool Parser::Parse_varDefinition(std::string scope) {
         currentToken = next();
         if(getCurrentToken() != SY_RBRACKET)    //   ] 
             panic("SyntaxError: varDefinition not complete at line %d, column %d", line, column); 
+        /*填充符号表*/
+        __symbolTable->pushSymbolItem(scope, overallSymbol.Name, overallSymbol.type, length);
         currentToken = next();
     }else if(getCurrentToken() == SY_SEMICOLON) {    // ;
+        /*填充符号表*/
+        //变量不能在声明的时候直接赋值   所以value就是ERROR_CODE
+        if(overallSymbol.type == it_charType) {
+            __symbolTable->pushSymbolItem(scope, overallSymbol.Name, lm_variable, ' ');
+        }else if(overallSymbol.type == it_intType) {
+            __symbolTable->pushSymbolItem(scope, overallSymbol.Name, lm_variable, ERROR_CODE);
+        }
         return true; 
     }
 
@@ -549,12 +581,13 @@ bool Parser::Parse_varDefinition(std::string scope) {
         if(getCurrentToken() != SY_COMMA) break;
 
         //标识符
+        std::string identname;
         currentToken = next();
         if(getCurrentToken() != TK_IDENT) {
             panic("SyntaxError: varDefiniton lack ident at line %d, columne %d", line, column); 
             break;
         }
-        id = getCurrentLexeme();
+        identname = getCurrentLexeme();
 
         currentToken = next();  // [
         if(getCurrentToken() == SY_LBRACKET) {
@@ -576,8 +609,20 @@ bool Parser::Parse_varDefinition(std::string scope) {
             currentToken = next();
             if(getCurrentToken() != SY_RBRACKET) 
                 panic("SyntaxError: varDefinition not complete at line %d, column %d", line, column); 
+
+            /*填充符号表*/
+            __symbolTable->pushSymbolItem(scope, identname, overallSymbol.type, length);
             currentToken = next(); 
-        }else if(getCurrentToken() == SY_SEMICOLON) break;
+        }else if(getCurrentToken() == SY_SEMICOLON){
+
+            /*填充符号表*/
+            if(overallSymbol.type == it_charType) {
+                __symbolTable->pushSymbolItem(scope, identname, lm_variable, ' ');
+            }else if(overallSymbol.type == it_intType) {
+                __symbolTable->pushSymbolItem(scope, identname, lm_variable, ERROR_CODE);
+            }
+            break;
+        }
     }
     return true;
 }

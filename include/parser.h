@@ -97,7 +97,7 @@ class Parser
         //<返回语句> ::= return['('<表达式>')']
         bool Parse_returnStmt(std::string scope);
         //<整数> ::= [ + | -]<无符号整数> | 0
-        int  Parse_integer();
+        int  Parse_integer(std::string value);
 
     private:
         //词法分析器  输出<词素, 值>

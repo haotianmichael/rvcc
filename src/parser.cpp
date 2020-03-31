@@ -104,7 +104,20 @@ std::tuple<P_Token, std::string>  Parser::next(){
             ctrn = peekNextChar();
         }
         return std::make_tuple(CONST_INT, num);
+    }else if(ctr == '-') {  //负数   注意算数表达式部分要注意和直接声明时候的区别
+        char ctrn = peekNextChar();
+        if((ctrn >= '0' && ctrn <= '9')) {
+            std::string num = "";
+            num += ctr;
+            while(ctrn >= '0' && ctrn <= '9') {
+                ctr = getNextChar(); 
+                num += ctr; 
+                ctrn = peekNextChar(); 
+            } 
+            return std::make_tuple(CONST_INT, num);
+        }
     }
+
     //字符串型
     if(ctr == '\"') {
         char ctrn = peekNextChar(); 
@@ -252,7 +265,8 @@ void Parser::parse() {
         std::cout << "###########################Start " << std::endl << std::endl << std::endl;
         //解析
         if(Parse_procedure())  {
-            std::cout << std::endl<< std::endl << "SyntaxAnalysis succeeded!..." << std::endl << std::endl;
+            std::cout << std::endl<< std::endl << "SyntaxAnalysis Succeeded!...Starting To Print SymbolTable..." << std::endl << std::endl;
+            __symbolTable->printTable();   //打印符号表
             return;
         }
     }
@@ -264,9 +278,9 @@ bool Parser::Parse_procedure() {
     /*说明语句----------填符号表*/
     //全局常量声明
     Parse_constDeclaration("Global");
-    return true;
     //全局变量说明
     Parse_varDeclaration(true, "Global");
+    return true;
     //检查函数定义
     Parse_functionDefinition();
 
@@ -352,7 +366,7 @@ bool Parser::Parse_constDefinition(std::string scope) {
 
         //整数
         currentToken = next();
-        value = Parse_integer();
+        value = Parse_integer(getCurrentLexeme());
         /*填充符号表*/
         __symbolTable->pushSymbolItem(scope, constname, lm_constant, value);
         //解析右递归
@@ -370,7 +384,7 @@ bool Parser::Parse_constDefinition(std::string scope) {
                 panic("syntaxError: const definition not complete at line %d, columnn %d", line, column); 
 
             currentToken  = next();
-            value = Parse_integer();  //整数
+            value = Parse_integer(getCurrentLexeme());  //整数
             /*填充符号表*/ 
             __symbolTable->pushSymbolItem(scope, constname, lm_constant, value);
         }
@@ -572,19 +586,21 @@ bool Parser::Parse_varDefinition(std::string scope) {
         /*填充符号表*/
         __symbolTable->pushSymbolItem(scope, overallSymbol.Name, overallSymbol.type, length);
         currentToken = next();
-    }else if(getCurrentToken() == SY_SEMICOLON) {    // ;
+    }else {
         /*填充符号表*/
         //变量不能在声明的时候直接赋值   所以value就是ERROR_CODE
         if(overallSymbol.type == it_charType) {
-            __symbolTable->pushSymbolItem(scope, overallSymbol.Name, lm_variable, ' ');
+            __symbolTable->pushSymbolItem(scope, overallSymbol.Name, lm_variable, '-');
         }else if(overallSymbol.type == it_intType) {
             __symbolTable->pushSymbolItem(scope, overallSymbol.Name, lm_variable, ERROR_CODE);
-        }
-        return true; 
+        } 
     }
 
-    while(true) {
+    if(getCurrentToken() == SY_SEMICOLON) {    // ;
+        return true; 
+    } 
 
+    while(true) {
         // ,
         if(getCurrentToken() != SY_COMMA) break;
 
@@ -621,15 +637,18 @@ bool Parser::Parse_varDefinition(std::string scope) {
             /*填充符号表*/
             __symbolTable->pushSymbolItem(scope, identname, overallSymbol.type, length);
             currentToken = next(); 
-        }else if(getCurrentToken() == SY_SEMICOLON){
-
+        }else {
             /*填充符号表*/
             if(overallSymbol.type == it_charType) {
-                __symbolTable->pushSymbolItem(scope, identname, lm_variable, ' ');
+                __symbolTable->pushSymbolItem(scope, identname, lm_variable, '-');
             }else if(overallSymbol.type == it_intType) {
                 __symbolTable->pushSymbolItem(scope, identname, lm_variable, ERROR_CODE);
-            }
-            break;
+            } 
+
+        }
+
+        if(getCurrentToken() == SY_SEMICOLON) {
+            break; 
         }
     }
     return true;
@@ -1219,12 +1238,30 @@ bool Parser::Parse_assignStmt(std::string scope) {
 
 //<整数> ::= [+ | -]<无符号整数> | 0
 //注意。0前面不能有任何正负号
-int Parser::Parse_integer() {
+int Parser::Parse_integer(std::string value) {
 
-    //符号表内容  判断数字
+    /*
+       符号表内容  判断数字
+       wrong format 019
+     */
+    int num = 0;
+    if(value.length() > 1 && value[0] == '0') {
+        panic("IntegerParserError: wrong format at line %d, column %d", line, column);
+    }
 
-
-    return true;
+    if(value[0] == '-') {
+        for(unsigned int i = 1; i < value.length(); i ++)  {
+            num += value[i] - '0'; 
+            num *= 10;
+        }
+        return -num/10;
+    }else {
+        for(unsigned int i = 0; i < value.length(); i ++) {
+            num += value[i] - '0'; 
+            num *= 10; 
+        }
+        return num/10; 
+    }
 }
 
 

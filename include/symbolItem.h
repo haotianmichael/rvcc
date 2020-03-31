@@ -2,32 +2,46 @@
 #include "lex.h"
 
 /*
-   分程序结构 符号表项设计
+   @@分程序结构 符号表项设计
    子类继承方式   root根符号表对多类型符号表用vector管理
    @根符号表(父类)
    @函数符号表
    @过程符号表 (if-while作用域)
    @局部变量符号表
    @数组符号表 
-   */
+
+*/
+/*
+   @@符号表管理方式
+   localItem *li = new localItem(st_localType, "", "");  子类指针
+   symbolItem *si;   父类指针
+   li = static_cast<localItem *>(si);
+   std::cout << li->getInteger() << std::endl;
+   用父类的链表直接同意管理
+   在访问子类元素的时候  将父类指针进行强制类型准换 即可
+*/
 class symbolItem
 {
     public:
         symbolItem(symbolType st, std::string scope, std::string name);
+        symbolItem *next;   //指向下一个链表元素
+
         /*get*/
         inline symbolType getSt() {return _st;}
         inline int getCurrentLevel() { return _current_level;}
         inline std::string getname() { return _name;}
         inline std::string getscope() { return _scope;}
+        inline int getIndex() { return _index;}
 
         /*set*/
         inline void setlevel(int level) { _current_level = level;}
-        
+
     private:
         symbolType _st;   //当前符号表类型
         std::string _name;   //常量，变量，函数，数组    
         std::string _scope;   //当前符号表所属的函数作用域
         int _current_level;   //符号表作用域层次
+        int _index;   //链表索引  (模拟数组访问索引)
 };
 
 
@@ -64,7 +78,6 @@ class arrayItem : public symbolItem
     public:
         arrayItem (symbolType st, std::string scope, std::string itemname)
             :symbolItem(st, scope, itemname) {}
-        virtual ~arrayItem ();
 
         /*get*/
         inline int getLength() { return _length;}

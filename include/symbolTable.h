@@ -9,7 +9,7 @@ class symbolTable
     public:
         symbolTable() {}
         virtual ~symbolTable() {}
-        void printTable();   //打印符号表
+        bool  printTable();   //打印符号表
         
         /*填表操作
             scope  符号表的作用域
@@ -31,5 +31,7 @@ class symbolTable
 
 
     private:
-        std::vector<symbolItem> __symbolItem;    //符号表项
+        symbolItem *__symbolItemHead = NULL;  //符号表头指针
+        symbolItem *__symbolItemTail = NULL;  //符号表尾指针
+        int __symbolItemSize = 0;  //符号表大小
 };

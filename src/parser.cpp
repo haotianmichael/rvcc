@@ -264,6 +264,7 @@ bool Parser::Parse_procedure() {
     /*说明语句----------填符号表*/
     //全局常量声明
     Parse_constDeclaration("Global");
+    return true;
     //全局变量说明
     Parse_varDeclaration(true, "Global");
     //检查函数定义
@@ -430,7 +431,6 @@ bool Parser::Parse_constDefinition(std::string scope) {
 
 //<变量说明> ::= <变量定义>;{<变量定义>;}
 bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
-
     std::cout <<  "Parse_varDeclaration Start..." << std::endl;
     //在main之前全局定义   函数 &&  全局变量 && 全局数组
     if(isGlobal) {
@@ -439,6 +439,8 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
                 overallSymbol.type = it_intType;  
             }else if(getCurrentToken() == KW_CHAR) {
                 overallSymbol.type = it_charType; 
+            }else if(getCurrentToken() == KW_VOID){
+                overallSymbol.type = it_voidType;
             }else {
                 panic("SyntaxError:  unknown dataType at line %d, column %d", line, column);
             }
@@ -459,6 +461,8 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
                 overallSymbol.type = it_intType; 
             }else if(getCurrentToken() == KW_CHAR) {
                 overallSymbol.type = it_charType; 
+            }else if(getCurrentToken() == KW_VOID){
+                overallSymbol.type = it_voidType;
             }else {
                 panic("SyntaxError:  unknown dataType at line %d, column %d", line, column);
             }
@@ -490,6 +494,8 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
                     overallSymbol.type = it_intType; 
                 }else if(getCurrentToken() == KW_CHAR) {
                     overallSymbol.type = it_charType; 
+                }else if(getCurrentToken() == KW_VOID){
+                    overallSymbol.type = it_voidType;
                 }else {
                     panic("SyntaxError:  unknown dataType at line %d, column %d", line, column);
                 }
@@ -510,6 +516,8 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
                     overallSymbol.type = it_intType; 
                 }else if(getCurrentToken() == KW_CHAR) {
                     overallSymbol.type = it_charType; 
+                }else if(getCurrentToken() == KW_VOID){
+                    overallSymbol.type = it_voidType;
                 }else {
                     panic("SyntaxError:  unknown dataType at line %d, column %d", line, column);
                 }
@@ -628,7 +636,6 @@ bool Parser::Parse_varDefinition(std::string scope) {
 }
 
 
-/*目前静态区域只允许定义一个函数*/
 //<函数定义部分> ::= {<有返回值函数定义> | <无返回值函数定义>}
 bool Parser::Parse_functionDefinition() {
 
@@ -638,9 +645,9 @@ bool Parser::Parse_functionDefinition() {
         std::cout <<  "Parse_functionDefinition Over..." << std::endl << std::endl;
         return false; 
     } 
-    if(overallSymbol.type == KW_INT || overallSymbol.type == KW_CHAR) {  //因为全局变量解析一定会被执行，所以overallSymbol一定会被赋值
+    if(overallSymbol.type == it_intType || overallSymbol.type == it_charType) {  //因为全局变量解析一定会被执行，所以overallSymbol一定会被赋值
         Parse_haveReturnFuncDefinition();  
-    }else if(overallSymbol.type == KW_VOID) {
+    }else if(overallSymbol.type == it_voidType) {
         Parse_noReturnFuncDefinition(); 
     }else {
         return false; 
@@ -649,7 +656,15 @@ bool Parser::Parse_functionDefinition() {
     while(true) {
         currentToken = next();    
         if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR || getCurrentToken() == KW_VOID) {
-            overallSymbol.type = getCurrentToken();  
+            if(getCurrentToken() == KW_INT) {
+                overallSymbol.type = it_intType; 
+            }else if(getCurrentToken() == KW_CHAR) {
+                overallSymbol.type = it_charType; 
+            }else if(getCurrentToken() == KW_VOID){
+                overallSymbol.type = it_voidType; 
+            }else {
+                panic("SyntaxError:  unknown dataType at line %d, column %d", line, column);
+            }
             currentToken = next();
             if(getCurrentToken() == KW_MAIN) return false;
             else if(getCurrentToken() != TK_IDENT) {
@@ -658,9 +673,9 @@ bool Parser::Parse_functionDefinition() {
             overallSymbol.Name = getCurrentLexeme();
             currentToken = next();
             if(getCurrentToken() == SY_LPAREN) {  //解析函数
-                if(overallSymbol.type == KW_INT || overallSymbol.type == KW_CHAR) 
+                if(overallSymbol.type == it_intType || overallSymbol.type == it_charType) 
                     Parse_haveReturnFuncDefinition();
-                else if(overallSymbol.type == KW_VOID)
+                else if(overallSymbol.type == it_voidType)
                     Parse_noReturnFuncDefinition();
             }
         }else break;
@@ -745,7 +760,7 @@ bool Parser::Parse_noReturnFuncDefinition() {
 bool Parser::Parse_functionDeclarHead() {
 
     //函数返回值
-    if(overallSymbol.type != KW_INT && overallSymbol.type != KW_CHAR)
+    if(overallSymbol.type != it_intType && overallSymbol.type != it_charType)
         panic("SyntaxError: funcDefinition's returnValue error at line %d, column %d", line, column);
 
     //函数名称

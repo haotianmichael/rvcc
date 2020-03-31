@@ -8,12 +8,8 @@ FourYuanInstr::FourYuanInstr(FourYuanOpcode opcode, std::string left, std::strin
 }
 
 
-std::string FourYuanInstr::getleft() { return this->__left;}
-std::string FourYuanInstr::getright() { return this->__right;}
-FourYuanOpcode FourYuanInstr::getopcode() { return this->__opcode;}
 
-
-//打印符号表
+//打印四元式
 void FourYuanInstr::printFourYuan() {
 
     std::string opcode = "";

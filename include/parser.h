@@ -38,7 +38,6 @@ class Parser
     private:
         /*符号表*/
         symbolTable *__symbolTable;
-        static int __symbolIndex;   //符号表访问索引
 
     public:
         /*递归下降子程序定义的分析过程 

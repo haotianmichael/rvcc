@@ -49,7 +49,7 @@ class FourYuanInstr
 {
     public:
         FourYuanInstr (FourYuanOpcode opcode, std::string left, std::string right);
-        virtual ~FourYuanInstr ();
+        virtual ~FourYuanInstr (){}
         void printFourYuan();
 
         /*get*/

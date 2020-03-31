@@ -98,14 +98,14 @@ enum funcReturnType{
     frt_intType
 };
 
-//localItem 种类
+//localItem 种类  数据类型直接通过函数重载实现
 enum localMold{
     lm_constant,    //常量
     lm_variable,    //变量
     lm_param  //参数 
 };
 
-//localItem   arrayItem 数据类型
+//arrayItem localItem arrayItem 类型检查
 enum itemType{
    it_voidType,
    it_charType,

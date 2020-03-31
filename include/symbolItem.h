@@ -26,7 +26,7 @@ class symbolItem
     private:
         symbolType _st;   //当前符号表类型
         std::string _name;   //常量，变量，函数，数组    
-        std::string _scope;   //当前符号表所属的函数做英语
+        std::string _scope;   //当前符号表所属的函数作用域
         int _current_level;   //符号表作用域层次
 };
 

@@ -11,8 +11,8 @@
 class Parser
 {
     public:
-        explicit Parser (const std::string &fileName);
-        virtual ~Parser () {}
+        explicit Parser(const std::string &fileName);
+        virtual ~Parser(){}
         void printLex();   //词法分析测试函数
         void printParser();  //语法分析器测试函数  
     private:
@@ -46,15 +46,15 @@ class Parser
         //<程序> ::= [<常量说明>][<变量说明>][<函数定义部分>]<主函数>
         bool Parse_procedure();
         //<常量说明> ::= const<常量定义>;{const<常量定义>;}
-        bool Parse_constDeclaration();
+        bool Parse_constDeclaration(std::string scope);
         /*<常量定义> ::= int<标识符>=<整数>{,<标识符>=<整数>}
           | char<标识符>=<整数>{,<标识符>=<整数>}*/
-        bool Parse_constDefinition();
+        bool Parse_constDefinition(std::string scope);
         //<变量说明> ::= <变量定义>;{<变量定义>;}
-        bool Parse_varDeclaration(bool isGlobal);
+        bool Parse_varDeclaration(bool isGlobal, std::string scope);
         /*<变量定义> ::= <类型标识符>(<标识符>|<标识符>'['<无符号整数>']')
-            {,(<标识符> | <标识符> '['<无符号整数>']')}*/
-        bool Parse_varDefinition();
+          {,(<标识符> | <标识符> '['<无符号整数>']')}*/
+        bool Parse_varDefinition(std::string scope);
         //<函数定义> ::= {<无返回值定义> | <有返回值函数>}
         bool Parse_functionDefinition();
         //<有返回值函数定义> ::= <声明头部>'('<参数表>')''{'<复合语句>'}'
@@ -62,42 +62,42 @@ class Parser
         //<无返回值函数定义> ::= void'('<参数表>')''{'<复合语句>'}'
         bool Parse_noReturnFuncDefinition();
         //<参数表> ::= <类型标识符><标识符>{,<类型标识符><标识符>}
-        bool Parse_paraList();
+        bool Parse_paraList(std::string scope);
         //<声明头部> ::= int <标识符> | char <标识符>
-        bool Parse_FunctionDeclarHead();
+        bool Parse_functionDeclarHead();
 
 
         //<复合语句> ::= [<常量说明>][<变量说明>]{<语句>}
-        bool Parse_compoundStmt();
-       /*<语句> ::= <条件语句> | <循环语句> | <写语句>; | <标识符>['('<值参数表>')'];
-            | <赋值语句>; | <读语句>; | <写语句>; | <空>; |  <返回语句>*/
-        bool Parse_Stmt();
+        bool Parse_compoundStmt(std::string scope);
+        /*<语句> ::= <条件语句> | <循环语句> | <写语句>; | <标识符>['('<值参数表>')'];
+          | <赋值语句>; | <读语句>; | <写语句>; | <空>; |  <返回语句>*/
+        bool Parse_Stmt(std::string scope);
         //<赋值语句> ::= <标识符> = <表达式> | <标识符>'['<表达式>']'=<表达式>
-        bool Parse_assignStmt();
+        bool Parse_assignStmt(std::string scope);
         //<条件语句> ::= if'('<条件>')'<语句>else<语句>
-        bool Parse_conditionStmt();
+        bool Parse_conditionStmt(std::string scope);
         //<条件> ::= <表达式><关系运算符><表达式> | <表达式>
-        bool Parse_condition();
+        bool Parse_condition(std::string scope);
         //<循环语句> ::= while'('<条件>')'<语句>
-        bool Parse_loopStmt();
+        bool Parse_loopStmt(std::string scope);
         //<值参数表> ::= <表达式>{, <表达式>}
-        bool Parse_valueParamList();
+        bool Parse_valueParamList(std::string scope);
 
         //<表达式> ::= [+ | -]<项>{<加法运算符><项>}
-        bool Parse_expression();
+        bool Parse_expression(std::string scope);
         //<项> ::= <因子>{<乘法运算符><因子>}
-        bool Parse_item(); 
+        bool Parse_item(std::string scope); 
         //<因子> ::= <标识符>['('<值参数表>')']|<标识符>'['<表达式>']'|'('<表达式>')'|<整数>|<字符>
-        bool Parse_factor();
+        bool Parse_factor(std::string scope);
 
         //<读语句> ::= scanf‘(’<标识符>{,<标识符>}')'
-        bool Parse_scanf();
+        bool Parse_scanf(std::string scope);
         //<写语句> ::= printf'('<字符串>,<表达式>')' | printf'('<字符串>')' | prinntf'('<表达式>')'
-        bool Parse_printf();
+        bool Parse_printf(std::string scope);
         //<返回语句> ::= return['('<表达式>')']
-        bool Parse_returnStmt();
+        bool Parse_returnStmt(std::string scope);
         //<整数> ::= [ + | -]<无符号整数> | 0
-        bool Parse_integer();
+        int  Parse_integer();
 
     private:
         //词法分析器  输出<词素, 值>

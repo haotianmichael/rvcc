@@ -261,9 +261,9 @@ bool Parser::Parse_procedure() {
 
     /*说明语句----------填符号表*/
     //全局常量声明
-    Parse_constDeclaration();
+    Parse_constDeclaration("Global");
     //全局变量说明
-    Parse_varDeclaration(true);
+    Parse_varDeclaration(true, "Global");
     //检查函数定义
     Parse_functionDefinition();
 
@@ -285,7 +285,7 @@ bool Parser::Parse_procedure() {
 
     /*执行语句----------查表，生成中间代码*/
     //复合语句
-    Parse_compoundStmt();
+    Parse_compoundStmt("main");
 
 
     //  } 
@@ -296,14 +296,14 @@ bool Parser::Parse_procedure() {
 }
 
 //<常量说明> ::= const<常量定义>;{const<常量定义>;}
-bool Parser::Parse_constDeclaration() {
+bool Parser::Parse_constDeclaration(std::string scope) {
 
     std::cout << "Parse_constDeclaration Start..." << std::endl;
     //const
     if(getCurrentToken() != KW_CONST)  return false;
     currentToken = next();
     //解析<常量定义>
-    Parse_constDefinition();
+    Parse_constDefinition(scope);
 
     // ;
     if(getCurrentToken() != SY_SEMICOLON)
@@ -315,7 +315,7 @@ bool Parser::Parse_constDeclaration() {
         if(getCurrentToken() != KW_CONST) break;  //正常break
 
         currentToken = next();
-        Parse_constDefinition();
+        Parse_constDefinition(scope);
 
         //  ;
         if(getCurrentToken() != SY_SEMICOLON)
@@ -329,7 +329,7 @@ bool Parser::Parse_constDeclaration() {
 
 /*<常量定义> ::= int<标识符>=<整数>{,<标识符>=<整数>}
   | char<标识符>=<字符{,<标识符>=<字符>}>*/
-bool Parser::Parse_constDefinition() {
+bool Parser::Parse_constDefinition(std::string scope) {
     std::string id;
     if(getCurrentToken() == KW_INT){  //int
         currentToken = next();
@@ -347,9 +347,9 @@ bool Parser::Parse_constDefinition() {
 
         //整数
         currentToken = next();
-        Parse_integer();
+        int value = Parse_integer();
         /*填充符号表*/
-
+        __symbolTable->pushSymbolItem(scope, id, lm_constant, value);
         //解析右递归
         while(true) {
             currentToken = next();
@@ -388,7 +388,9 @@ bool Parser::Parse_constDefinition() {
             panic("SyntaxError: const definition not complete at line %d, column %d", line, column); 
 
         /*填充符号表*/
-
+        std::string str  = getCurrentLexeme();
+        char cvalue = str[0];
+        __symbolTable->pushSymbolItem(scope, id, lm_constant, cvalue);
         //解析右递归
         while(true) {
             currentToken = next();
@@ -419,7 +421,7 @@ bool Parser::Parse_constDefinition() {
 
 
 //<变量说明> ::= <变量定义>;{<变量定义>;}
-bool Parser::Parse_varDeclaration(bool isGlobal) {
+bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
 
     std::cout <<  "Parse_varDeclaration Start..." << std::endl;
     //在main之前全局定义   函数 &&  全局变量 && 全局数组
@@ -454,7 +456,7 @@ bool Parser::Parse_varDeclaration(bool isGlobal) {
     }
 
     //解析全局变量   全局数组  [    ,    ;
-    if(!Parse_varDefinition()) return false;
+    if(!Parse_varDefinition(scope)) return false;
 
     if(getCurrentToken() != SY_SEMICOLON)  //  ;
     panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
@@ -491,7 +493,7 @@ bool Parser::Parse_varDeclaration(bool isGlobal) {
                 } 
             }else break; 
         } 
-        if(!Parse_varDefinition())  return false;
+        if(!Parse_varDefinition(scope))  return false;
 
         if(getCurrentToken() != SY_SEMICOLON) //  ;
         panic("SyntaxError: varDeclration not complete at line %d, column %d", line, column);
@@ -504,7 +506,7 @@ bool Parser::Parse_varDeclaration(bool isGlobal) {
 
 /*<变量定义> ::= <类型标识符>(<标识符> | <标识符>'['<无符号整数>']')
   {, (<标识符> | <标识符> '['<无符号整数>']')} */
-bool Parser::Parse_varDefinition() {
+bool Parser::Parse_varDefinition(std::string scope) {
 
     std::string id;
     int length, num = 0;
@@ -619,14 +621,14 @@ bool Parser::Parse_functionDefinition() {
 bool Parser::Parse_haveReturnFuncDefinition() {
 
     //声明头部
-    Parse_FunctionDeclarHead();
+    Parse_functionDeclarHead();
 
     //参数
     currentToken = next();
     if(getCurrentToken() == SY_RPAREN) {  //无参数
         ;
     }else {    //参数列表
-        Parse_paraList(); 
+        Parse_paraList(""); 
     }
 
     // 参数列表出来检测  ) 
@@ -642,7 +644,7 @@ bool Parser::Parse_haveReturnFuncDefinition() {
     }
 
     //复合语句
-    Parse_compoundStmt();
+    Parse_compoundStmt("");
 
     // } 
     if(getCurrentToken() != SY_RBRACE) {
@@ -660,7 +662,7 @@ bool Parser::Parse_noReturnFuncDefinition() {
     if(getCurrentToken() == SY_RPAREN) {   //无参数
         ;
     }else {   //参数列表
-        Parse_paraList();
+        Parse_paraList("");
     }
 
     // 有参数之后再次判断)
@@ -676,7 +678,7 @@ bool Parser::Parse_noReturnFuncDefinition() {
     }
 
     //复合语句
-    Parse_compoundStmt();
+    Parse_compoundStmt("");
 
 
     // }
@@ -687,7 +689,7 @@ bool Parser::Parse_noReturnFuncDefinition() {
 }
 
 //<声明头部> ::= int<标识符> | char<标识符>
-bool Parser::Parse_FunctionDeclarHead() {
+bool Parser::Parse_functionDeclarHead() {
 
     //函数返回值
     if(overallSymbol.type != KW_INT && overallSymbol.type != KW_CHAR)
@@ -701,7 +703,7 @@ bool Parser::Parse_FunctionDeclarHead() {
 
 
 //<参数表> ::= <类型标识符><标识符>{,<类型标识符><标识符>}
-bool Parser::Parse_paraList() {
+bool Parser::Parse_paraList(std::string scope) {
 
     //类型标识符  int | char
     if(getCurrentToken() != KW_INT && getCurrentToken() != KW_CHAR) {
@@ -765,13 +767,13 @@ bool Parser::Parse_paraList() {
 
 
 //<复合语句> ::= [<常量说明>][<变量说明>]{<语句>}
-bool Parser::Parse_compoundStmt() {
+bool Parser::Parse_compoundStmt(std::string scope) {
 
     currentToken = next();
-    Parse_constDeclaration();
-    Parse_varDeclaration(false);
+    Parse_constDeclaration(scope);
+    Parse_varDeclaration(false, scope);
     while(true) {
-        if(!Parse_Stmt())    //初始值为1
+        if(!Parse_Stmt(scope))    //初始值为1
             break;     
     }
     return true;
@@ -781,31 +783,31 @@ bool Parser::Parse_compoundStmt() {
 
 /*<语句> ::= <条件语句> | <循环语句> |  <标识符>['('<值参数表>')'];
   | <赋值语句>; | <读语句>; | <写语句>; | ; | <返回语句>;  */
-bool Parser::Parse_Stmt() {
+bool Parser::Parse_Stmt(std::string scope) {
 
 
     //紧接着constDeclaration 和 varDeclaration  最后一步是!next
     switch (getCurrentToken()) {
         case KW_IF:   //<条件语句>
-            Parse_conditionStmt(); 
+            Parse_conditionStmt(scope); 
             break;
         case KW_WHILE:    //<循环语句>
-            Parse_loopStmt();
+            Parse_loopStmt(scope);
             break;
         case KW_SCANF:   //<读语句>
-            Parse_scanf();
+            Parse_scanf(scope);
             if(getCurrentToken() != SY_SEMICOLON)
                 panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
             break;
         case KW_PRINTF:    //<写语句>
-            Parse_printf();
+            Parse_printf(scope);
             if(getCurrentToken() != SY_SEMICOLON)
                 panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
             break;
         case SY_SEMICOLON:   //<空语句>
             break;
         case KW_RETURN:     //<返回语句>
-            Parse_returnStmt();
+            Parse_returnStmt(scope);
             currentToken = next();
             if(getCurrentToken() != SY_SEMICOLON) 
                 panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
@@ -819,13 +821,13 @@ bool Parser::Parse_Stmt() {
     }
     currentToken = next();    //开始检测下一个语句  或者   } 
     return true;
-}
+    }
 
 
 
 
 //<条件语句> ::= if'('<条件>')'<语句>else<语句>
-bool Parser::Parse_conditionStmt() {
+bool Parser::Parse_conditionStmt(std::string scope) {
 
     std::cout <<  "Parse_conditionStmt Start..." << std::endl;
     if(getCurrentToken() != KW_IF)  {
@@ -840,7 +842,7 @@ bool Parser::Parse_conditionStmt() {
     }
 
     //识别<条件>
-    Parse_condition();
+    Parse_condition(scope);
 
     //代码生成
 
@@ -857,13 +859,13 @@ bool Parser::Parse_conditionStmt() {
     }
 
     //分析语句
-    Parse_Stmt();
+    Parse_Stmt(scope);
 
     currentToken = next();
     if(getCurrentToken() != SY_RBRACE) {   // } 
         panic("SytaxError: lack  } at line %d, column %d", line, column); 
-        return false; 
-    }
+    return false; 
+}
 
 currentToken = next();
 if(getCurrentToken() != KW_ELSE) {
@@ -875,7 +877,7 @@ if(getCurrentToken() != KW_ELSE) {
         return false; 
     } 
 
-    Parse_Stmt();
+    Parse_Stmt(scope);
 
     currentToken = next();
     if(getCurrentToken() != SY_RBRACE) {
@@ -891,9 +893,9 @@ return true;
 
 //<条件> ::= <表达式><关系运算符><表达式> | <表达式>
 //<关系运算符> ::= < | <= | > | >= | != | ==
-bool Parser::Parse_condition() {
+bool Parser::Parse_condition(std::string scope) {
 
-    Parse_expression();
+    Parse_expression(scope);
 
     if(getCurrentToken() == SY_RPAREN) {   //表达式
         return true;
@@ -903,7 +905,7 @@ bool Parser::Parse_condition() {
                 && getCurrentToken() != SY_EQ && getCurrentToken() != SY_NE) {
             panic("SyntaxError: wrong operator at line %d, column %d", line, column); 
         }else {
-            Parse_expression(); 
+            Parse_expression(scope); 
 
             if(getCurrentToken() != SY_RPAREN) 
                 panic("SyntaxError: lack )  at line %d, column %d", line, column);
@@ -916,7 +918,7 @@ bool Parser::Parse_condition() {
 
 
 //<表达式> ::= [ + | -]<项>{<加法运算符><项>}
-bool Parser::Parse_expression() {
+bool Parser::Parse_expression(std::string scope) {
 
 
     //[+ | -]
@@ -925,13 +927,13 @@ bool Parser::Parse_expression() {
         //生成代码相关
 
     }else {
-        Parse_item();
+        Parse_item(scope);
         //std::cout << getCurrentLexeme() << std::endl;
         while(true) {
             if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
                 //生成代码相关
             }else break; 
-            Parse_item();
+            Parse_item(scope);
         }
     }
 
@@ -941,9 +943,9 @@ bool Parser::Parse_expression() {
 
 
 //<项> ::= <因子>{<乘法运算符><因子>}
-bool Parser::Parse_item() {
+bool Parser::Parse_item(std::string scope) {
 
-    Parse_factor();
+    Parse_factor(scope);
 
     while(true) {
         if(getCurrentToken() == SY_TIMES || getCurrentToken() == SY_DEV) {
@@ -951,7 +953,7 @@ bool Parser::Parse_item() {
 
         }else break;
         //因子
-        Parse_factor();
+        Parse_factor(scope);
     }
 
     return true;
@@ -959,18 +961,18 @@ bool Parser::Parse_item() {
 
 
 //<因子> ::= <标识符>['('<值参数表>')'] | <标识符> '['<表达式>']' | <整数> | <字符>
-bool Parser::Parse_factor() {
+bool Parser::Parse_factor(std::string scope) {
 
     switch (getCurrentToken()) {
         case TK_IDENT:    //标识符   ————>  变量   函数   数组
             currentToken = next();
             if(getCurrentToken() == SY_LPAREN) {
-            
+
             }else if(getCurrentToken() == SY_LBRACKET) {
-            
+
             }else {
-            
-            
+
+
             }
             break;
         case CONST_INT:
@@ -988,7 +990,7 @@ bool Parser::Parse_factor() {
 
 
 //<循环语句> ::= while'('<条件>')'<语句>
-bool Parser::Parse_loopStmt() {
+bool Parser::Parse_loopStmt(std::string scope) {
 
     std::cout << "Parse_loopStmt Start..." << std::endl;
     if(getCurrentToken() != KW_WHILE) {
@@ -1000,7 +1002,7 @@ bool Parser::Parse_loopStmt() {
         panic("SyntaxError: lack  ( at line %d, column %d", line, column); 
     }
 
-    Parse_condition();
+    Parse_condition(scope);
 
     if(getCurrentToken() != SY_RPAREN) {
         panic("SyntaxError: lack  ) at line %d, column %d", line, column); 
@@ -1011,7 +1013,7 @@ bool Parser::Parse_loopStmt() {
         panic("SyntaxError: lack  { at line %d, column %d", line, column); 
     }
 
-    Parse_Stmt();
+    Parse_Stmt(scope);
 
     currentToken = next();   //   } 
     if(getCurrentToken() != SY_RBRACE) {
@@ -1026,7 +1028,7 @@ bool Parser::Parse_loopStmt() {
 
 
 //<值参数表> ::= <表达式>{,<表达式>}
-bool  Parser::Parse_valueParamList() {
+bool  Parser::Parse_valueParamList(std::string scope) {
 
 
 
@@ -1036,7 +1038,7 @@ bool  Parser::Parse_valueParamList() {
 
 
 //<读语句> ::= scanf'('<标识符>{,<标识符>}')'
-bool Parser::Parse_scanf() {
+bool Parser::Parse_scanf(std::string scope) {
 
     if(getCurrentToken() != KW_SCANF) {
         return false; 
@@ -1077,7 +1079,7 @@ bool Parser::Parse_scanf() {
 
 
 //<写语句> ::= printf'('<字符串>')' | printf '('<表达式>')'
-bool Parser::Parse_printf() {
+bool Parser::Parse_printf(std::string scope) {
 
     if(getCurrentToken() != KW_PRINTF) {
         return false; 
@@ -1092,7 +1094,7 @@ bool Parser::Parse_printf() {
     if(getCurrentToken() == CONST_STRING) {   //字符串常量
         currentToken = next();    //    )
     }else {
-        Parse_expression();    //  表达式
+        Parse_expression(scope);    //  表达式
     }
 
     if(getCurrentToken() != SY_RPAREN) {
@@ -1110,7 +1112,7 @@ bool Parser::Parse_printf() {
 
 
 //<返回语句> ::= return ['('<表达式>')']
-bool Parser::Parse_returnStmt() {
+bool Parser::Parse_returnStmt(std::string scope) {
 
     if(getCurrentToken() != KW_RETURN) {
         return false; 
@@ -1121,7 +1123,7 @@ bool Parser::Parse_returnStmt() {
         panic("SyntaxError: lack  ( at line %d, column %d", line, column); 
     }
 
-    Parse_expression();
+    Parse_expression(scope);
 
     currentToken = next();
     if(getCurrentToken() != SY_RPAREN) {
@@ -1138,9 +1140,9 @@ bool Parser::Parse_returnStmt() {
 
 //<赋值语句> ::= <标识符>=<表达式> | <标识符>'['<表达式>']'=<表达式>
 //实际分析的是  = <表达式> | '['<表达式>']'=<表达式>
-bool Parser::Parse_assignStmt() {
+bool Parser::Parse_assignStmt(std::string scope) {
 
-        
+
 
     return true;
 }
@@ -1149,7 +1151,7 @@ bool Parser::Parse_assignStmt() {
 
 //<整数> ::= [+ | -]<无符号整数> | 0
 //注意。0前面不能有任何正负号
-bool Parser::Parse_integer() {
+int Parser::Parse_integer() {
 
     //符号表内容  判断数字
 

@@ -77,7 +77,7 @@ std::string Parser::preprocessors() {
 std::tuple<P_Token, std::string>  Parser::next(){
 
 
-    char ctr = getNextChar();
+    char ctr = getNextChar(); 
     if(ctr == EOF) return std::make_tuple(TK_EOF, "eof");
 
     //消除空格和换行
@@ -280,7 +280,7 @@ bool Parser::Parse_procedure() {
     Parse_constDeclaration("Global");
     //全局变量说明
     Parse_varDeclaration(true, "Global");
-    return true;
+    //return true;
     //检查函数定义
     Parse_functionDefinition();
 

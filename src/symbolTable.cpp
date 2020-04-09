@@ -8,6 +8,7 @@ symbolItem::symbolItem(symbolType st, std::string scope, std::string name) {
     _scope = scope; 
     _name = name;
     next = NULL;
+    prev = NULL;
 }
 
 /*symbolTable*/
@@ -40,6 +41,7 @@ bool symbolTable::pushSymbolItem(std::string scope, std::string itemname, localM
         __symbolItemSize++;
     }else if(__symbolItemHead != NULL && __symbolItemTail != NULL){
         __symbolItemTail->next = localitem;
+        localitem->prev = __symbolItemTail;
         __symbolItemTail = localitem;
         __symbolItemSize++;
     }else {
@@ -66,6 +68,7 @@ bool symbolTable::pushSymbolItem(std::string scope, std::string itemname, localM
         __symbolItemSize++;
     }else if(__symbolItemHead != NULL && __symbolItemTail != NULL){
         __symbolItemTail->next = localitem;
+        localitem->prev = __symbolItemTail;
         __symbolItemTail = localitem;
         __symbolItemSize++;
     }else {
@@ -91,6 +94,7 @@ bool symbolTable::pushSymbolItem(std::string scope, std::string itemname, itemTy
         __symbolItemSize++;
     }else if(__symbolItemHead != NULL && __symbolItemTail != NULL){
         __symbolItemTail->next = arrayitem;
+        arrayitem->prev = __symbolItemTail;
         __symbolItemTail = arrayitem;
         __symbolItemSize++;
     }

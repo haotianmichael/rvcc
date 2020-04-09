@@ -25,6 +25,7 @@ class symbolItem
     public:
         symbolItem(symbolType st, std::string scope, std::string name);
         symbolItem *next;   //指向下一个链表元素
+        symbolItem *prev;   //当前作用域失败，向上索引   前驱指针
 
         /*get*/
         inline symbolType getSt() {return _st;}

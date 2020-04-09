@@ -4,11 +4,12 @@
 
 
 
-class intermediateGenerator
+class IntermediateGenerator
 {
 public:
-    intermediateGenerator ();
-    virtual ~intermediateGenerator ();
+    IntermediateGenerator (){};
+    virtual ~IntermediateGenerator (){};
+    void  pushIntermediateItem(FourYuanInstr &);
 
 private:
     

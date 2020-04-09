@@ -9,7 +9,7 @@
  */
 
 //四元式操作码
-enum FourYuanOpcode{
+enum fourYuanOpcode{
 
     /*计算指令*/
     ADD,    //res = src1 + src2
@@ -48,19 +48,20 @@ enum FourYuanOpcode{
 class FourYuanInstr
 {
     public:
-        FourYuanInstr (FourYuanOpcode opcode, std::string left, std::string right);
+        FourYuanInstr (fourYuanOpcode opcode, std::string left, std::string right, std::string res);
         virtual ~FourYuanInstr (){}
         void printFourYuan();
 
         /*get*/
         inline std::string getleft() { return __left;};
         inline std::string getright() { return __right;}
-        inline FourYuanOpcode getopcode() { return __opcode;}
+        inline fourYuanOpcode getopcode() { return __opcode;}
 
     private:
-        FourYuanOpcode __opcode;
+        fourYuanOpcode __opcode;
         std::string __left;
         std::string __right;
+        std::string __res;
 };
 
 

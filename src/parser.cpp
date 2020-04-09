@@ -1,8 +1,9 @@
 #include "../include/parser.h"
 #include "../include/utils.h"
+#include "../include/intermediateGenerator.h"
+#include "../include/riscvGenerator.h"
 
-
-
+extern IntermediateGenerator itgenerator;   //四元式产生表
 
 
 /*
@@ -247,7 +248,7 @@ void Parser::parse() {
     std::cout << "SyntaxAnalysis Start..." << std::endl << std::endl;
 
     /*初始化符号表*/
-    this->__symbolTable = new symbolTable();
+    this->__symbolTable = new SymbolTable();
 
 
     currentToken = next();
@@ -301,9 +302,15 @@ bool Parser::Parse_procedure() {
         panic("SyntaxError: main lack { at line %d, column %d", line, column);
 
     /*执行语句----------查表，生成中间代码*/
+    __symbolTable->pushSymbolItem("Global", "main", frt_voidType);
+
+    /*中间代码*/
+    FourYuanInstr tmp(DEC, "", "", "main");
+    itgenerator.pushIntermediateItem(tmp);
+
+
     //复合语句
     Parse_compoundStmt("main");
-
 
     //  } 
     if(getCurrentToken() != SY_RBRACE)

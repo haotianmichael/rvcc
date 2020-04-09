@@ -37,7 +37,7 @@ class Parser
 
     private:
         /*符号表*/
-        symbolTable *__symbolTable;
+        SymbolTable *__symbolTable;
 
     public:
         /*递归下降子程序定义的分析过程 

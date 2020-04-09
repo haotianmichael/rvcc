@@ -4,11 +4,11 @@
 
 
 
-class symbolTable
+class SymbolTable
 {
     public:
-        symbolTable() {}
-        virtual ~symbolTable() {}
+        SymbolTable() {}
+        virtual ~SymbolTable() {}
         bool  printTable();   //打印符号表
         
         /*填表操作
@@ -31,7 +31,7 @@ class symbolTable
 
 
     private:
-        symbolItem *__symbolItemHead = NULL;  //符号表头指针
-        symbolItem *__symbolItemTail = NULL;  //符号表尾指针
+        SymbolItem *__symbolItemHead = NULL;  //符号表头指针
+        SymbolItem *__symbolItemTail = NULL;  //符号表尾指针
         int __symbolItemSize = 0;  //符号表大小
 };

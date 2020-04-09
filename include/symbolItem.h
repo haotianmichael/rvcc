@@ -20,12 +20,12 @@
    用父类的链表直接同意管理
    在访问子类元素的时候  将父类指针进行强制类型准换 即可
 */
-class symbolItem
+class SymbolItem
 {
     public:
-        symbolItem(symbolType st, std::string scope, std::string name);
-        symbolItem *next;   //指向下一个链表元素
-        symbolItem *prev;   //当前作用域失败，向上索引   前驱指针
+        SymbolItem(symbolType st, std::string scope, std::string name);
+        SymbolItem *next;   //指向下一个链表元素
+        SymbolItem *prev;   //当前作用域失败，向上索引   前驱指针
 
         /*get*/
         inline symbolType getSt() {return _st;}
@@ -47,11 +47,11 @@ class symbolItem
 
 
 //常量，变量
-class localItem : public symbolItem {
+class LocalItem : public SymbolItem {
 
     public:
-        localItem(symbolType st, std::string scope, std::string itemname)
-            :symbolItem(st, scope, itemname) {}
+        LocalItem(symbolType st, std::string scope, std::string itemname)
+            :SymbolItem(st, scope, itemname) {}
 
         /*get*/
         inline localMold getLm() { return _lm;}
@@ -74,11 +74,11 @@ class localItem : public symbolItem {
 
 
 //数组-一维
-class arrayItem : public symbolItem
+class ArrayItem : public SymbolItem
 {
     public:
-        arrayItem (symbolType st, std::string scope, std::string itemname)
-            :symbolItem(st, scope, itemname) {}
+        ArrayItem (symbolType st, std::string scope, std::string itemname)
+            :SymbolItem(st, scope, itemname) {}
 
         /*get*/
         inline int getLength() { return _length;}
@@ -95,12 +95,12 @@ class arrayItem : public symbolItem
 
 
 //函数
-class funcItem : public symbolItem
+class FuncItem : public SymbolItem
 {
     public:
         /*如果父类只存在有参数的构造函数，那子类必须显示调用其构造函数  借此完成父类的成员初始化*/
-        funcItem (symbolType st, std::string scope, std::string itemname) 
-            : symbolItem(st, scope, itemname){}
+        FuncItem (symbolType st, std::string scope, std::string itemname) 
+            : SymbolItem(st, scope, itemname){}
 
         /*get*/
         inline funcReturnType getReturnType() { return _frt;}
@@ -115,11 +115,11 @@ class funcItem : public symbolItem
 
 
 //过程
-class procItem : public symbolItem 
+class ProcItem : public SymbolItem 
 {
     public:
-        procItem(symbolType st, std::string scope, std::string itemname)
-            :symbolItem(st, scope, itemname) {}
+        ProcItem(symbolType st, std::string scope, std::string itemname)
+            :SymbolItem(st, scope, itemname) {}
 
     private:
 

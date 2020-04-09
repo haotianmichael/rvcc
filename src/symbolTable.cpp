@@ -3,7 +3,7 @@
 #include "../include/utils.h"
 
 /*__symbolItem*/
-symbolItem::symbolItem(symbolType st, std::string scope, std::string name) {
+SymbolItem::SymbolItem(symbolType st, std::string scope, std::string name) {
     _st = st;
     _scope = scope; 
     _name = name;
@@ -13,9 +13,9 @@ symbolItem::symbolItem(symbolType st, std::string scope, std::string name) {
 
 /*symbolTable*/
 //检查是否可以填表
-bool symbolTable::ispushSymbolItem(std::string scope, std::string itemname) {
+bool SymbolTable::ispushSymbolItem(std::string scope, std::string itemname) {
 
-    symbolItem *si = __symbolItemHead;
+    SymbolItem *si = __symbolItemHead;
     while(si != NULL) {
         if(si->getname() == itemname && si->getscope() == scope){
             return false;     
@@ -26,11 +26,13 @@ bool symbolTable::ispushSymbolItem(std::string scope, std::string itemname) {
 }
 
 //localItem 整形类型
-bool symbolTable::pushSymbolItem(std::string scope, std::string itemname, localMold mod, int value) {
-    if(!ispushSymbolItem(scope, itemname))
+bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localMold mod, int value) {
+    if(!ispushSymbolItem(scope, itemname)) {
+        panic("RuntimeError: duplicate symbolTable definition"); 
         return false;
+    }
 
-    localItem *localitem = new localItem(st_localType, scope, itemname);
+    LocalItem *localitem = new LocalItem(st_localType, scope, itemname);
     localitem->setLm(mod);    //常量  变量  参数
     localitem->setIt(it_intType);   //整形   
     localitem->setInteget(value);
@@ -53,11 +55,11 @@ bool symbolTable::pushSymbolItem(std::string scope, std::string itemname, localM
 
 
 //localItem 字符类型
-bool symbolTable::pushSymbolItem(std::string scope, std::string itemname, localMold mod, char value) {
+bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localMold mod, char value) {
     if(!ispushSymbolItem(scope, itemname))
         return false;
 
-    localItem *localitem = new localItem(st_localType, scope, itemname);
+    LocalItem *localitem = new LocalItem(st_localType, scope, itemname);
     localitem->setLm(mod);   //常量   变量 参数
     localitem->setIt(it_charType);   //数据类型
     localitem->setCharacter(value);
@@ -80,11 +82,11 @@ bool symbolTable::pushSymbolItem(std::string scope, std::string itemname, localM
 
 
 //arrayItem
-bool symbolTable::pushSymbolItem(std::string scope, std::string itemname, itemType it, int length) {
+bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, itemType it, int length) {
     if(!ispushSymbolItem(scope, itemname))
         return false;
 
-    arrayItem *arrayitem = new arrayItem(st_arrayType, scope, itemname);
+    ArrayItem *arrayitem = new ArrayItem(st_arrayType, scope, itemname);
     arrayitem->setIt(it);
     arrayitem->setLength(length);
     //this->__symbolItem.push_back(arrayitem);
@@ -103,18 +105,18 @@ bool symbolTable::pushSymbolItem(std::string scope, std::string itemname, itemTy
 
 
 //funcitem
-bool symbolTable::pushSymbolItem(std::string scope, std::string name, funcReturnType frt) {
+bool SymbolTable::pushSymbolItem(std::string scope, std::string name, funcReturnType frt) {
     if(!ispushSymbolItem(scope, name))
         return false;
 
-    funcItem funcitem(st_funcType, scope, name);
+    FuncItem funcitem(st_funcType, scope, name);
     funcitem.setReturnType(frt);
     //this->__symbolItem.push_back(funcitem);
     return true;
 }
 
 
-bool symbolTable::pushSymbolItem(std::string scope, std::string proname) {
+bool SymbolTable::pushSymbolItem(std::string scope, std::string proname) {
 
 
 
@@ -122,9 +124,9 @@ bool symbolTable::pushSymbolItem(std::string scope, std::string proname) {
 }
 
 //打印符号表
-bool symbolTable::printTable() {
+bool SymbolTable::printTable() {
 
-    symbolItem *si = __symbolItemHead;
+    SymbolItem *si = __symbolItemHead;
     if(si == NULL) {
         return false; 
     }
@@ -135,7 +137,7 @@ bool symbolTable::printTable() {
     while(si != NULL) {
         symbolType st = si->getSt();
         if(st == st_localType) {
-            localItem *li = static_cast<localItem *>(si); 
+            LocalItem *li = static_cast<LocalItem *>(si); 
             std::string name = li->getname();  //名称
             std::string scope = li->getscope();  //函数作用域
             localMold lm = li->getLm();  //常量 变量
@@ -160,7 +162,7 @@ bool symbolTable::printTable() {
             std::cout << std::endl;
 
         }else if(st == st_arrayType){
-            arrayItem *ai = static_cast<arrayItem *>(si);
+            ArrayItem *ai = static_cast<ArrayItem *>(si);
             std::string name = ai->getname();  //名称
             std::string scope =  ai->getscope();   //函数作用域
             itemType it = ai->getType();   //数据类型

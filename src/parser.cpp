@@ -305,7 +305,7 @@ bool Parser::Parse_procedure() {
     __symbolTable->pushSymbolItem("Global", "main", frt_voidType);
 
     /*中间代码*/
-    FourYuanInstr tmp(DEC, "", "", "main");
+    FourYuanInstr tmp(FUNDEC, "", "", "main");
     itgenerator.pushIntermediateItem(tmp);
 
 

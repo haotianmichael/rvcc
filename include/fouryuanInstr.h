@@ -34,13 +34,27 @@ enum fourYuanOpcode{
 
 
     /*函数*/
-    CALL,   //调用
-    DEC,    //声明
-    ARG,  //参数
+    PUSH,  //参数
+    FUNCALL,   //调用
+    FUNDEC,    //声明
     RET,   //返回
+    PARAM,  //参数表
     BEGIN,  //函数入口
     END,  //函数出口
 
+    /*命令*/
+    ReadChar,
+    ReadInt,
+
+    PrintStr,
+    PrintChar,
+    PrintInt,
+    PrintId,
+    
+    ReturnChar,
+    ReturnInt,
+    ReturnId,
+    ReturnEmpty, 
 };
 
 

@@ -65,7 +65,7 @@ void FourYuanInstr::printFourYuan() {
     }
 
 
-    
+
 
 
     return ;

@@ -1,12 +1,13 @@
 #pragma once
 #include "lex.h"
+#include <vector>
 
 /*
    中间代码设计
    四元式
    QuaterOpcode src1  src2  res 
    [操作码] [源操作数1]  [源操作数2]  [结果]
- */
+*/
 
 //四元式操作码
 enum fourYuanOpcode{
@@ -70,12 +71,24 @@ class FourYuanInstr
         inline std::string getleft() { return __left;};
         inline std::string getright() { return __right;}
         inline fourYuanOpcode getopcode() { return __opcode;}
+        inline std::string gettarget() { return __target;}
+        inline itemType getparat() { return __paraT;}
+        inline funcReturnType getfunct() { return __frt;}
+        inline int gettargetindex() { return __targetindex;}
+        inline int getsrcindex() { return __srcindex;}
+        inline bool getistargetArr() { return __targetArr;}
+        inline bool getissrcArr() { return __srcArr;}
 
     private:
+        /*element*/
         fourYuanOpcode __opcode;
+        std::string __target;
         std::string __left;
         std::string __right;
-        std::string __res;
+        itemType __paraT;
+        funcReturnType __frt;
+        bool __targetArr;
+        int __targetindex;
+        bool __srcArr;
+        int __srcindex; 
 };
-
-

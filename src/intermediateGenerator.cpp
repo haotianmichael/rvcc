@@ -11,6 +11,11 @@ void IntermediateGenerator::pushIntermediateItem(FourYuanInstr& tmp) {
     return;
 }
 
+void IntermediateGenerator::pushDataItem(std::string tmp) {
+    
+    this->dataSet.push_back(tmp);
+    return;
+}
 
 void IntermediateGenerator::printTmpItem() {
 
@@ -27,13 +32,23 @@ void IntermediateGenerator::printTmpItem() {
             case ASS:
                 if(tmp.getistargetArr()) {
                     //赋值数组
-                
-                
-                
+                    out << tmp.gettarget() << "[" << tmp.gettargetindex() << "] = " << std::endl;                
+                    if(tmp.getissrcArr()) {
+                        out << tmp.getleft() << "[" << tmp.getsrcindex() << "]" << std::endl; 
+                    }else {
+                        out << tmp.getleft() << " " <<  tmp.getopcode() << " " << tmp.getright() << std::endl;;
+                    }
                 }else {
-                
-                
-                
+                    //临时变量
+                    if(tmp.gettarget().size() >  0 && tmp.gettarget()[0] == 'T') {
+                        /*填表*/      
+                    }
+                    out << tmp.gettarget() << " = ";
+                    if(tmp.getissrcArr()) {
+                        out << tmp.getleft() << "[" << tmp.getsrcindex() << "]" << std::endl; 
+                    }else {
+                        out << tmp.getleft() << " " <<  tmp.getopcode() << " " << tmp.getright() << std::endl;;
+                    }
                 } 
                 break;
             case LABEL:

@@ -63,7 +63,7 @@ enum fourYuanOpcode{
 class FourYuanInstr
 {
     public:
-        FourYuanInstr (fourYuanOpcode opcode, std::string left, std::string right, std::string res);
+        FourYuanInstr() {}
         virtual ~FourYuanInstr (){}
         void printFourYuan();
 
@@ -79,12 +79,24 @@ class FourYuanInstr
         inline bool getistargetArr() { return __targetArr;}
         inline bool getissrcArr() { return __srcArr;}
 
+        /*set*/
+        inline void setleft(std::string left) { __left = left;}
+        inline void setright(std::string right) { __right = right;}
+        inline void setopcode(fourYuanOpcode fyo) { __opcode = fyo;}
+        inline void settarget(std::string target) { __target = target;}
+        inline void setparat(itemType it) { __paraT = it;}
+        inline void setfunct(funcReturnType frt) { __frt = frt;}
+        inline void settargetindex(int index) { __targetindex = index;}
+        inline void setsrcindex(int index) { __srcindex = index;}
+        inline void settargetArr(bool is) { __targetArr = is;}
+        inline void setsrcArr(bool is) { __srcArr = is;}
+
     private:
         /*element*/
         fourYuanOpcode __opcode;
-        std::string __target;
-        std::string __left;
-        std::string __right;
+        std::string __target = "";
+        std::string __left = "";
+        std::string __right = "";
         itemType __paraT;
         funcReturnType __frt;
         bool __targetArr;

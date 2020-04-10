@@ -1,14 +1,5 @@
 #include "../include/fouryuanInstr.h"
 
-//构造函数
-FourYuanInstr::FourYuanInstr(fourYuanOpcode opcode, std::string left, std::string right, std::string res) {
-    __opcode = opcode;
-    __left = left;
-    __right = right;
-    __res = res;
-}
-
-
 
 //打印四元式
 void FourYuanInstr::printFourYuan() {

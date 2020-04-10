@@ -305,7 +305,10 @@ bool Parser::Parse_procedure() {
     __symbolTable->pushSymbolItem("Global", "main", frt_voidType);
 
     /*中间代码*/
-    FourYuanInstr tmp(FUNDEC, "", "", "main");
+    FourYuanInstr tmp;
+    tmp.setopcode(FUNDEC);
+    tmp.setfunct(frt_voidType); 
+    tmp.settarget("main");
     itgenerator.pushIntermediateItem(tmp);
 
 
@@ -722,7 +725,7 @@ bool Parser::Parse_haveReturnFuncDefinition() {
     if(getCurrentToken() == SY_RPAREN) {  //无参数
         ;
     }else {    //参数列表
-        Parse_paraList(""); 
+        Parse_paraList(overallSymbol.Name); 
     }
 
     // 参数列表出来检测  ) 
@@ -738,7 +741,7 @@ bool Parser::Parse_haveReturnFuncDefinition() {
     }
 
     //复合语句
-    Parse_compoundStmt("");
+    Parse_compoundStmt(overallSymbol.Name);
 
     // } 
     if(getCurrentToken() != SY_RBRACE) {
@@ -751,12 +754,25 @@ bool Parser::Parse_haveReturnFuncDefinition() {
 //<无返回值函数定义> ::= void<标识符>'('<参数表>')''{'<复合语句>'}'
 bool Parser::Parse_noReturnFuncDefinition() {
 
+    std::string funName = overallSymbol.Name; 
+    if(overallSymbol.type != it_voidType) {
+        panic("SyntaxError: funcDefinition's returnValue error at line %d, column %d", line, column);
+        return false; 
+    }
+    __symbolTable->pushSymbolItem("Global", funName, frt_voidType);
+
+    FourYuanInstr tmp;
+    tmp.setfunct(frt_voidType);
+    tmp.settarget(funName);
+    tmp.setopcode(FUNDEC);
+    itgenerator.pushIntermediateItem(tmp);
+
     //参数
     currentToken = next();
     if(getCurrentToken() == SY_RPAREN) {   //无参数
         ;
     }else {   //参数列表
-        Parse_paraList("");
+        Parse_paraList(funName);
     }
 
     // 有参数之后再次判断)
@@ -772,8 +788,7 @@ bool Parser::Parse_noReturnFuncDefinition() {
     }
 
     //复合语句
-    Parse_compoundStmt("");
-
+    Parse_compoundStmt(funName);
 
     // }
     if(getCurrentToken() != SY_RBRACE) {
@@ -786,11 +801,25 @@ bool Parser::Parse_noReturnFuncDefinition() {
 bool Parser::Parse_functionDeclarHead() {
 
     //函数返回值
-    if(overallSymbol.type != it_intType && overallSymbol.type != it_charType)
+    if(overallSymbol.type != it_intType && overallSymbol.type != it_charType){
         panic("SyntaxError: funcDefinition's returnValue error at line %d, column %d", line, column);
+        return false;
+    }
+
+    //函数返回类型
+    funcReturnType frt;
+    frt = (overallSymbol.type == it_intType) ? frt_intType : frt_charType;
 
     //函数名称
     std::string funcName = overallSymbol.Name;
+    __symbolTable->pushSymbolItem("Global", funcName, frt);
+
+    FourYuanInstr tmp;
+    tmp.setfunct(frt);
+    tmp.settarget(funcName);
+    tmp.setopcode(FUNDEC);
+    itgenerator.pushIntermediateItem(tmp); 
+
     return true;
 }
 
@@ -804,14 +833,27 @@ bool Parser::Parse_paraList(std::string scope) {
         panic("SyntaxError: paralist error at line %d, column %d", line, column);
         return false; 
     }
-
+    itemType it;
+    it = (getCurrentToken() == KW_INT)  ? it_intType : it_charType;
     //标识符
     currentToken = next();
     if(getCurrentToken() != TK_IDENT) {
         panic("SyntaxError: paralist error at line %d, column %d", line, column);
         return false;
     }
-
+    std::string itemname = getCurrentLexeme();
+    if(it == it_intType) {
+        __symbolTable->pushSymbolItem(scope, itemname, lm_param, ERROR_CODE);
+    }else if(it == it_charType) {
+        __symbolTable->pushSymbolItem(scope, itemname, lm_param, '-');
+    }
+    
+    FourYuanInstr tmp;
+    tmp.setopcode(PARAM);
+    tmp.settarget(itemname);
+    tmp.setparat(it);
+    itgenerator.pushIntermediateItem(tmp);
+    
 
     while(true) {
         currentToken = next();

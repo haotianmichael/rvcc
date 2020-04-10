@@ -378,7 +378,7 @@ bool Parser::Parse_constDefinition(std::string scope) {
         currentToken = next();
         value = Parse_integer(getCurrentLexeme());
         /*填充符号表*/
-        __symbolTable->pushSymbolItem(scope, constname, lm_constant, value);
+        __symbolTable->pushSymbolItem(scope, constname, lm_constant, it_intType, value);
         //解析右递归
         while(true) {
             currentToken = next();
@@ -396,7 +396,7 @@ bool Parser::Parse_constDefinition(std::string scope) {
             currentToken  = next();
             value = Parse_integer(getCurrentLexeme());  //整数
             /*填充符号表*/ 
-            __symbolTable->pushSymbolItem(scope, constname, lm_constant, value);
+            __symbolTable->pushSymbolItem(scope, constname, lm_constant, it_intType, value);
         }
         //char
     }else if(getCurrentToken() == KW_CHAR){   
@@ -420,7 +420,7 @@ bool Parser::Parse_constDefinition(std::string scope) {
         /*填充符号表*/
         std::string str  = getCurrentLexeme();
         cvalue = str[0];
-        __symbolTable->pushSymbolItem(scope, constname, lm_constant, cvalue);
+        __symbolTable->pushSymbolItem(scope, constname, lm_constant, it_charType, cvalue);
         //解析右递归
         while(true) {
             currentToken = next();
@@ -442,7 +442,7 @@ bool Parser::Parse_constDefinition(std::string scope) {
             /*填充符号表*/
             std::string str = getCurrentLexeme();
             cvalue = str[0];
-            __symbolTable->pushSymbolItem(scope, constname, lm_constant, cvalue);
+            __symbolTable->pushSymbolItem(scope, constname, lm_constant, it_charType, cvalue);
         }
 
     }else{
@@ -460,11 +460,11 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
     if(isGlobal) {
         if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR || getCurrentToken() == KW_VOID) {
             if(getCurrentToken() == KW_INT) {
-                overallSymbol.type = it_intType;  
+                overallSymbol.type = frt_intType;
             }else if(getCurrentToken() == KW_CHAR) {
-                overallSymbol.type = it_charType; 
+                overallSymbol.type = frt_charType; 
             }else if(getCurrentToken() == KW_VOID){
-                overallSymbol.type = it_voidType;
+                overallSymbol.type = frt_voidType;
             }else {
                 panic("SyntaxError:  unknown dataType at line %d, column %d", line, column);
             }
@@ -482,11 +482,11 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
     }else {   //局部变量  数组
         if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR) {
             if(getCurrentToken() == KW_INT) {
-                overallSymbol.type = it_intType; 
+                overallSymbol.type = frt_intType; 
             }else if(getCurrentToken() == KW_CHAR) {
-                overallSymbol.type = it_charType; 
+                overallSymbol.type = frt_charType; 
             }else if(getCurrentToken() == KW_VOID){
-                overallSymbol.type = it_voidType;
+                overallSymbol.type = frt_voidType;
             }else {
                 panic("SyntaxError:  unknown dataType at line %d, column %d", line, column);
             }
@@ -515,11 +515,11 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
         if(isGlobal) {
             if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR || getCurrentToken() == KW_VOID) {
                 if(getCurrentToken() == KW_INT) {
-                    overallSymbol.type = it_intType; 
+                    overallSymbol.type = frt_intType; 
                 }else if(getCurrentToken() == KW_CHAR) {
-                    overallSymbol.type = it_charType; 
+                    overallSymbol.type = frt_charType; 
                 }else if(getCurrentToken() == KW_VOID){
-                    overallSymbol.type = it_voidType;
+                    overallSymbol.type = frt_voidType;
                 }else {
                     panic("SyntaxError:  unknown dataType at line %d, column %d", line, column);
                 }
@@ -537,11 +537,11 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
         }else {  //局部变量右递归
             if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR) {
                 if(getCurrentToken() == KW_INT) {
-                    overallSymbol.type = it_intType; 
+                    overallSymbol.type = frt_intType; 
                 }else if(getCurrentToken() == KW_CHAR) {
-                    overallSymbol.type = it_charType; 
+                    overallSymbol.type = frt_charType; 
                 }else if(getCurrentToken() == KW_VOID){
-                    overallSymbol.type = it_voidType;
+                    overallSymbol.type = frt_voidType;
                 }else {
                     panic("SyntaxError:  unknown dataType at line %d, column %d", line, column);
                 }
@@ -594,15 +594,19 @@ bool Parser::Parse_varDefinition(std::string scope) {
         if(getCurrentToken() != SY_RBRACKET)    //   ] 
             panic("SyntaxError: varDefinition not complete at line %d, column %d", line, column); 
         /*填充符号表*/
-        __symbolTable->pushSymbolItem(scope, overallSymbol.Name, overallSymbol.type, length);
+        if(overallSymbol.type == frt_intType) {
+            __symbolTable->pushSymbolItem(scope, overallSymbol.Name, lm_variable, it_arrayType, it_intType, length);
+        }else if(overallSymbol.type == frt_charType) {
+            __symbolTable->pushSymbolItem(scope, overallSymbol.Name, lm_variable, it_arrayType, it_charType, length);
+        }
         currentToken = next();
     }else {
         /*填充符号表*/
         //变量不能在声明的时候直接赋值   所以value就是ERROR_CODE
-        if(overallSymbol.type == it_charType) {
-            __symbolTable->pushSymbolItem(scope, overallSymbol.Name, lm_variable, '-');
-        }else if(overallSymbol.type == it_intType) {
-            __symbolTable->pushSymbolItem(scope, overallSymbol.Name, lm_variable, ERROR_CODE);
+        if(overallSymbol.type == frt_charType) {
+            __symbolTable->pushSymbolItem(scope, overallSymbol.Name, lm_variable, it_charType, '-');
+        }else if(overallSymbol.type == frt_intType) {
+            __symbolTable->pushSymbolItem(scope, overallSymbol.Name, lm_variable, it_intType, ERROR_CODE);
         } 
     }
 
@@ -645,16 +649,19 @@ bool Parser::Parse_varDefinition(std::string scope) {
                 panic("SyntaxError: varDefinition not complete at line %d, column %d", line, column); 
 
             /*填充符号表*/
-            __symbolTable->pushSymbolItem(scope, identname, overallSymbol.type, length);
+            if(overallSymbol.type == frt_intType) {
+                __symbolTable->pushSymbolItem(scope, identname, lm_variable, it_arrayType, it_intType, length);
+            }else if(overallSymbol.type == frt_charType) {
+                __symbolTable->pushSymbolItem(scope, identname, lm_variable, it_arrayType, it_charType, length);
+            }
             currentToken = next(); 
         }else {
             /*填充符号表*/
-            if(overallSymbol.type == it_charType) {
-                __symbolTable->pushSymbolItem(scope, identname, lm_variable, '-');
-            }else if(overallSymbol.type == it_intType) {
-                __symbolTable->pushSymbolItem(scope, identname, lm_variable, ERROR_CODE);
+            if(overallSymbol.type == frt_charType) {
+                __symbolTable->pushSymbolItem(scope, identname, lm_variable, it_charType, '-');
+            }else if(overallSymbol.type == frt_intType) {
+                __symbolTable->pushSymbolItem(scope, identname, lm_variable, it_intType, ERROR_CODE);
             } 
-
         }
 
         if(getCurrentToken() == SY_SEMICOLON) {
@@ -674,9 +681,9 @@ bool Parser::Parse_functionDefinition() {
         std::cout <<  "Parse_functionDefinition Over..." << std::endl << std::endl;
         return false; 
     } 
-    if(overallSymbol.type == it_intType || overallSymbol.type == it_charType) {  //因为全局变量解析一定会被执行，所以overallSymbol一定会被赋值
+    if(overallSymbol.type == frt_intType || overallSymbol.type == frt_charType) {  //因为全局变量解析一定会被执行，所以overallSymbol一定会被赋值
         Parse_haveReturnFuncDefinition();  
-    }else if(overallSymbol.type == it_voidType) {
+    }else if(overallSymbol.type == frt_voidType) {
         Parse_noReturnFuncDefinition(); 
     }else {
         return false; 
@@ -686,11 +693,11 @@ bool Parser::Parse_functionDefinition() {
         currentToken = next();    
         if(getCurrentToken() == KW_INT || getCurrentToken() == KW_CHAR || getCurrentToken() == KW_VOID) {
             if(getCurrentToken() == KW_INT) {
-                overallSymbol.type = it_intType; 
+                overallSymbol.type = frt_intType; 
             }else if(getCurrentToken() == KW_CHAR) {
-                overallSymbol.type = it_charType; 
+                overallSymbol.type = frt_charType; 
             }else if(getCurrentToken() == KW_VOID){
-                overallSymbol.type = it_voidType; 
+                overallSymbol.type = frt_voidType; 
             }else {
                 panic("SyntaxError:  unknown dataType at line %d, column %d", line, column);
             }
@@ -702,9 +709,9 @@ bool Parser::Parse_functionDefinition() {
             overallSymbol.Name = getCurrentLexeme();
             currentToken = next();
             if(getCurrentToken() == SY_LPAREN) {  //解析函数
-                if(overallSymbol.type == it_intType || overallSymbol.type == it_charType) 
+                if(overallSymbol.type == frt_intType || overallSymbol.type == frt_charType) 
                     Parse_haveReturnFuncDefinition();
-                else if(overallSymbol.type == it_voidType)
+                else if(overallSymbol.type == frt_voidType)
                     Parse_noReturnFuncDefinition();
             }
         }else break;
@@ -755,7 +762,7 @@ bool Parser::Parse_haveReturnFuncDefinition() {
 bool Parser::Parse_noReturnFuncDefinition() {
 
     std::string funName = overallSymbol.Name; 
-    if(overallSymbol.type != it_voidType) {
+    if(overallSymbol.type != frt_voidType) {
         panic("SyntaxError: funcDefinition's returnValue error at line %d, column %d", line, column);
         return false; 
     }
@@ -801,14 +808,14 @@ bool Parser::Parse_noReturnFuncDefinition() {
 bool Parser::Parse_functionDeclarHead() {
 
     //函数返回值
-    if(overallSymbol.type != it_intType && overallSymbol.type != it_charType){
+    if(overallSymbol.type != frt_intType && overallSymbol.type != frt_charType){
         panic("SyntaxError: funcDefinition's returnValue error at line %d, column %d", line, column);
         return false;
     }
 
     //函数返回类型
     funcReturnType frt;
-    frt = (overallSymbol.type == it_intType) ? frt_intType : frt_charType;
+    frt = (overallSymbol.type == frt_intType) ? frt_intType : frt_charType;
 
     //函数名称
     std::string funcName = overallSymbol.Name;
@@ -847,9 +854,9 @@ bool Parser::Parse_paraList(std::string scope) {
         currentToken = next();
         if(getCurrentToken() == SY_RPAREN)  { // ) 参数结束 
             if(it == it_intType) {
-                __symbolTable->pushSymbolItem(scope, itemname, lm_param, ERROR_CODE);
+                __symbolTable->pushSymbolItem(scope, itemname, lm_parameter, it_intType,  ERROR_CODE);
             }else if(it == it_charType) {
-                __symbolTable->pushSymbolItem(scope, itemname, lm_param, '-');
+                __symbolTable->pushSymbolItem(scope, itemname, lm_parameter, it_charType, '-');
             }
             FourYuanInstr tmp;
             tmp.setopcode(PARAM);
@@ -861,9 +868,9 @@ bool Parser::Parse_paraList(std::string scope) {
 
         } else if(getCurrentToken() == SY_COMMA) {   //  , 继续解析
             if(it == it_intType) {
-                __symbolTable->pushSymbolItem(scope, itemname, lm_param, ERROR_CODE);
+                __symbolTable->pushSymbolItem(scope, itemname, lm_parameter, it_intType, ERROR_CODE);
             }else if(it == it_charType) {
-                __symbolTable->pushSymbolItem(scope, itemname, lm_param, '-');
+                __symbolTable->pushSymbolItem(scope, itemname, lm_parameter, it_charType, '-');
             }
             FourYuanInstr tmp;
             tmp.setopcode(PARAM);
@@ -890,9 +897,9 @@ bool Parser::Parse_paraList(std::string scope) {
             currentToken = next();
             if(getCurrentToken() == SY_RBRACKET){   //无数字
                 if(it == it_intType) {
-                    __symbolTable->pushSymbolItem(scope, itemname, lm_param, ERROR_CODE);
+                    __symbolTable->pushSymbolItem(scope, itemname, lm_parameter, it_arrayType, it_intType, ERROR_CODE);
                 }else if(it == it_charType) {
-                    __symbolTable->pushSymbolItem(scope, itemname, lm_param, '-');
+                    __symbolTable->pushSymbolItem(scope, itemname, lm_parameter, it_arrayType, it_charType, ERROR_CODE);
                 }
 
                 FourYuanInstr tmp;
@@ -910,6 +917,11 @@ bool Parser::Parse_paraList(std::string scope) {
                 } 
                 num /= 10;
                 if(num <= 0) panic("SyntaxError: elements of array must be positive at line %d, column %d", line, column);
+                if(it == it_intType) {
+                    __symbolTable->pushSymbolItem(scope, itemname, lm_parameter, it_arrayType, it_intType, num);
+                }else if(it == it_charType) {
+                    __symbolTable->pushSymbolItem(scope, itemname, lm_parameter, it_arrayType, it_charType, num);
+                }
 
                 currentToken = next();
                 if(getCurrentToken() != SY_RBRACKET)
@@ -979,9 +991,9 @@ bool Parser::Parse_Stmt(std::string scope) {
             return false;
             break;
     }
-    currentToken = next();    //开始检测下一个语句  或者   } 
+    currentToken = next();    //开始检测下一个语句  或者   
     return true;
-    }
+}
 
 
 
@@ -1022,32 +1034,32 @@ bool Parser::Parse_conditionStmt(std::string scope) {
     Parse_Stmt(scope);
 
     currentToken = next();
-    if(getCurrentToken() != SY_RBRACE) {   // } 
-        panic("SytaxError: lack  } at line %d, column %d", line, column); 
-    return false; 
-}
-
-currentToken = next();
-if(getCurrentToken() != KW_ELSE) {
-    return true;    //没有else 条件语句直接退出
-}else {
-    currentToken = next(); 
-    if(getCurrentToken() != SY_LBRACE) {
-        panic("SytaxError: lack  {  at line %d, column %d", line, column); 
-        return false; 
-    } 
-
-    Parse_Stmt(scope);
-
-    currentToken = next();
-    if(getCurrentToken() != SY_RBRACE) {
+    if(getCurrentToken() != SY_RBRACE) {   
         panic("SytaxError: lack  } at line %d, column %d", line, column); 
         return false; 
     }
-}
 
-std::cout <<  "Parse_conditionStmt Over..." << std::endl;
-return true;
+    currentToken = next();
+    if(getCurrentToken() != KW_ELSE) {
+        return true;    //没有else 条件语句直接退出
+    }else {
+        currentToken = next(); 
+        if(getCurrentToken() != SY_LBRACE) {
+            panic("SytaxError: lack  {  at line %d, column %d", line, column); 
+            return false; 
+        } 
+
+        Parse_Stmt(scope);
+
+        currentToken = next();
+        if(getCurrentToken() != SY_RBRACE) {
+            panic("SytaxError: lack  } at line %d, column %d", line, column); 
+            return false; 
+        }
+    }
+
+    std::cout <<  "Parse_conditionStmt Over..." << std::endl;
+    return true;
 }
 
 

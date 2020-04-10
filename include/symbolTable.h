@@ -16,9 +16,11 @@ class SymbolTable
             itemname 当前标识符的名称
          */
         bool ispushSymbolItem(std::string scope, std::string itemname);  //检查是否重复定义
-        bool pushSymbolItem(std::string scope, std::string itemname, localMold mold, int value);  //int 类型localItem
-        bool pushSymbolItem(std::string scope, std::string itemname, localMold mold, char value);   //char 类型 localItem
-        bool pushSymbolItem(std::string scope, std::string arrayname, itemType it, int length);  //arrayItem
+        /*变量  常量  参数*/
+        bool pushSymbolItem(std::string scope, std::string itemname, localMold mold, itemType it, int value);  //int 类型localItem  
+        bool pushSymbolItem(std::string scope, std::string itemname, localMold mold, itemType it, char value);   //char 类型 localItem
+        bool pushSymbolItem(std::string scope, std::string itemname, localMold mold, itemType it_array, itemType array_type, int length);  //数组  类型localItem
+        
         bool pushSymbolItem(std::string scope, std::string funcName, funcReturnType frt);   //funcItem
         bool pushSymbolItem(std::string scope, std::string proname);  //proItem
 

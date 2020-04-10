@@ -25,16 +25,17 @@ bool SymbolTable::ispushSymbolItem(std::string scope, std::string itemname) {
     return true;
 }
 
-//localItem 整形类型
-bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localMold mod, int value) {
-    if(!ispushSymbolItem(scope, itemname)) {
-        panic("RuntimeError: duplicate symbolTable definition"); 
-        return false;
-    }
+//localItem 整形&&数组类型
+bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localMold mod, itemType it, int value) {
+    /*if(!ispushSymbolItem(scope, itemname)) {*/
+        //std::cout << scope << " " << itemname << std::endl;
+        //panic("RuntimeError: duplicate symbolTable definition"); 
+        //return false;
+    /*}*/
 
     LocalItem *localitem = new LocalItem(st_localType, scope, itemname);
     localitem->setLm(mod);    //常量  变量  参数
-    localitem->setIt(it_intType);   //整形   
+    localitem->setIt(it);   //整形   
     localitem->setInteget(value);
     //插入符号表 尾插法
     if(__symbolItemHead == NULL && __symbolItemTail == NULL) {
@@ -55,13 +56,13 @@ bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localM
 
 
 //localItem 字符类型
-bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localMold mod, char value) {
+bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localMold mod, itemType it, char value) {
     if(!ispushSymbolItem(scope, itemname))
         return false;
 
     LocalItem *localitem = new LocalItem(st_localType, scope, itemname);
     localitem->setLm(mod);   //常量   变量 参数
-    localitem->setIt(it_charType);   //数据类型
+    localitem->setIt(it);   //数据类型
     localitem->setCharacter(value);
     //this->__symbolItem.push_back(localitem);
     if(__symbolItemHead == NULL && __symbolItemTail == NULL) {
@@ -79,29 +80,36 @@ bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localM
     return true;
 }
 
+//locaItem 数组类型
+bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localMold mod, itemType it_array, itemType arrayType, int length) {
+    //if(!ispushSymbolItem(scope, itemname))
+        //return false;
 
+    LocalItem *localitem = new LocalItem(st_localType, scope, itemname); 
+    localitem->setLm(mod);
+    localitem->setIt(arrayType);
+    localitem->setLenght(length);
 
-//arrayItem
-bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, itemType it, int length) {
-    if(!ispushSymbolItem(scope, itemname))
-        return false;
-
-    ArrayItem *arrayitem = new ArrayItem(st_arrayType, scope, itemname);
-    arrayitem->setIt(it);
-    arrayitem->setLength(length);
-    //this->__symbolItem.push_back(arrayitem);
+    if(it_array == it_arrayType) {
+        localitem->setisArr(true); 
+    }
     if(__symbolItemHead == NULL && __symbolItemTail == NULL) {
-        __symbolItemHead = arrayitem; 
-        __symbolItemTail = arrayitem;
+        __symbolItemHead = localitem; 
+        __symbolItemTail = localitem;
         __symbolItemSize++;
     }else if(__symbolItemHead != NULL && __symbolItemTail != NULL){
-        __symbolItemTail->next = arrayitem;
-        arrayitem->prev = __symbolItemTail;
-        __symbolItemTail = arrayitem;
+        __symbolItemTail->next = localitem;
+        localitem->prev = __symbolItemTail;
+        __symbolItemTail = localitem;
         __symbolItemSize++;
+    }else {
+        panic("SymbolTableError: pushItem not allowed"); 
     }
+
     return true;
 }
+
+
 
 
 //funcitem
@@ -161,22 +169,24 @@ bool SymbolTable::printTable() {
             }
             std::cout << std::endl;
 
-        }else if(st == st_arrayType){
-            ArrayItem *ai = static_cast<ArrayItem *>(si);
-            std::string name = ai->getname();  //名称
-            std::string scope =  ai->getscope();   //函数作用域
-            itemType it = ai->getType();   //数据类型
-            int length = ai->getLength();
-            std::cout << "arrayType\t";
-            std::cout << name << "\t";
-            std::cout << scope << "\t";
-            std::cout << "variable\t";
-            if(it == it_intType) {
-                std::cout << "int\t\t" << length << "\t";
-            }else if(it == it_charType) {
-                std::cout << "char\t\t" << length << "\t"; 
-            }
-            std::cout << std::endl;
+            /*
+               }else if(st == st_arrayType){
+               ArrayItem *ai = static_cast<ArrayItem *>(si);
+               std::string name = ai->getname();  //名称
+               std::string scope =  ai->getscope();   //函数作用域
+               itemType it = ai->getType();   //数据类型
+               int length = ai->getLength();
+               std::cout << "arrayType\t";
+               std::cout << name << "\t";
+               std::cout << scope << "\t";
+               std::cout << "variable\t";
+               if(it == it_intType) {
+               std::cout << "int\t\t" << length << "\t";
+               }else if(it == it_charType) {
+               std::cout << "char\t\t" << length << "\t"; 
+               }
+               std::cout << std::endl;
+             */
 
         }else if(st == st_procType){
 

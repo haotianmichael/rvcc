@@ -58,40 +58,26 @@ class LocalItem : public SymbolItem {
         inline itemType getIt() {return _it;}
         inline int getInteger() {return _iValue;}
         inline char getCharacter() {return _cValue;}
+        inline int getLength() { return __length;}
+        inline bool getisArr() { return _isArr;}
 
         /*set*/
         inline void setLm(localMold lm) { _lm = lm;}
         inline void setIt(itemType it) { _it = it;}
         inline void setInteget(int iValue) { _iValue = iValue;}
         inline void setCharacter(char cValue) { _cValue = cValue;}
+        inline void setLenght(int length) { __length = length;}
+        inline void setisArr(bool is) { _isArr = is;}
 
     private:
-        localMold _lm;   //常量&变量
+        localMold _lm;   //常量&变量&参数
         itemType _it;  //具体数据类型
+        bool _isArr;   //是否为数组
         int _iValue;   //整形值
         char _cValue;   //字符值
+        int __length;  //数组类型长度
 };
 
-
-//数组-一维
-class ArrayItem : public SymbolItem
-{
-    public:
-        ArrayItem (symbolType st, std::string scope, std::string itemname)
-            :SymbolItem(st, scope, itemname) {}
-
-        /*get*/
-        inline int getLength() { return _length;}
-        inline itemType getType() { return _it;}
-
-        /*set*/
-        inline void setLength(int length) { _length = length;}
-        inline void setIt(itemType it) { _it = it;}
-
-    private:
-        itemType _it;   //具体数据类型
-        int _length;   //数组长度
-};
 
 
 //函数

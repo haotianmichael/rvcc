@@ -6,7 +6,7 @@
 
 const int N = 100010;
 int n;
-int q[N];
+int q[100010];
 
 
 void myswap(int a, int b) {

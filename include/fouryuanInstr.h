@@ -78,6 +78,7 @@ class FourYuanInstr
         inline int getsrcindex() { return __srcindex;}
         inline bool getistargetArr() { return __targetArr;}
         inline bool getissrcArr() { return __srcArr;}
+        inline bool getparaArr() { return __paraArr;}
 
         /*set*/
         inline void setleft(std::string left) { __left = left;}
@@ -90,17 +91,19 @@ class FourYuanInstr
         inline void setsrcindex(int index) { __srcindex = index;}
         inline void settargetArr(bool is) { __targetArr = is;}
         inline void setsrcArr(bool is) { __srcArr = is;}
+        inline void setparaArr(bool is) { __paraArr = is;}
 
     private:
         /*element*/
-        fourYuanOpcode __opcode;
-        std::string __target = "";
-        std::string __left = "";
-        std::string __right = "";
-        itemType __paraT;
-        funcReturnType __frt;
-        bool __targetArr;
-        int __targetindex;
-        bool __srcArr;
-        int __srcindex; 
+        fourYuanOpcode __opcode;   //中间代码操作符
+        std::string __target = "";  //结果
+        std::string __left = "";  //左操作数
+        std::string __right = "";  //右操作数
+        itemType __paraT;  //参数类型
+        funcReturnType __frt;  //函数返回类型
+        bool __targetArr;  //赋值  结果是否为数组
+        int __targetindex; //结果数组索引
+        bool __srcArr;  //赋值  操作数是否为数组
+        int __srcindex;   //操作数索引
+        bool __paraArr;  //参数是否为数组
 };

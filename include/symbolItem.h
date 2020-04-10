@@ -46,7 +46,7 @@ class SymbolItem
 };
 
 
-//常量，变量
+//常量，变量，参数
 class LocalItem : public SymbolItem {
 
     public:

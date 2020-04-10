@@ -8,7 +8,7 @@ extern IntermediateGenerator itgenerator;   //四元式产生表
 
 /*
    构造函数  列表初始化成员关键字 
- */
+   */
 Parser::Parser(const std::string &fileName) : keywords({
         {"main", KW_MAIN},
         {"void", KW_VOID},
@@ -35,7 +35,7 @@ Parser::Parser(const std::string &fileName) : keywords({
 
 /*
    预处理器   格式：  #include <file.h>
- */
+   */
 std::string Parser::preprocessors() {
     std::string filename = "";
     std::string tmp = "";
@@ -74,7 +74,7 @@ std::string Parser::preprocessors() {
 
 /*
    词法分析器
- */
+   */
 std::tuple<P_Token, std::string>  Parser::next(){
 
 
@@ -842,41 +842,65 @@ bool Parser::Parse_paraList(std::string scope) {
         return false;
     }
     std::string itemname = getCurrentLexeme();
-    if(it == it_intType) {
-        __symbolTable->pushSymbolItem(scope, itemname, lm_param, ERROR_CODE);
-    }else if(it == it_charType) {
-        __symbolTable->pushSymbolItem(scope, itemname, lm_param, '-');
-    }
-    
-    FourYuanInstr tmp;
-    tmp.setopcode(PARAM);
-    tmp.settarget(itemname);
-    tmp.setparat(it);
-    itgenerator.pushIntermediateItem(tmp);
-    
 
     while(true) {
         currentToken = next();
-        if(getCurrentToken() == SY_RPAREN)  break;  // ) 参数结束 
-        else if(getCurrentToken() == SY_COMMA) {   //  , 继续解析
+        if(getCurrentToken() == SY_RPAREN)  { // ) 参数结束 
+            if(it == it_intType) {
+                __symbolTable->pushSymbolItem(scope, itemname, lm_param, ERROR_CODE);
+            }else if(it == it_charType) {
+                __symbolTable->pushSymbolItem(scope, itemname, lm_param, '-');
+            }
+            FourYuanInstr tmp;
+            tmp.setopcode(PARAM);
+            tmp.settarget(itemname);
+            tmp.setparat(it);
+            tmp.setparaArr(false);  //参数不是数组
+            itgenerator.pushIntermediateItem(tmp);
+            break; 
+
+        } else if(getCurrentToken() == SY_COMMA) {   //  , 继续解析
+            if(it == it_intType) {
+                __symbolTable->pushSymbolItem(scope, itemname, lm_param, ERROR_CODE);
+            }else if(it == it_charType) {
+                __symbolTable->pushSymbolItem(scope, itemname, lm_param, '-');
+            }
+            FourYuanInstr tmp;
+            tmp.setopcode(PARAM);
+            tmp.settarget(itemname);
+            tmp.setparat(it);
+            tmp.setparaArr(false);  //参数不是数组
+            itgenerator.pushIntermediateItem(tmp);
 
             currentToken = next();
             if(getCurrentToken() != KW_INT && getCurrentToken() != KW_CHAR) {
                 panic("SyntaxError: paralist error at line %d, column %d", line, column);
                 return false;
             }
-
-
+            it = (getCurrentToken()  == KW_INT) ? it_intType : it_charType;
             currentToken = next();
             if(getCurrentToken() != TK_IDENT){
                 panic("SyntaxError: paralist error at line %d, column %d", line, column);
                 return false; 
             }
+            itemname = getCurrentLexeme();
+
         }else if(getCurrentToken() == SY_LBRACKET) {    //   [ 参数类型为数组
             /*参数数组可以没有数字  int func(int a[]);*/
             currentToken = next();
             if(getCurrentToken() == SY_RBRACKET){   //无数字
-                ; 
+                if(it == it_intType) {
+                    __symbolTable->pushSymbolItem(scope, itemname, lm_param, ERROR_CODE);
+                }else if(it == it_charType) {
+                    __symbolTable->pushSymbolItem(scope, itemname, lm_param, '-');
+                }
+
+                FourYuanInstr tmp;
+                tmp.setopcode(PARAM);
+                tmp.settarget(itemname);
+                tmp.setparat(it); 
+                tmp.setparaArr(true);
+                itgenerator.pushIntermediateItem(tmp);
             }else if(getCurrentToken() == CONST_INT) {  //有数字
                 std::string strnum = getCurrentLexeme();
                 int num = 0;
@@ -1292,7 +1316,7 @@ int Parser::Parse_integer(std::string value) {
     /*
        符号表内容  判断数字
        wrong format 019
-     */
+       */
     int num = 0;
     if(value.length() > 1 && value[0] == '0') {
         panic("IntegerParserError: wrong format at line %d, column %d", line, column);

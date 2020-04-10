@@ -2,7 +2,8 @@
 #include <stdio.h>
 
 
-const int N = 100010, M = 10010; int a, b, c, d;
+const int N = 100010, M = 10010; 
+int a, b, c, d;
 
 void funa() {}
 void funb(char x[], int y[]) {}

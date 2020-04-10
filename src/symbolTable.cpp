@@ -27,11 +27,10 @@ bool SymbolTable::ispushSymbolItem(std::string scope, std::string itemname) {
 
 //localItem 整形&&数组类型
 bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localMold mod, itemType it, int value) {
-    /*if(!ispushSymbolItem(scope, itemname)) {*/
-        //std::cout << scope << " " << itemname << std::endl;
-        //panic("RuntimeError: duplicate symbolTable definition"); 
-        //return false;
-    /*}*/
+    if(!ispushSymbolItem(scope, itemname)) {
+        panic("RuntimeError: duplicate symbolTable definition"); 
+        return false;
+    }
 
     LocalItem *localitem = new LocalItem(st_localType, scope, itemname);
     localitem->setLm(mod);    //常量  变量  参数
@@ -57,8 +56,10 @@ bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localM
 
 //localItem 字符类型
 bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localMold mod, itemType it, char value) {
-    if(!ispushSymbolItem(scope, itemname))
+    if(!ispushSymbolItem(scope, itemname)) {
+        panic("RuntimeError: duplicate symbolTable definition"); 
         return false;
+    }
 
     LocalItem *localitem = new LocalItem(st_localType, scope, itemname);
     localitem->setLm(mod);   //常量   变量 参数
@@ -82,8 +83,10 @@ bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localM
 
 //locaItem 数组类型
 bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localMold mod, itemType it_array, itemType arrayType, int length) {
-    //if(!ispushSymbolItem(scope, itemname))
-        //return false;
+    if(!ispushSymbolItem(scope, itemname)) {
+        panic("RuntimeError: duplicate symbolTable definition"); 
+        return false;
+    }
 
     LocalItem *localitem = new LocalItem(st_localType, scope, itemname); 
     localitem->setLm(mod);

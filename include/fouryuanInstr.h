@@ -59,7 +59,16 @@ enum fourYuanOpcode{
 };
 
 
+//后缀表达式
+struct PostfixExpression {
+    itemType it;
+    int value;
+    std::string str;
+    bool isOpcode;
+    bool isChar;
+};
 
+//中间代码四元式
 class FourYuanInstr
 {
     public:

@@ -6,12 +6,18 @@
 
 class IntermediateGenerator
 {
+         /*中间代码生成*/
     public:
         IntermediateGenerator (){};
         virtual ~IntermediateGenerator (){};
         void  pushIntermediateItem(FourYuanInstr &);  //填写四元式
         void  printTmpItem();   //输出四元式
-        void pushDataItem(std::string);   
+        void pushDataItem(std::string);     //添加.data域元素
+
+        /*表达式计算*/
+    public:
+
+
 
     private:
 

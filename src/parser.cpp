@@ -272,6 +272,7 @@ void Parser::parse() {
         }
     }
 }
+        /*声明部分*/
 
 //<程序> ::= [<常量说明>][<变量说明>][<函数定义部分>]<主函数>
 bool Parser::Parse_procedure() {
@@ -947,6 +948,7 @@ bool Parser::Parse_paraList(std::string scope) {
     return true;
 }
 
+                /*执行部分  至此函数开始涉及表达式运算   属于核心算法*/
 
 //<复合语句> ::= [<常量说明>][<变量说明>]{<语句>}
 bool Parser::Parse_compoundStmt(std::string scope) {
@@ -1000,14 +1002,14 @@ bool Parser::Parse_Stmt(std::string scope) {
             currentToken = next();
             name = getCurrentLexeme();
             if(getCurrentToken() == SY_ASSIGN || getCurrentToken() == SY_LBRACKET) {
-            //赋值语句
+                //赋值语句
                 Parse_assignStmt(scope, name); 
                 currentToken = next();
                 if(getCurrentToken() != SY_SEMICOLON) {
                     panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
                 }
             }else if(getCurrentToken() == SY_LPAREN) {
-            //函数调用 
+                //函数调用 
                 name = getCurrentLexeme();  //函数名称
                 tmp.setopcode(FUNCALL);
                 tmp.settarget(name);
@@ -1015,9 +1017,9 @@ bool Parser::Parse_Stmt(std::string scope) {
                 if(getCurrentToken() == SY_RPAREN) {  //无参数
                     itgenerator.pushIntermediateItem(tmp); 
                 }else { //有参数
-                     
+
                     std::vector<itemType> valueList = Parse_valueParamList(scope);
-                    if(funCheck(scope, name)) {  //函数参数  符号表检查
+                    if(funCheck(scope, name, valueList)) {  //函数参数  符号表检查
                         itgenerator.pushIntermediateItem(tmp); 
                     }else {
                         panic("SyntaxError: FunCall Error at line %d, column %d", line, column); 
@@ -1046,7 +1048,7 @@ bool Parser::Parse_Stmt(std::string scope) {
 
 
 //函数检查
-bool funCheck(std::string scope, std::string name) {
+bool Parser::funCheck(std::string scope, std::string name, std::vector<itemType> paralist) {
 
 
 
@@ -1059,8 +1061,96 @@ bool funCheck(std::string scope, std::string name) {
 //<值参数表> ::= <表达式>{,<表达式>}
 std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
 
+    std::vector<itemType> paralist;
 
 
+
+
+    return paralist;
+}
+
+
+//<表达式> ::= [ + | -]<项>{<加法运算符><项>}
+exprRet Parser::Parse_expression(std::string scope) {
+
+    bool previs = false;   //有前缀项的flag
+    itemType it;
+    exprRet er;
+    std::vector<PostfixExpression> pfeList;
+
+    //[+ | -]
+    currentToken = next();
+    if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS){
+        //生成代码相关
+        previs = true;
+        PostfixExpression pfe;
+        pfe.it = it_charType;
+        pfe.isOpcode = false;
+        pfe.str = (getCurrentToken() == SY_PLUS)  ? '+' : '-';
+        pfeList.push_back(pfe);
+    }
+
+    Parse_item(scope, pfeList);
+    //std::cout << getCurrentLexeme() << std::endl;
+    while(true) {
+        if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
+            //生成代码相关
+
+        }else break; 
+        Parse_item(scope, pfeList);
+    }
+
+    //表达式计算
+
+
+
+
+    return er;
+}
+
+
+//<项> ::= <因子>{<乘法运算符><因子>}
+bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> pfeList) {
+
+    Parse_factor(scope, pfeList);
+
+    while(true) {
+        if(getCurrentToken() == SY_TIMES || getCurrentToken() == SY_DEV) {
+
+
+        }else break;
+        //因子
+        Parse_factor(scope, pfeList);
+    }
+
+    return true;
+}
+
+
+//<因子> ::= <标识符>['('<值参数表>')'] | <标识符> '['<表达式>']' | <整数> | <字符> | '('<表达式>')'
+bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeList) {
+
+    switch (getCurrentToken()) {
+        case TK_IDENT:    //标识符   ————>  变量   函数   数组
+            currentToken = next();
+            if(getCurrentToken() == SY_LPAREN) {
+
+            }else if(getCurrentToken() == SY_LBRACKET) {
+
+            }else {
+
+
+            }
+            break;
+        case CONST_INT:
+
+            break;
+        case CONST_STRING:
+
+            break;
+        default:
+            return false;
+    }
 
     return true;
 }
@@ -1155,78 +1245,6 @@ bool Parser::Parse_condition(std::string scope) {
     return true;
 }
 
-
-
-//<表达式> ::= [ + | -]<项>{<加法运算符><项>}
-bool Parser::Parse_expression(std::string scope) {
-
-
-    //[+ | -]
-    currentToken = next();
-    if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS){
-        //生成代码相关
-
-    }else {
-        Parse_item(scope);
-        //std::cout << getCurrentLexeme() << std::endl;
-        while(true) {
-            if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
-                //生成代码相关
-            }else break; 
-            Parse_item(scope);
-        }
-    }
-
-    //表达式计算
-    return true;
-}
-
-
-//<项> ::= <因子>{<乘法运算符><因子>}
-bool Parser::Parse_item(std::string scope) {
-
-    Parse_factor(scope);
-
-    while(true) {
-        if(getCurrentToken() == SY_TIMES || getCurrentToken() == SY_DEV) {
-
-
-        }else break;
-        //因子
-        Parse_factor(scope);
-    }
-
-    return true;
-}
-
-
-//<因子> ::= <标识符>['('<值参数表>')'] | <标识符> '['<表达式>']' | <整数> | <字符>
-bool Parser::Parse_factor(std::string scope) {
-
-    switch (getCurrentToken()) {
-        case TK_IDENT:    //标识符   ————>  变量   函数   数组
-            currentToken = next();
-            if(getCurrentToken() == SY_LPAREN) {
-
-            }else if(getCurrentToken() == SY_LBRACKET) {
-
-            }else {
-
-
-            }
-            break;
-        case CONST_INT:
-
-            break;
-        case CONST_STRING:
-
-            break;
-        default:
-            return false;
-    }
-
-    return true;
-}
 
 
 //<循环语句> ::= while'('<条件>')'<语句>

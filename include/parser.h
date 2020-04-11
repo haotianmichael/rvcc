@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <iostream>
 #include "lex.h"
+#include "intermediateGenerator.h"
 #include "symbolTable.h"
 
 const int ERROR_CODE  = -2147483648;  //错误码
@@ -84,11 +85,11 @@ class Parser
         std::vector<itemType> Parse_valueParamList(std::string scope);
 
         //<表达式> ::= [+ | -]<项>{<加法运算符><项>}
-        bool Parse_expression(std::string scope);
+        exprRet Parse_expression(std::string scope);
         //<项> ::= <因子>{<乘法运算符><因子>}
-        bool Parse_item(std::string scope); 
+        bool Parse_item(std::string scope, std::vector<PostfixExpression> pfeList); 
         //<因子> ::= <标识符>['('<值参数表>')']|<标识符>'['<表达式>']'|'('<表达式>')'|<整数>|<字符>
-        bool Parse_factor(std::string scope);
+        bool Parse_factor(std::string scope, std::vector<PostfixExpression> preList);
 
         //<读语句> ::= scanf‘(’<标识符>{,<标识符>}')'
         bool Parse_scanf(std::string scope);
@@ -100,7 +101,7 @@ class Parser
         int  Parse_integer(std::string value);
     public:
         //函数参数 检查
-        bool funCheck(std::string scope, std::string name);
+        bool funCheck(std::string scope, std::string name, std::vector<itemType> paralist);
 
     private:
         //词法分析器  输出<词素, 值>

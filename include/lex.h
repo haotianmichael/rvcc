@@ -115,3 +115,12 @@ enum itemType{
    it_charType,  //字符类型
    it_intType  //整形
 };
+
+
+//语法分析 表达式返回值
+struct exprRet{
+    std::string name;
+    itemType it;
+    int value;
+    char cvalue;
+};

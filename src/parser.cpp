@@ -955,7 +955,7 @@ bool Parser::Parse_compoundStmt(std::string scope) {
     Parse_constDeclaration(scope);
     Parse_varDeclaration(false, scope);
     while(true) {
-        if(!Parse_Stmt(scope))    //初始值为1
+        if(!Parse_Stmt(scope))  
             break;     
     }
     return true;
@@ -967,6 +967,8 @@ bool Parser::Parse_compoundStmt(std::string scope) {
   | <赋值语句>; | <读语句>; | <写语句>; | ; | <返回语句>;  */
 bool Parser::Parse_Stmt(std::string scope) {
 
+    std::string name = "";
+    FourYuanInstr tmp;
 
     //紧接着constDeclaration 和 varDeclaration  最后一步是!next
     switch (getCurrentToken()) {
@@ -995,7 +997,44 @@ bool Parser::Parse_Stmt(std::string scope) {
                 panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
             break;
         case TK_IDENT:   //调用语句   赋值语句
-
+            currentToken = next();
+            name = getCurrentLexeme();
+            if(getCurrentToken() == SY_ASSIGN || getCurrentToken() == SY_LBRACKET) {
+            //赋值语句
+                Parse_assignStmt(scope, name); 
+                currentToken = next();
+                if(getCurrentToken() != SY_SEMICOLON) {
+                    panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
+                }
+            }else if(getCurrentToken() == SY_LPAREN) {
+            //函数调用 
+                name = getCurrentLexeme();  //函数名称
+                tmp.setopcode(FUNCALL);
+                tmp.settarget(name);
+                currentToken = next();
+                if(getCurrentToken() == SY_RPAREN) {  //无参数
+                    itgenerator.pushIntermediateItem(tmp); 
+                }else { //有参数
+                     
+                    std::vector<itemType> valueList = Parse_valueParamList(scope);
+                    if(funCheck(scope, name)) {  //函数参数  符号表检查
+                        itgenerator.pushIntermediateItem(tmp); 
+                    }else {
+                        panic("SyntaxError: FunCall Error at line %d, column %d", line, column); 
+                    }
+                    currentToken = next();
+                    if(getCurrentToken() == SY_RPAREN) {   //  ) 
+                        panic("SyntaxError: Statement lack ) at line %d, column %d", line, column);
+                    }
+                }
+                currentToken = next();
+                if(getCurrentToken() != SY_SEMICOLON) {
+                    panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
+                }
+            }else {
+                panic("SyntaxError: No meaning of ident at line %d, column %d", line, column);
+                return false;
+            }
             break;
         default:
             return false;
@@ -1006,6 +1045,25 @@ bool Parser::Parse_Stmt(std::string scope) {
 }
 
 
+//函数检查
+bool funCheck(std::string scope, std::string name) {
+
+
+
+
+    return true;
+}
+
+
+
+//<值参数表> ::= <表达式>{,<表达式>}
+std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
+
+
+
+
+    return true;
+}
 
 
 //<条件语句> ::= if'('<条件>')'<语句>else<语句>
@@ -1209,16 +1267,6 @@ bool Parser::Parse_loopStmt(std::string scope) {
 
 
 
-//<值参数表> ::= <表达式>{,<表达式>}
-bool  Parser::Parse_valueParamList(std::string scope) {
-
-
-
-
-    return true;
-}
-
-
 //<读语句> ::= scanf'('<标识符>{,<标识符>}')'
 bool Parser::Parse_scanf(std::string scope) {
 
@@ -1322,7 +1370,7 @@ bool Parser::Parse_returnStmt(std::string scope) {
 
 //<赋值语句> ::= <标识符>=<表达式> | <标识符>'['<表达式>']'=<表达式>
 //实际分析的是  = <表达式> | '['<表达式>']'=<表达式>
-bool Parser::Parse_assignStmt(std::string scope) {
+bool Parser::Parse_assignStmt(std::string scope, std::string name) {
 
 
 

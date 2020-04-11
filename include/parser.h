@@ -73,7 +73,7 @@ class Parser
           | <赋值语句>; | <读语句>; | <写语句>; | <空>; |  <返回语句>*/
         bool Parse_Stmt(std::string scope);
         //<赋值语句> ::= <标识符> = <表达式> | <标识符>'['<表达式>']'=<表达式>
-        bool Parse_assignStmt(std::string scope);
+        bool Parse_assignStmt(std::string scope, std::string name);
         //<条件语句> ::= if'('<条件>')'<语句>else<语句>
         bool Parse_conditionStmt(std::string scope);
         //<条件> ::= <表达式><关系运算符><表达式> | <表达式>
@@ -81,7 +81,7 @@ class Parser
         //<循环语句> ::= while'('<条件>')'<语句>
         bool Parse_loopStmt(std::string scope);
         //<值参数表> ::= <表达式>{, <表达式>}
-        bool Parse_valueParamList(std::string scope);
+        std::vector<itemType> Parse_valueParamList(std::string scope);
 
         //<表达式> ::= [+ | -]<项>{<加法运算符><项>}
         bool Parse_expression(std::string scope);
@@ -98,6 +98,9 @@ class Parser
         bool Parse_returnStmt(std::string scope);
         //<整数> ::= [ + | -]<无符号整数> | 0
         int  Parse_integer(std::string value);
+    public:
+        //函数参数 检查
+        bool funCheck(std::string scope, std::string name);
 
     private:
         //词法分析器  输出<词素, 值>

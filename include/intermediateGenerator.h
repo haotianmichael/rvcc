@@ -6,7 +6,7 @@
 
 class IntermediateGenerator
 {
-         /*中间代码生成*/
+    /*中间代码生成*/
     public:
         IntermediateGenerator (){};
         virtual ~IntermediateGenerator (){};
@@ -14,8 +14,6 @@ class IntermediateGenerator
         void  printTmpItem();   //输出四元式
         void pushDataItem(std::string);     //添加.data域元素
 
-        /*表达式计算*/
-    public:
 
 
 

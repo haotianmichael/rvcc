@@ -272,7 +272,7 @@ void Parser::parse() {
         }
     }
 }
-        /*声明部分*/
+/*声明部分*/
 
 //<程序> ::= [<常量说明>][<变量说明>][<函数定义部分>]<主函数>
 bool Parser::Parse_procedure() {
@@ -948,7 +948,7 @@ bool Parser::Parse_paraList(std::string scope) {
     return true;
 }
 
-                /*执行部分  至此函数开始涉及表达式运算   属于核心算法*/
+/*执行部分  至此函数开始涉及表达式运算   属于核心算法*/
 
 //<复合语句> ::= [<常量说明>][<变量说明>]{<语句>}
 bool Parser::Parse_compoundStmt(std::string scope) {
@@ -1052,7 +1052,6 @@ bool Parser::funCheck(std::string scope, std::string name, std::vector<itemType>
 
 
 
-
     return true;
 }
 
@@ -1065,7 +1064,6 @@ std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
 
 
 
-
     return paralist;
 }
 
@@ -1074,9 +1072,8 @@ std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
 exprRet Parser::Parse_expression(std::string scope) {
 
     bool previs = false;   //有前缀项的flag
-    itemType it;
     exprRet er;
-    std::vector<PostfixExpression> pfeList;
+    std::vector<PostfixExpression> pfeListBefore;  //中缀表达式
 
     //[+ | -]
     currentToken = next();
@@ -1085,26 +1082,42 @@ exprRet Parser::Parse_expression(std::string scope) {
         previs = true;
         PostfixExpression pfe;
         pfe.it = it_charType;
-        pfe.isOpcode = false;
-        pfe.str = (getCurrentToken() == SY_PLUS)  ? '+' : '-';
-        pfeList.push_back(pfe);
+        pfe.isOpcode = true;
+        pfe.value = (getCurrentToken() == SY_PLUS)  ? '+' : '-';
+        pfeListBefore.push_back(pfe);
     }
 
-    Parse_item(scope, pfeList);
+    Parse_item(scope, pfeListBefore);
     //std::cout << getCurrentLexeme() << std::endl;
     while(true) {
         if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
             //生成代码相关
-
+            PostfixExpression pfe;
+            pfe.it = it_charType; 
+            pfe.isOpcode = true;
+            pfe.value = (getCurrentToken() == SY_PLUS)  ? '+' : '-';
+            pfeListBefore.push_back(pfe); 
         }else break; 
-        Parse_item(scope, pfeList);
+        Parse_item(scope, pfeListBefore);
     }
 
     //表达式计算
+    if(pfeListBefore.size() == 0) {
+        er.isEmpty = true;  
+    }else {
+        er.isEmpty = false; 
+    }
 
-
-
-
+    std::vector<PostfixExpression> pfeListAfter;   //后缀表达式
+    postfixReverse(pfeListBefore, pfeListAfter);
+    itemType it;
+    int value;
+    er.name = expressEvaluation(scope, pfeListAfter, it, value);
+    if(it == it_intType) {
+        er.value = value; 
+    } else {
+        er.cvalue = value; 
+    }
     return er;
 }
 
@@ -1116,8 +1129,12 @@ bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> pfeLis
 
     while(true) {
         if(getCurrentToken() == SY_TIMES || getCurrentToken() == SY_DEV) {
-
-
+            PostfixExpression pfe;
+            pfe.it = it_charType;
+            pfe.str = (getCurrentToken() == SY_TIMES) ? '*' : '/';
+            pfe.isOpcode = true;
+            pfeList.push_back(pfe);
+            currentToken = next();
         }else break;
         //因子
         Parse_factor(scope, pfeList);
@@ -1128,16 +1145,33 @@ bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> pfeLis
 
 
 //<因子> ::= <标识符>['('<值参数表>')'] | <标识符> '['<表达式>']' | <整数> | <字符> | '('<表达式>')'
+/*
+   有返回值函数
+   数组元素
+   括号
+   整数
+   字符 
+ */
 bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeList) {
+
+    PostfixExpression pfe;
+    exprRet er;
+    FourYuanInstr fy;
+    std::string name;
 
     switch (getCurrentToken()) {
         case TK_IDENT:    //标识符   ————>  变量   函数   数组
             currentToken = next();
-            if(getCurrentToken() == SY_LPAREN) {
+            if(getCurrentToken() == SY_LBRACKET) {   // [  数组
 
-            }else if(getCurrentToken() == SY_LBRACKET) {
 
-            }else {
+
+
+
+
+            }else if(getCurrentToken() == SY_LPAREN) {   //  (  函数
+
+            }else {   //变量
 
 
             }
@@ -1424,6 +1458,86 @@ int Parser::Parse_integer(std::string value) {
         return num/10; 
     }
 }
+
+
+//中缀表达式转后缀表达式
+void Parser::postfixReverse(std::vector<PostfixExpression> pfeListBefore, std::vector<PostfixExpression> pfeListAfter) {
+
+    std::vector<PostfixExpression> tmp;
+    if(pfeListBefore.size() == 1) {
+        pfeListAfter.push_back(pfeListBefore[0]); 
+        return;
+    }else if(pfeListBefore.size() > 1) {
+        if(pfeListBefore[0].it == it_charType && (pfeListBefore[0].value == '+' || pfeListBefore[0].value == '-') && pfeListBefore[0].isOpcode == true) {
+            if(pfeListBefore[0].value == '-') {
+                PostfixExpression pfe;
+                pfe.it = it_intType;
+                pfe.value = 0;
+                pfe.isOpcode = true;
+                pfeListBefore.insert(pfeListBefore.begin(), pfe);   //如果第一个元素是-  插入0
+            }else {
+                pfeListBefore.erase(pfeListBefore.begin());  //消除 +
+            }
+        } 
+    }
+
+    for(unsigned int i = 0; i < pfeListBefore.size(); i ++) {
+        PostfixExpression pfe = pfeListBefore[i]; 
+        if(pfe.it == it_charType) {   //后缀运算符优先级
+            switch (pfe.value) {
+                case '+':
+                case '-':
+                    if(!pfe.isOpcode) {
+                        pfeListAfter.push_back(pfe); 
+                        break; 
+                    } 
+                    while(tmp.size() != 0) {
+                        pfeListAfter.push_back(tmp[tmp.size() - 1]);                    
+                        tmp.pop_back();
+                    }
+                    tmp.push_back(pfe);
+                    break;
+                case '*':
+                case '/':
+                    if(!pfe.isOpcode) {
+                        pfeListAfter.push_back(pfe); 
+                        break; 
+                    } 
+                    while(tmp.size() != 0) {
+                        if(tmp[tmp.size() - 1].value == '*' || tmp[tmp.size() - 1].value == '/') {
+                            pfeListAfter.push_back(tmp[tmp.size() - 1]); 
+                            tmp.pop_back();
+                        }else {
+                            break; 
+                        } 
+                    }
+                    tmp.push_back(pfe);
+                    break;
+                default: pfeListAfter.push_back(pfe);
+            }        
+        }else {  //运算数直接插入
+            pfeListAfter.push_back(pfe); 
+        } 
+    }
+
+    while(tmp.size() != 0) {
+        pfeListAfter.push_back(tmp[tmp.size() - 1]); 
+        tmp.pop_back(); 
+    }
+    return;
+}
+
+
+//表达式求值
+std::string Parser::expressEvaluation(std::string scope, std::vector<PostfixExpression> &pfeList, itemType &it, int &value) {
+
+    std::string name;
+
+
+
+    return name;
+}
+
 
 
 

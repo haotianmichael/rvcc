@@ -64,8 +64,8 @@ struct PostfixExpression {
     itemType it;
     int value;
     std::string str;
-    bool isOpcode;
-    bool isChar;
+    bool isCharvar;  //是不是char型变量       char型数组元素
+    bool isOpcode;   //如果是char型变量 那是不是运算符
 };
 
 //中间代码四元式

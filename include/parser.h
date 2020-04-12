@@ -99,9 +99,12 @@ class Parser
         bool Parse_returnStmt(std::string scope);
         //<整数> ::= [ + | -]<无符号整数> | 0
         int  Parse_integer(std::string value);
+
     public:
-        //函数参数 检查
-        bool funCheck(std::string scope, std::string name, std::vector<itemType> paralist);
+        /*表达式计算*/
+        bool funCheck(std::string scope, std::string name, std::vector<itemType> paralist);    //函数参数 检查
+        void postfixReverse(std::vector<PostfixExpression> pfeListBefore, std::vector<PostfixExpression> pfeListAfter);   //中缀表达式转后缀表达式
+        std::string expressEvaluation(std::string scope, std::vector<PostfixExpression> &, itemType &, int &);  //表达式求值
 
     private:
         //词法分析器  输出<词素, 值>

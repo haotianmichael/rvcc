@@ -88,6 +88,7 @@ class FourYuanInstr
         inline bool getistargetArr() { return __targetArr;}
         inline bool getissrcArr() { return __srcArr;}
         inline bool getparaArr() { return __paraArr;}
+        inline char getop() { return __op;}
 
         /*set*/
         inline void setleft(std::string left) { __left = left;}
@@ -101,6 +102,7 @@ class FourYuanInstr
         inline void settargetArr(bool is) { __targetArr = is;}
         inline void setsrcArr(bool is) { __srcArr = is;}
         inline void setparaArr(bool is) { __paraArr = is;}
+        inline void setop(char op) { __op = op;}
 
     private:
         /*element*/
@@ -115,4 +117,5 @@ class FourYuanInstr
         bool __srcArr;  //赋值  操作数是否为数组
         int __srcindex;   //操作数索引
         bool __paraArr;  //参数是否为数组
+        char __op;   
 };

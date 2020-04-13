@@ -104,7 +104,8 @@ class Parser
         /*表达式计算*/
         bool funCheck(std::string scope, std::string name, std::vector<itemType> paralist);    //函数参数 检查
         void postfixReverse(std::vector<PostfixExpression> pfeListBefore, std::vector<PostfixExpression> pfeListAfter);   //中缀表达式转后缀表达式
-        std::string expressEvaluation(std::string scope, std::vector<PostfixExpression> &, itemType &, int &);  //表达式求值
+        std::string expressEvaluation(std::vector<PostfixExpression> &, itemType &, int &);  //表达式求值
+        std::string varGenerator();
 
     private:
         //词法分析器  输出<词素, 值>

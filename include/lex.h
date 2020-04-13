@@ -70,7 +70,7 @@ enum P_Token{
     KW_RETURN,   //return
     KW_SCANF,
     KW_PRINTF,
-    
+
 
     /*
      *字面值 : 整数  字符串 字符
@@ -99,9 +99,9 @@ enum funcReturnType{
 
 
 /*localItem 
-        大体上分为3种:常量  变量  参数
-        每一种类又分为  整形  字符  数组 
-*/
+  大体上分为3种:常量  变量  参数
+  每一种类又分为  整形  字符  数组 
+  */
 //localItem 种类  数据类型直接通过函数重载实现
 enum localMold{
     lm_constant,    //常量
@@ -111,9 +111,10 @@ enum localMold{
 
 //localItem 类型检查
 enum itemType{
-   it_arrayType,  //数组类型
-   it_charType,  //字符类型
-   it_intType  //整形
+    it_arrayType,  //数组类型
+    it_charType,  //字符类型
+    it_intType,  //整形
+    it_stringType   //字符串
 };
 
 

@@ -4,6 +4,9 @@
 #include "../include/riscvGenerator.h"
 
 extern IntermediateGenerator itgenerator;   //四元式产生表
+int varCount = 0;  //临时变量计数器
+static int labelCount = 0;   //标签计数器
+static int stringCount = 0;   //字符串计数器
 
 
 /*
@@ -1529,17 +1532,173 @@ void Parser::postfixReverse(std::vector<PostfixExpression> pfeListBefore, std::v
 
 
 //表达式求值
-std::string Parser::expressEvaluation(std::string scope, std::vector<PostfixExpression> &pfeList, itemType &it, int &value) {
+std::string Parser::expressEvaluation(std::vector<PostfixExpression> &pfeList, itemType &type, int &value) {
 
-    std::string name;
-
-
-
-    return name;
+    PostfixExpression pfeA, pfeB;
+    FourYuanInstr fyi;
+    std::vector<PostfixExpression> tmp;
+    if(pfeList.size() == 1) {
+        pfeA = pfeList[0]; 
+        if(pfeA.it == it_intType) {
+            type = it_intType; 
+            value = pfeA.value;
+            return "";
+        }else if(pfeA.it == it_charType) {
+            type = it_charType; 
+            value = pfeA.value;
+            return ""; 
+        }else {
+            if(pfeA.isCharvar) {  //字符型变量
+                type = it_charType; 
+            } else {
+                type = it_intType; 
+            }
+            return pfeA.str; 
+        } 
+    }else {
+        for(unsigned int i = 0; i < pfeList.size();  i ++) {
+            pfeA = pfeList[i];
+            if(pfeA.it == it_charType) {
+                char x[15] = {'\0'};    
+                fyi.setopcode(ASS);     
+                fyi.settargetArr(false); 
+                fyi.setsrcArr(false); 
+                switch (pfeA.value) {
+                    case '+':
+                    case '-':{
+                                 if(!pfeA.isOpcode) {
+                                     tmp.push_back(pfeA); 
+                                     break;
+                                 }
+                                 if(tmp.size() > 1) {
+                                     bool isAble = true;
+                                     int leftD, rightD; 
+                                     if(tmp[tmp.size() - 1].it == it_stringType) {
+                                         fyi.setright(tmp[tmp.size()  - 1].str); 
+                                         tmp.pop_back();
+                                         isAble = false;
+                                     }else {
+                                         sprintf(x, "%d", tmp[tmp.size() - 1].value); 
+                                         fyi.setright(x); 
+                                         rightD = tmp[tmp.size() - 1].value;
+                                         tmp.pop_back();
+                                     } 
+                                     memset(x, 0, 15); 
+                                     if(tmp[tmp.size() - 1].it == it_stringType) {
+                                         fyi.setleft(tmp[tmp.size()  - 1].str); 
+                                         tmp.pop_back();
+                                         isAble = false;
+                                     }else {
+                                         sprintf(x, "%d", tmp[tmp.size() - 1].value); 
+                                         fyi.setleft(x); 
+                                         leftD = tmp[tmp.size() - 1].value;
+                                         tmp.pop_back();
+                                     } 
+                                     if(isAble) {
+                                         pfeB.it = it_intType; 
+                                         pfeB.value  = (pfeA.value == '+') ?  (leftD + rightD) : (leftD - rightD);
+                                         tmp.push_back(pfeB);
+                                         break;
+                                     }
+                                     std::string var = varGenerator(); 
+                                     fyi.settarget(var);
+                                     fyi.setop(pfeA.value);  
+                                     itgenerator.pushIntermediateItem(fyi);
+                                     pfeB.it = it_stringType;
+                                     pfeB.str = var;
+                                     tmp.push_back(pfeB);
+                                 }
+                                 break;
+                             }
+                    case '*':
+                    case '/':{
+                                 if(!pfeA.isOpcode) {
+                                     tmp.push_back(pfeA); 
+                                     break;
+                                 }
+                                 if(tmp.size() > 1) {
+                                     bool isAble = true;
+                                     int leftD, rightD; 
+                                     if(tmp[tmp.size() - 1].it == it_stringType) {
+                                         fyi.setright(tmp[tmp.size()  - 1].str); 
+                                         tmp.pop_back();
+                                         isAble = false;
+                                     }else {
+                                         sprintf(x, "%d", tmp[tmp.size() - 1].value); 
+                                         fyi.setright(x); 
+                                         rightD = tmp[tmp.size() - 1].value;
+                                         tmp.pop_back();
+                                     } 
+                                     memset(x, 0, 15); 
+                                     if(tmp[tmp.size() - 1].it == it_stringType) {
+                                         fyi.setleft(tmp[tmp.size()  - 1].str); 
+                                         tmp.pop_back();
+                                         isAble = false;
+                                     }else {
+                                         sprintf(x, "%d", tmp[tmp.size() - 1].value); 
+                                         fyi.setleft(x); 
+                                         leftD = tmp[tmp.size() - 1].value;
+                                         tmp.pop_back();
+                                         if(pfeA.value == '/' && fyi.getright() == "0") {
+                                            panic("RuntimeError: div 0 situation"); 
+                                         }
+                                     } 
+                                     if(isAble) {
+                                         pfeB.it = it_intType; 
+                                         pfeB.value  = (pfeA.value == '*') ?  (leftD * rightD) : (leftD / rightD);
+                                         tmp.push_back(pfeB);
+                                         break;
+                                     }
+                                     std::string var = varGenerator(); 
+                                     fyi.settarget(var);
+                                     fyi.setop(pfeA.value);  
+                                     itgenerator.pushIntermediateItem(fyi);
+                                     pfeB.it = it_stringType;
+                                     pfeB.str = var;
+                                     tmp.push_back(pfeB);
+                                 }
+                                 break;
+                             }
+                    default: tmp.push_back(pfeA);
+                }
+            }else {
+                tmp.push_back(pfeA); 
+            } 
+        }    
+        if(tmp.size() >= 1) {
+            if(tmp[0].it == it_intType) {
+                type = it_intType;
+                value = tmp[0].value;
+                return ""; 
+            } 
+            return tmp[0].str;
+        }else {
+            return ""; 
+        }
+    }
 }
 
 
+//创建临时变量
+std::string varGenerator() {
+    char x[10] = {'\0'};
+    sprintf(x, "%d", ++varCount);
+    return ("T"+std::string(x));
+}
 
+//创建标签
+std::string labelGenetar() {
+    char x[10] = {'\0'};
+    sprintf(x, "%d", ++labelCount);
+    return ("Label"+std::string(x));
+}
+
+//创建字符串
+std::string stringGenetar() {
+    char x[10] = {'\0'};
+    sprintf(x, "%d", ++stringCount);
+    return ("String" + std::string(x));
+}
 
 //语法分析器测试函数
 void Parser::printParser() {

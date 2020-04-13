@@ -1020,7 +1020,7 @@ bool Parser::Parse_Stmt(std::string scope) {
                 if(getCurrentToken() == SY_RPAREN) {  //无参数
                     itgenerator.pushIntermediateItem(tmp); 
                 }else { //有参数
-
+                    std::cout << "Start FunCall with param..." << std::endl;
                     std::vector<itemType> valueList = Parse_valueParamList(scope);
                     if(funCheck(scope, name, valueList)) {  //函数参数  符号表检查
                         itgenerator.pushIntermediateItem(tmp); 
@@ -1064,8 +1064,91 @@ bool Parser::funCheck(std::string scope, std::string name, std::vector<itemType>
 std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
 
     std::vector<itemType> paralist;
+    std::vector<std::string> paramTable;
+    FourYuanInstr fyi;
 
 
+    exprRet er = Parse_expression(scope);
+    if(!er.isEmpty) {
+        paralist.push_back(er.it);
+    }else {
+        return paralist;  
+    }
+    if(er.isSure) {
+        char x[15] = {'\0'}; 
+        sprintf(x, "%d", er.it == it_intType ? er.value : er.cvalue); 
+        fyi.setopcode(ASS);
+        fyi.setsrcArr(false);
+        fyi.settargetArr(false);
+        fyi.settarget(varGenerator());
+        fyi.setop('+'); 
+        fyi.setright("0");
+        fyi.setleft(x);
+        itgenerator.pushIntermediateItem(fyi);
+        paramTable.push_back(fyi.gettarget());
+    }else {
+        if(er.name.size() > 0 && er.name[0] == 'T') {
+            FourYuanInstr tmp;
+            tmp.setopcode(ASS);
+            tmp.settarget(varGenerator()); 
+            tmp.setsrcArr(false);
+            tmp.settargetArr(false);
+            tmp.setleft(er.name);
+            tmp.setop('+');
+            tmp.setright("0");
+            itgenerator.pushIntermediateItem(tmp);
+            paramTable.push_back(tmp.gettarget());
+        }else {
+            paramTable.push_back(er.name); 
+        } 
+    }
+
+
+    while(true) {
+        // ,
+        if(getCurrentToken() != SY_COMMA) {
+            break; 
+        } 
+
+        currentToken = next();
+        er = Parse_expression(scope);  
+        paralist.push_back(er.it); 
+
+        if(er.isSure) {
+            char x[15] = {'\0'}; 
+            sprintf(x, "%d", er.it == it_intType ? er.value : er.cvalue); 
+            fyi.setopcode(ASS);
+            fyi.setsrcArr(false);
+            fyi.settargetArr(false);
+            fyi.settarget(varGenerator());
+            fyi.setop('+'); 
+            fyi.setright("0");
+            fyi.setleft(x);
+            itgenerator.pushIntermediateItem(fyi);
+            paramTable.push_back(fyi.gettarget());
+        }else {
+            if(er.name.size() > 0 && er.name[0] == 'T') {
+                FourYuanInstr tmp;
+                tmp.setopcode(ASS);
+                tmp.settarget(varGenerator()); 
+                tmp.setsrcArr(false);
+                tmp.settargetArr(false);
+                tmp.setleft(er.name);
+                tmp.setop('+');
+                tmp.setright("0");
+                itgenerator.pushIntermediateItem(tmp);
+                paramTable.push_back(tmp.gettarget());
+            }else {
+                paramTable.push_back(er.name); 
+            } 
+        }
+    }
+
+    for(unsigned int i = 0; i < paramTable.size(); i ++) {
+        fyi.setopcode(PUSH);         
+        fyi.settarget(paramTable[i]); 
+        itgenerator.pushIntermediateItem(fyi); 
+    }
 
     return paralist;
 }
@@ -1115,7 +1198,7 @@ exprRet Parser::Parse_expression(std::string scope) {
     postfixReverse(pfeListBefore, pfeListAfter);
     itemType it;
     int value;
-    er.name = expressEvaluation(scope, pfeListAfter, it, value);
+    er.name = expressEvaluation(pfeListAfter, it, value);
     if(it == it_intType) {
         er.value = value; 
     } else {
@@ -1640,7 +1723,7 @@ std::string Parser::expressEvaluation(std::vector<PostfixExpression> &pfeList, i
                                          leftD = tmp[tmp.size() - 1].value;
                                          tmp.pop_back();
                                          if(pfeA.value == '/' && fyi.getright() == "0") {
-                                            panic("RuntimeError: div 0 situation"); 
+                                             panic("RuntimeError: div 0 situation"); 
                                          }
                                      } 
                                      if(isAble) {
@@ -1680,21 +1763,21 @@ std::string Parser::expressEvaluation(std::vector<PostfixExpression> &pfeList, i
 
 
 //创建临时变量
-std::string varGenerator() {
+std::string Parser::varGenerator() {
     char x[10] = {'\0'};
     sprintf(x, "%d", ++varCount);
     return ("T"+std::string(x));
 }
 
 //创建标签
-std::string labelGenetar() {
+std::string Parser::labelGenetar() {
     char x[10] = {'\0'};
     sprintf(x, "%d", ++labelCount);
     return ("Label"+std::string(x));
 }
 
 //创建字符串
-std::string stringGenetar() {
+std::string Parser::stringGenetar() {
     char x[10] = {'\0'};
     sprintf(x, "%d", ++stringCount);
     return ("String" + std::string(x));

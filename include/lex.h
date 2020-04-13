@@ -125,4 +125,5 @@ struct exprRet{
     int value;
     char cvalue;
     bool isEmpty;
+    bool isSure;
 };

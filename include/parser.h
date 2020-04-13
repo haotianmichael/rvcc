@@ -43,7 +43,7 @@ class Parser
     public:
         /*递归下降子程序定义的分析过程 
           语法分析，直接生成中间代码——四元式 
-         */
+          */
         //<程序> ::= [<常量说明>][<变量说明>][<函数定义部分>]<主函数>
         bool Parse_procedure();
         //<常量说明> ::= const<常量定义>;{const<常量定义>;}
@@ -106,6 +106,9 @@ class Parser
         void postfixReverse(std::vector<PostfixExpression> pfeListBefore, std::vector<PostfixExpression> pfeListAfter);   //中缀表达式转后缀表达式
         std::string expressEvaluation(std::vector<PostfixExpression> &, itemType &, int &);  //表达式求值
         std::string varGenerator();
+        std::string labelGenetar();
+        std::string stringGenetar();
+
 
     private:
         //词法分析器  输出<词素, 值>

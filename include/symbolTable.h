@@ -10,7 +10,9 @@ class SymbolTable
         SymbolTable() {}
         virtual ~SymbolTable() {}
         bool  printTable();   //打印符号表
-        
+        inline int getSize() { return __symbolItemSize;}
+        inline SymbolItem* getHead() {  return __symbolItemHead;}
+        inline SymbolItem* getTail() {  return __symbolItemTail;} 
         /*填表操作
             scope  符号表的作用域
             itemname 当前标识符的名称

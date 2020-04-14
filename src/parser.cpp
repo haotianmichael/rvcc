@@ -955,7 +955,6 @@ bool Parser::Parse_paraList(std::string scope) {
 
 //<复合语句> ::= [<常量说明>][<变量说明>]{<语句>}
 bool Parser::Parse_compoundStmt(std::string scope) {
-
     currentToken = next();
     Parse_constDeclaration(scope);
     Parse_varDeclaration(false, scope);
@@ -1022,13 +1021,13 @@ bool Parser::Parse_Stmt(std::string scope) {
                 }else { //有参数
                     std::cout << "Start FunCall with param..." << std::endl;
                     std::vector<itemType> valueList = Parse_valueParamList(scope);
-                    if(funCheck(scope, name, valueList)) {  //函数参数  符号表检查
+                    if(funCheck(name, true, valueList)) {  //函数参数  符号表检查
                         itgenerator.pushIntermediateItem(tmp); 
                     }else {
                         panic("SyntaxError: FunCall Error at line %d, column %d", line, column); 
                     }
                     currentToken = next();
-                    if(getCurrentToken() == SY_RPAREN) {   //  ) 
+                    if(getCurrentToken() != SY_RPAREN) {   //  ) 
                         panic("SyntaxError: Statement lack ) at line %d, column %d", line, column);
                     }
                 }
@@ -1051,11 +1050,62 @@ bool Parser::Parse_Stmt(std::string scope) {
 
 
 //函数检查
-bool Parser::funCheck(std::string scope, std::string name, std::vector<itemType> paralist) {
+bool Parser::funCheck(std::string name, bool inExpr, std::vector<itemType> paralist) {
 
+    bool isfun = false;
+    SymbolItem *head = __symbolTable->getHead();
+    SymbolItem *tail = __symbolTable->getTail();
+    std::vector<itemType> param;   //从运行栈中读取参数
 
+    //函数名称检查
+    while(head != tail) {
+        if((head->getscope() == "GLOBAL") && (head->getname() == name) 
+                && (head->getSt() == st_funcType)) {   //函数
+            isfun = true; 
+            FuncItem* fci = static_cast<FuncItem *>(head);
+            if(inExpr && fci->getReturnType() == frt_voidType) {
+                panic("RuntimeError: VoidFunc can't match in expression at line %d, column %d", line, column);
+            }
 
-    return true;
+            head = head->next;
+            while(head != tail) {
+                LocalItem *fcii = static_cast<LocalItem *>(head);    
+                if(fcii->getscope() == name && fcii->getLm() == lm_parameter) {
+                    param.push_back(fcii->getIt());    //参数检查
+                }else {
+                    break; 
+                }
+                head = head->next;
+            } 
+            break;    
+        }
+        head = head->next; 
+    }
+
+    //函数参数检查
+    if(isfun) {
+        if(paralist.size() == 0) {  //实参数量
+            isfun = false;
+            panic("RuntimeError: Actual Para number error at line %d, colummn %d", line, column); 
+        } 
+        if(param.size() != paralist.size()) {   //形参数量
+            isfun = false;
+            panic("RuntimeError:  Formal Para number error at line %d, colummn %d", line, column); 
+        }
+
+        for(unsigned int i = 0; i < paralist.size(); i ++) {
+            itemType formal = paralist[i];
+            itemType actual = param[i];
+            if(formal != actual) {
+                isfun = false;
+                panic("RuntimeError: Para Type not matched at line %d, column %d", line, column); 
+            }
+        }
+    }
+    if(isfun == true) {
+        std::cout << "FunCall with para Checking Succeed!..." << std::endl; 
+    }
+    return isfun;
 }
 
 
@@ -1109,11 +1159,9 @@ std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
         if(getCurrentToken() != SY_COMMA) {
             break; 
         } 
-
         currentToken = next();
         er = Parse_expression(scope);  
         paralist.push_back(er.it); 
-
         if(er.isSure) {
             char x[15] = {'\0'}; 
             sprintf(x, "%d", er.it == it_intType ? er.value : er.cvalue); 
@@ -1157,6 +1205,7 @@ std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
 //<表达式> ::= [ + | -]<项>{<加法运算符><项>}
 exprRet Parser::Parse_expression(std::string scope) {
 
+    std::cout << "Start expression" << std::endl;
     bool previs = false;   //有前缀项的flag
     exprRet er;
     std::vector<PostfixExpression> pfeListBefore;  //中缀表达式
@@ -1174,6 +1223,7 @@ exprRet Parser::Parse_expression(std::string scope) {
     }
 
     Parse_item(scope, pfeListBefore);
+    return er;
     //std::cout << getCurrentLexeme() << std::endl;
     while(true) {
         if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
@@ -1211,6 +1261,7 @@ exprRet Parser::Parse_expression(std::string scope) {
 //<项> ::= <因子>{<乘法运算符><因子>}
 bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> pfeList) {
 
+    std::cout << "Start item" << std::endl;
     Parse_factor(scope, pfeList);
 
     while(true) {
@@ -1227,8 +1278,7 @@ bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> pfeLis
     }
 
     return true;
-}
-
+} 
 
 //<因子> ::= <标识符>['('<值参数表>')'] | <标识符> '['<表达式>']' | <整数> | <字符> | '('<表达式>')'
 /*
@@ -1240,6 +1290,7 @@ bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> pfeLis
  */
 bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeList) {
 
+    std::cout << "Start factor" << std::endl;
     PostfixExpression pfe;
     exprRet er;
     FourYuanInstr fy;
@@ -1263,6 +1314,8 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
             }
             break;
         case CONST_INT:
+        case SY_PLUS:
+        case SY_MINUS:
 
             break;
         case CONST_STRING:

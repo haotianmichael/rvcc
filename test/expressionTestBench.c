@@ -9,7 +9,7 @@ void fun(int a, int b[], char c, char d[]) {
 
 }
 
-void foo() {
+void foo(int a) {
 }
 
 
@@ -18,6 +18,6 @@ main() {
 
     int a, b[10];
     char c, d[20];
-    fun(a+c, b, c, d);
+    foo(a + c);
 
 }

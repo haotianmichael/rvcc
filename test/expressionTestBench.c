@@ -18,5 +18,6 @@ main() {
     int a, b[10];
     char c, d[20];
 
-    foo(a + c - a + vara);
+    foo(-10 +-c + -vara);
+
 }

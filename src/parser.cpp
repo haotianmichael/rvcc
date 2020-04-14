@@ -7,6 +7,7 @@ extern IntermediateGenerator itgenerator;   //四元式产生表
 int varCount = 0;  //临时变量计数器
 static int labelCount = 0;   //标签计数器
 static int stringCount = 0;   //字符串计数器
+static int isPre = 0;  //表达式计算  是否有前驱符号 0为没有  1为+   2为-
 
 
 /*
@@ -1205,7 +1206,7 @@ std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
 //<表达式> ::= [ + | -]<项>{<加法运算符><项>}
 exprRet Parser::Parse_expression(std::string scope) {
 
-    std::cout << "Start expression" << std::endl;
+    //std::cout << "Start expression" << std::endl;
     bool previs = false;   //有前缀项的flag
     exprRet er;
     std::vector<PostfixExpression> pfeListBefore;  //中缀表达式
@@ -1232,6 +1233,10 @@ exprRet Parser::Parse_expression(std::string scope) {
             pfe.value = (getCurrentToken() == SY_PLUS)  ? '+' : '-';
             pfeListBefore.push_back(pfe); 
             currentToken = next();
+            if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
+                isPre = (getCurrentToken() == SY_PLUS) ? 1 : 2;
+                currentToken = next();  //直接解析掉前驱符号
+            }
         }else break; 
         Parse_item(scope, pfeListBefore);
     }
@@ -1260,7 +1265,7 @@ exprRet Parser::Parse_expression(std::string scope) {
 //<项> ::= <因子>{<乘法运算符><因子>}
 bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> pfeList) {
 
-    std::cout << "Start item" << std::endl;
+    //std::cout << "Start item" << std::endl;
     Parse_factor(scope, pfeList);
 
     while(true) {
@@ -1289,7 +1294,7 @@ bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> pfeLis
  */
 bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeList) {
 
-    std::cout << "Start factor" << std::endl;
+    //std::cout << "Start factor" << std::endl;
     PostfixExpression pfe;
     exprRet er;
     FourYuanInstr fy;
@@ -1313,18 +1318,32 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
             }
             break;
         case CONST_INT:
+            factor_symbol(isPre);
+            break;
         case SY_PLUS:
         case SY_MINUS:
-
-            break;
-        case CONST_STRING:
-
+            panic("SyntaxError: too many operators at line %d, column %d", line, column);
             break;
         default:
             return false;
     }
 
     return true;
+}
+
+//因子中的常量和前驱正负号解析
+void Parser::factor_symbol(int isPre) {
+
+    if(isPre == 0) {  //没有前驱符号
+        
+    }else if(isPre == 1) { // + 
+    
+    }else if(isPre == 2) {  // -
+    
+    }
+    isPre = 0;
+    currentToken = next();  //吃掉该字符
+    return ;
 }
 
 

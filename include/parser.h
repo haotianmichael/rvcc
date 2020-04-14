@@ -108,6 +108,7 @@ class Parser
         std::string varGenerator();
         std::string labelGenetar();
         std::string stringGenetar();
+        void factor_symbol(int isPre);
 
 
     private:

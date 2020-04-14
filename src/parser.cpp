@@ -1276,6 +1276,10 @@ bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> pfeLis
             pfe.isOpcode = true;
             pfeList.push_back(pfe);
             currentToken = next();
+            if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
+                isPre = (getCurrentToken() == SY_PLUS) ? 1 : 2;
+                currentToken = next();  //直接解析掉前驱符号
+            }
         }else break;
         //因子
         Parse_factor(scope, pfeList);

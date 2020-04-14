@@ -1026,7 +1026,6 @@ bool Parser::Parse_Stmt(std::string scope) {
                     }else {
                         panic("SyntaxError: FunCall Error at line %d, column %d", line, column); 
                     }
-                    currentToken = next();
                     if(getCurrentToken() != SY_RPAREN) {   //  ) 
                         panic("SyntaxError: Statement lack ) at line %d, column %d", line, column);
                     }
@@ -1052,6 +1051,7 @@ bool Parser::Parse_Stmt(std::string scope) {
 //函数检查
 bool Parser::funCheck(std::string name, bool inExpr, std::vector<itemType> paralist) {
 
+    return true;
     bool isfun = false;
     SymbolItem *head = __symbolTable->getHead();
     SymbolItem *tail = __symbolTable->getTail();
@@ -1211,7 +1211,6 @@ exprRet Parser::Parse_expression(std::string scope) {
     std::vector<PostfixExpression> pfeListBefore;  //中缀表达式
 
     //[+ | -]
-    currentToken = next();
     if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS){
         //生成代码相关
         previs = true;
@@ -1220,11 +1219,10 @@ exprRet Parser::Parse_expression(std::string scope) {
         pfe.isOpcode = true;
         pfe.value = (getCurrentToken() == SY_PLUS)  ? '+' : '-';
         pfeListBefore.push_back(pfe);
+        currentToken = next();
     }
 
     Parse_item(scope, pfeListBefore);
-    return er;
-    //std::cout << getCurrentLexeme() << std::endl;
     while(true) {
         if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
             //生成代码相关
@@ -1233,6 +1231,7 @@ exprRet Parser::Parse_expression(std::string scope) {
             pfe.isOpcode = true;
             pfe.value = (getCurrentToken() == SY_PLUS)  ? '+' : '-';
             pfeListBefore.push_back(pfe); 
+            currentToken = next();
         }else break; 
         Parse_item(scope, pfeListBefore);
     }

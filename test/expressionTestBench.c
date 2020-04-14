@@ -12,12 +12,11 @@ void fun(int a, int b[], char c, char d[]) {
 void foo(int a) {
 }
 
-
 int 
 main() {
 
     int a, b[10];
     char c, d[20];
-    foo(a + c);
 
+    foo(a + c - a + vara);
 }

@@ -1492,9 +1492,11 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
                 pfe.isCharvar = (er.it == it_intType) ? true : false; 
             }
             pfeList.push_back(pfe);
-            currentToken = next();
             if(getCurrentToken() != SY_RPAREN) {
+                //std::cout << getCurrentLexeme() << std::endl;
                 panic("SyntaxError: lack ) at line %d, columne %d ", line, column); 
+            }else {
+                currentToken = next();
             }
             break;
         default:

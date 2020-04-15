@@ -1306,19 +1306,138 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
 
     switch (getCurrentToken()) {
         case TK_IDENT:    //标识符   ————>  变量   函数   数组
+            name = getCurrentLexeme();
             currentToken = next();
             if(getCurrentToken() == SY_LBRACKET) {   // [  数组
+                currentToken = next();
+                er = Parse_expression(scope);
+                std::string res;
+                int index;
+                if(er.isSure) {
+                    fy.setopcode(ASS); 
+                    fy.settarget(varGenerator()); 
+                    fy.setsrcArr(false);
+                    fy.settargetArr(false);
+                    if(er.it == it_charType) {
+                        index = checkArr(name, scope, true, er.cvalue);                         
+                        char x[10] = {'\0'}; 
+                        sprintf(x, "%d", er.cvalue);
+                        fy.setleft(x);
+                        fy.setop('+');
+                        fy.setright("0");
+                    }else {
+                        index = checkArr(name, scope, true, er.value);                         
+                        char x[10] = {'\0'}; 
+                        sprintf(x, "%d", er.value);
+                        fy.setleft(x);
+                        fy.setop('+');
+                        fy.setright("0");
+                    }
+                    res = fy.gettarget();
+                }else{
+                    index = checkArr(name, scope, false); 
+                    if(er.name.size() > 0 && er.name[0] == 'T') {
+                        fy.setopcode(ASS);                
+                        fy.settarget(varGenerator());
+                        fy.setsrcArr(false);
+                        fy.settargetArr(false);
+                        fy.setop('+');
+                        fy.setright("0");
+                        itgenerator.pushIntermediateItem(fy);
+                        res = fy.gettarget();
+                    }else {
+                        res = er.name; 
+                    }
+                } 
 
+                if(index >= 0) {
+                    fy.setopcode(ASS); 
+                    fy.settarget(varGenerator()); 
+                    fy.setsrcArr(true);
+                    fy.settargetArr(false);
+                    char x[10] = {'\0'};
+                    sprintf(x, "%d", index); 
+                    fy.setleft("G" + std::string(x) + name); 
+                    itgenerator.pushIntermediateItem(fy);
 
+                    pfe.it = it_stringType;
+                    SymbolItem*pt = __symbolTable->getHead();
+                    for(int i = 0; i < index; i ++) {
+                        if(pt->next != NULL) {
+                            pt = pt->next; 
+                        } 
+                    } 
+                    pfe.isCharvar = false;
+                    if(static_cast<LocalItem *>(pt)->getIt() == it_charType) {
+                        pfe.isCharvar = true; 
+                    }
+                    pfe.str = fy.gettarget();
+                    pfeList.push_back(pfe);
+                }else {
+                     pfe.it = it_stringType;
+                     pfe.str = name;
+                }
 
-
-
-
+                currentToken = next();
+                if(getCurrentToken() != SY_RBRACKET) {   // ]  
+                        panic("SyntaxError:  lack ] at line %d, column %d", line, column); 
+                }
             }else if(getCurrentToken() == SY_LPAREN) {   //  (  函数
+                currentToken = next();
+                std::vector<itemType>  paraTable = Parse_valueParamList(scope);
+                if(!funCheck(name, true, paraTable)) {
+                    panic("SyntaxError: FunCall Error at line %d, column %d", line, column); 
+                }
+                fy.setopcode(FUNCALL);
+                fy.settarget(name);
+                itgenerator.pushIntermediateItem(fy);
+                fy.setopcode(ASS);
+                fy.settarget(varGenerator());
+                fy.settargetArr(false);
+                fy.setsrcArr(false);
+                fy.setleft("Ret");
+                fy.setop('+');
+                fy.setright("0");
+                itgenerator.pushIntermediateItem(fy);
 
+                pfe.it = it_stringType;
+                pfe.str = fy.gettarget();
+                pfe.isCharvar = false;
+                pfeList.push_back(pfe); 
             }else {   //变量
-
-
+                int index = checkInfactor(name, scope);
+                if(index >= 0) {
+                    SymbolItem * pt = __symbolTable->getHead();
+                    for(int i = 0; i < index; i ++) {
+                        if(pt->next != NULL) {
+                            pt = pt->next; 
+                        } 
+                    } 
+                    if(static_cast<LocalItem*>(pt)->getLm() == lm_constant) {
+                        pfe.it = static_cast<LocalItem*>(pt)->getIt();
+                        pfe.value = (pfe.it == it_intType) ? (static_cast<LocalItem *>(pt)->getInteger()) 
+                            : (static_cast<LocalItem *>(pt)->getCharacter());
+                        if(pfe.it == it_charType) 
+                            pfe.isOpcode = false;
+                    
+                    }else {
+                        pfe.isCharvar = false;
+                        if((static_cast<LocalItem*>(pt)->getLm() == lm_variable || static_cast<LocalItem*>(pt)->getLm() == lm_parameter) 
+                                || static_cast<LocalItem*>(pt)->getIt() == it_charType){
+                            pfe.isCharvar = true; 
+                        }
+                        pfe.it = it_stringType;
+                        char x[10] = {'\0'};
+                        sprintf(x, "%d", index); 
+                        pfe.str = "G" + std::string(x) + name;
+                   }
+                }else {
+                    pfe.it = it_stringType; 
+                    pfe.isCharvar = false;
+                    pfe.str = name;
+                    itgenerator.pushIntermediateItem(fy); 
+                }
+                pfeList.push_back(pfe); 
             }
             break;
         case CONST_INT:
@@ -1328,10 +1447,44 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
         case SY_MINUS:
             panic("SyntaxError: too many operators at line %d, column %d", line, column);
             break;
+        case CONST_CHAR:
+            pfe.it  = it_charType;
+            pfe.value = getCurrentLexeme()[0];
+            pfe.isOpcode = false;
+            pfeList.push_back(pfe);
+            break;
+        case SY_LPAREN:   //  ()括号
+            currentToken = next();
+            er = Parse_expression(scope);
+            if(er.isSure) {
+                pfe.it = it_intType;
+                pfe.value = (er.it == it_intType)   ? er.value : er.cvalue;      
+            }else {
+                pfe.it = it_stringType; 
+                if(er.name.size() > 0 && er.name[0] == 'T') {
+                    fy.setopcode(ASS);
+                    fy.settarget(varGenerator());
+                    fy.settargetArr(false);
+                    fy.setsrcArr(false); 
+                    fy.setop('+');
+                    fy.setright("0");
+                    fy.setleft(er.name); 
+                    itgenerator.pushIntermediateItem(fy);
+                    pfe.str = fy.gettarget();
+                }else {
+                    pfe.str = er.name; 
+                }
+                pfe.isCharvar = (er.it == it_intType) ? true : false; 
+            }
+            pfeList.push_back(pfe);
+            currentToken = next();
+            if(getCurrentToken() != SY_RPAREN) {
+                panic("SyntaxError: lack ) at line %d, columne %d ", line, column); 
+            }
+            break;
         default:
             return false;
     }
-
     return true;
 }
 

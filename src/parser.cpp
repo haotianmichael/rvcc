@@ -1235,6 +1235,8 @@ exprRet Parser::Parse_expression(std::string scope) {
             if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
                 isPre = (getCurrentToken() == SY_PLUS) ? 1 : 2;
                 currentToken = next();  //直接解析掉前驱符号
+            }else if(getCurrentToken() == SY_TIMES || getCurrentToken() == SY_DEV) {
+                panic("SyntaxError: too many operators at line %d, column %d", line, column);
             }
         }else break; 
         Parse_item(scope, pfeListBefore);
@@ -1278,6 +1280,8 @@ bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> pfeLis
             if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
                 isPre = (getCurrentToken() == SY_PLUS) ? 1 : 2;
                 currentToken = next();  //直接解析掉前驱符号
+            }else if(getCurrentToken() == SY_TIMES || getCurrentToken() == SY_DEV) {
+                panic("SyntaxError: too many operators at line %d, column %d", line, column);
             }
         }else break;
         //因子

@@ -1154,7 +1154,6 @@ std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
         } 
     }
 
-
     while(true) {
         // ,
         if(getCurrentToken() != SY_COMMA) {
@@ -1378,12 +1377,17 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
                      pfe.str = name;
                 }
 
-                currentToken = next();
                 if(getCurrentToken() != SY_RBRACKET) {   // ]  
-                        panic("SyntaxError:  lack ] at line %d, column %d", line, column); 
+                    panic("SyntaxError:  lack ] at line %d, column %d", line, column); 
+                }else {
+                    currentToken = next();
                 }
             }else if(getCurrentToken() == SY_LPAREN) {   //  (  函数
                 currentToken = next();
+                if(getCurrentToken() == SY_RPAREN) {
+                    currentToken = next();
+                    break;
+                }
                 std::vector<itemType>  paraTable = Parse_valueParamList(scope);
                 if(!funCheck(name, true, paraTable)) {
                     panic("SyntaxError: FunCall Error at line %d, column %d", line, column); 
@@ -1404,6 +1408,13 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
                 pfe.str = fy.gettarget();
                 pfe.isCharvar = false;
                 pfeList.push_back(pfe); 
+
+
+                if(getCurrentToken() != SY_RPAREN) {   // )  
+                    panic("SyntaxError:  lack )  at line %d, column %d", line, column); 
+                }else {
+                    currentToken = next();
+                }
             }else {   //变量
                 int index = checkInfactor(name, scope);
                 if(index >= 0) {
@@ -2018,4 +2029,23 @@ void Parser::printParser() {
     return;
 }
 
+
+int Parser::checkInfactor(std::string name, std::string scope)  {
+
+    return 0;
+}
+
+
+int Parser::checkArr(std::string name, std::string scope, bool exp, int index) {
+
+
+    return 0;
+}
+
+
+int Parser::checkInStmt(std::string name) {
+
+
+    return 0;
+}
 

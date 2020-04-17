@@ -271,7 +271,8 @@ void Parser::parse() {
         //解析
         if(Parse_procedure())  {
             std::cout << std::endl<< std::endl << "SyntaxAnalysis Succeeded!...Starting To Print SymbolTable..." << std::endl << std::endl;
-            __symbolTable->printTable();   //打印符号表
+            //__symbolTable->printTable();   //打印符号表
+            itgenerator.printTmpItem();
             return;
         }
     }
@@ -474,9 +475,9 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
                 panic("SyntaxError:  unknown dataType at line %d, column %d", line, column);
             }
             currentToken = next();
+            overallSymbol.Name  = getCurrentLexeme();   
             if(getCurrentToken() == KW_MAIN) return false;  //解析主函数
             if(getCurrentToken() == TK_IDENT) {   //全局变量 && 全局数组
-                overallSymbol.Name  = getCurrentLexeme();   
                 currentToken = next();
                 if(getCurrentToken() == SY_LPAREN) {
                     std::cout << "Parse_varDeclaration Over..." << std::endl << std::endl;
@@ -687,6 +688,11 @@ bool Parser::Parse_functionDefinition() {
         std::cout <<  "Parse_functionDefinition Over..." << std::endl << std::endl;
         return false; 
     } 
+    if(overallSymbol.Name == "main" && overallSymbol.type == frt_intType) {
+        return false; 
+    }else if(overallSymbol.Name == "main" && overallSymbol.type!= frt_intType) {
+        panic("SyntaxError:  Main return wrong value! at line %d, colunm %d", line, column); 
+    }
     if(overallSymbol.type == frt_intType || overallSymbol.type == frt_charType) {  //因为全局变量解析一定会被执行，所以overallSymbol一定会被赋值
         Parse_haveReturnFuncDefinition();  
     }else if(overallSymbol.type == frt_voidType) {
@@ -2043,8 +2049,6 @@ int Parser::checkInfactor(std::string name, std::string scope)  {
 
 
 int Parser::checkArr(std::string name, std::string scope, bool exp, int index) {
-
-
     return 0;
 }
 

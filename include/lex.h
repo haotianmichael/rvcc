@@ -42,6 +42,8 @@ enum P_Token{
     SY_GE,   //  >=
     SY_LT,    //  <
     SY_LE,    //  <=
+    SY_AND,    // &&
+    SY_OR,  // ||
 
 
     SY_COMMA,  // , 

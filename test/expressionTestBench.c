@@ -17,6 +17,10 @@ int bee(int a) {
 }
 
 
+void duu(int a, int b, int c) {
+
+
+}
 
 int 
 main() {
@@ -29,5 +33,5 @@ main() {
     foo(-a + d[2]);
     foo(d[2] / -390 + d[3] * -vara * 4 + b[1]);
     foo(bee(2 + 3) + -d[3] * vara + -b[1] / -bee(d[3]));
-    foo(bee(d[2] + -90) * -d[4] / (-vara + a) + d[3]);
+    duu(bee(d[2] + -90) * -d[4] / (-vara + a) + d[3], -a + d[2], bee(2 + 3) + -d[3] * vara  + -b[1] / -bee(d[3]));
 }

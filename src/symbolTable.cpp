@@ -1,6 +1,7 @@
 #include "../include/symbolTable.h"
 #include "../include/parser.h"
 #include "../include/utils.h"
+#include <fstream>
 
 /*__symbolItem*/
 SymbolItem::SymbolItem(symbolType st, std::string scope, std::string name) {
@@ -137,12 +138,13 @@ bool SymbolTable::pushSymbolItem(std::string scope, std::string proname) {
 //打印符号表
 bool SymbolTable::printTable() {
 
+    std::ofstream out("symbloTableFile.txt");
     SymbolItem *si = __symbolItemHead;
     if(si == NULL) {
         return false; 
     }
     /*标题*/
-    std::cout << "SymbolTableType\t" << "name\t" << "scope\t"  << "localMold\t" << "itemType\t"<<  "value" << std::endl;
+    out << "Type\t" << "name\t" << "scope\t"  << "localMold\t" << "itemType\t"<<  "value" << std::endl;
 
 
     while(si != NULL) {
@@ -155,22 +157,22 @@ bool SymbolTable::printTable() {
             itemType it = li->getIt();
             int value = ERROR_CODE;
             char cvalue = ' ';
-            std::cout << "localType\t";
-            std::cout << name << "\t"; 
-            std::cout << scope << "\t";
+            out << "localType\t";
+            out << name << "\t"; 
+            out << scope << "\t";
             if(lm == lm_constant) {
-                std::cout << "constant\t";
+                out << "constant\t";
             }else if(lm == lm_variable) {
-                std::cout << "variable\t"; 
+                out << "variable\t"; 
             }
             if(it == it_intType) {
                 value = li->getInteger(); 
-                std::cout << "int\t\t" << value << "\t";
+                out << "int\t\t" << value << "\t";
             }else if(it == it_charType){
                 cvalue = li->getCharacter(); 
-                std::cout << "char\t\t" << cvalue << "\t";
+                out << "char\t\t" << cvalue << "\t";
             }
-            std::cout << std::endl;
+            out << std::endl;
 
             /*
                }else if(st == st_arrayType){

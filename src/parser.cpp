@@ -12,7 +12,7 @@ static int isPre = 0;  //表达式计算  是否有前驱符号 0为没有  1为
 
 /*
    构造函数  列表初始化成员关键字 
- */
+   */
 Parser::Parser(const std::string &fileName) : keywords({
         {"main", KW_MAIN},
         {"void", KW_VOID},
@@ -39,7 +39,7 @@ Parser::Parser(const std::string &fileName) : keywords({
 
 /*
    预处理器   格式：  #include <file.h>
- */
+   */
 std::string Parser::preprocessors() {
     std::string filename = "";
     std::string tmp = "";
@@ -78,7 +78,7 @@ std::string Parser::preprocessors() {
 
 /*
    词法分析器
- */
+   */
 std::tuple<P_Token, std::string>  Parser::next(){
 
 
@@ -185,7 +185,26 @@ std::tuple<P_Token, std::string>  Parser::next(){
     if(ctr == '{') return std::make_tuple(SY_LBRACE, "{");
     if(ctr == '}') return std::make_tuple(SY_RBRACE, "}");
     if(ctr == '%') return std::make_tuple(SY_PERCENT, "%");
-    if(ctr == '&') return std::make_tuple(SY_ADDRESS, "&");
+
+    if(ctr == '&') {
+        char ctrn = peekNextChar();
+        if(ctrn == '&') {
+            ctr = getNextChar();
+            return std::make_tuple(SY_AND,"&&");        
+        }else {
+            return std::make_tuple(SY_ADDRESS, "&");
+        }
+    }
+
+    if(ctr == '|') {
+        char ctrn = peekNextChar();
+        if(ctrn == '|') {
+            ctr = getNextChar();
+            return std::make_tuple(SY_OR,"||");        
+        }else {
+            panic("SynaxError: unknow token: %c", ctr);
+        }
+    }
 
     if(ctr == '=') {
         char ctrn = peekNextChar();
@@ -249,7 +268,7 @@ void Parser::printLex() {
 //入口函数
 void Parser::parse() {
 
-    std::cout << "SyntaxAnalysis Start..." << std::endl << std::endl;
+    std::cout << "Opening Complier..." << std::endl << std::endl;
 
     /*初始化符号表*/
     this->__symbolTable = new SymbolTable();
@@ -267,12 +286,15 @@ void Parser::parse() {
             std::cout << "Preprocessors: #include <" << filename << ">" << std::endl; 
             currentToken = next();
         }
-        std::cout << "###########################Start " << std::endl << std::endl << std::endl;
+        std::cout << "###########################SyntaxAnalysis Starting..." << std::endl << std::endl << std::endl;
         //解析
         if(Parse_procedure())  {
-            std::cout << std::endl<< std::endl << "SyntaxAnalysis Succeeded!...Starting To Print SymbolTable..." << std::endl << std::endl;
-            //__symbolTable->printTable();   //打印符号表
-            itgenerator.printTmpItem();
+            std::cout << std::endl<< std::endl << "###########################SyntaxAnalysis Succeeded!..." << std::endl;
+            std::cout  << "Starting To Print SymbolTableFile..." << std::endl;
+            __symbolTable->printTable();   //打印符号表
+            std::cout << "Starting To Print tmpCodeFile..." << std::endl;
+            itgenerator.printTmpItem();   //打印中间代码
+            std::cout << "Print Succeeded!" << std::endl << std::endl << "Closing Complier..." << std::endl;
             return;
         }
     }
@@ -316,7 +338,6 @@ bool Parser::Parse_procedure() {
     tmp.setfunct(frt_voidType); 
     tmp.settarget("main");
     itgenerator.pushIntermediateItem(tmp);
-
 
     //复合语句
     Parse_compoundStmt("main");
@@ -761,10 +782,10 @@ bool Parser::Parse_haveReturnFuncDefinition() {
 
     //复合语句
     Parse_compoundStmt(overallSymbol.Name);
-
     // } 
     if(getCurrentToken() != SY_RBRACE) {
-        panic("SyntaxError: funcDefiniton expects } at line %d, column %d", line, column); 
+        //std::cout << getCurrentLexeme() << std::endl;
+        panic("qSyntaxError: funcDefiniton expects } at line %d, column %d", line, column); 
     }
     return true;
 }
@@ -808,6 +829,7 @@ bool Parser::Parse_noReturnFuncDefinition() {
 
     //复合语句
     Parse_compoundStmt(funName);
+
 
     // }
     if(getCurrentToken() != SY_RBRACE) {
@@ -982,6 +1004,7 @@ bool Parser::Parse_Stmt(std::string scope) {
     FourYuanInstr tmp;
 
     //紧接着constDeclaration 和 varDeclaration  最后一步是!next
+    //std::cout << getCurrentLexeme() << std::endl;
     switch (getCurrentToken()) {
         case KW_IF:   //<条件语句>
             Parse_conditionStmt(scope); 
@@ -1003,7 +1026,6 @@ bool Parser::Parse_Stmt(std::string scope) {
             break;
         case KW_RETURN:     //<返回语句>
             Parse_returnStmt(scope);
-            currentToken = next();
             if(getCurrentToken() != SY_SEMICOLON) 
                 panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
             break;
@@ -1013,7 +1035,6 @@ bool Parser::Parse_Stmt(std::string scope) {
             if(getCurrentToken() == SY_ASSIGN || getCurrentToken() == SY_LBRACKET) {
                 //赋值语句
                 Parse_assignStmt(scope, name); 
-                currentToken = next();
                 if(getCurrentToken() != SY_SEMICOLON) {
                     panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
                 }
@@ -1051,6 +1072,7 @@ bool Parser::Parse_Stmt(std::string scope) {
             break;
     }
     currentToken = next();    //开始检测下一个语句  或者   
+    //std::cout << getCurrentLexeme() << std::endl;
     return true;
 }
 
@@ -1126,11 +1148,11 @@ std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
 
 
     exprRet er = Parse_expression(scope);
-    if(!er.isEmpty) {
-        paralist.push_back(er.it);
-    }else {
-        return paralist;  
-    }
+    /*if(!er.isEmpty) {*/
+    //paralist.push_back(er.it);
+    //}else {
+    //return paralist;  
+    /*}*/
     if(er.isSure) {
         char x[15] = {'\0'}; 
         sprintf(x, "%d", er.it == it_intType ? er.value : er.cvalue); 
@@ -1304,7 +1326,7 @@ bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> pfeLis
    括号
    整数
    字符 
- */
+   */
 bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeList) {
 
     //std::cout << "Start factor" << std::endl;
@@ -1383,8 +1405,8 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
                     pfe.str = fy.gettarget();
                     pfeList.push_back(pfe);
                 }else {
-                     pfe.it = it_stringType;
-                     pfe.str = name;
+                    pfe.it = it_stringType;
+                    pfe.str = name;
                 }
 
                 if(getCurrentToken() != SY_RBRACKET) {   // ]  
@@ -1440,7 +1462,7 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
                             : (static_cast<LocalItem *>(pt)->getCharacter());
                         if(pfe.it == it_charType) 
                             pfe.isOpcode = false;
-                    
+
                     }else {
                         pfe.isCharvar = false;
                         if((static_cast<LocalItem*>(pt)->getLm() == lm_variable || static_cast<LocalItem*>(pt)->getLm() == lm_parameter) 
@@ -1451,7 +1473,7 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
                         char x[10] = {'\0'};
                         sprintf(x, "%d", index); 
                         pfe.str = "G" + std::string(x) + name;
-                   }
+                    }
                 }else {
                     pfe.it = it_stringType; 
                     pfe.isCharvar = false;
@@ -1515,11 +1537,11 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
 void Parser::factor_symbol(int isPre) {
 
     if(isPre == 0) {  //没有前驱符号
-        
+
     }else if(isPre == 1) { // + 
-    
+
     }else if(isPre == 2) {  // -
-    
+
     }
     isPre = 0;
     currentToken = next();  //吃掉该字符
@@ -1541,6 +1563,7 @@ bool Parser::Parse_conditionStmt(std::string scope) {
         panic("SytaxErro: lack ( at line %d, column %d", line, column); 
         return false; 
     }
+    currentToken = next();
 
     //识别<条件>
     Parse_condition(scope);
@@ -1549,7 +1572,7 @@ bool Parser::Parse_conditionStmt(std::string scope) {
 
     // )
     if(getCurrentToken() != SY_RPAREN) {
-        panic("SytaxErro: lack )  at line %d, column %d", line, column); 
+        panic("2SytaxError: lack )  at line %d, column %d", line, column); 
         return false; 
     } 
 
@@ -1560,9 +1583,8 @@ bool Parser::Parse_conditionStmt(std::string scope) {
     }
 
     //分析语句
-    Parse_Stmt(scope);
-
-    currentToken = next();
+    Parse_compoundStmt(scope);
+    //std::cout << getCurrentLexeme() << std::endl;
     if(getCurrentToken() != SY_RBRACE) {   
         panic("SytaxError: lack  } at line %d, column %d", line, column); 
         return false; 
@@ -1578,9 +1600,8 @@ bool Parser::Parse_conditionStmt(std::string scope) {
             return false; 
         } 
 
-        Parse_Stmt(scope);
+        Parse_compoundStmt(scope);
 
-        currentToken = next();
         if(getCurrentToken() != SY_RBRACE) {
             panic("SytaxError: lack  } at line %d, column %d", line, column); 
             return false; 
@@ -1597,21 +1618,32 @@ bool Parser::Parse_conditionStmt(std::string scope) {
 bool Parser::Parse_condition(std::string scope) {
 
     Parse_expression(scope);
-
     if(getCurrentToken() == SY_RPAREN) {   //表达式
         return true;
-    }else {
+    }
+
+    while(true) {
+        if(getCurrentToken() == SY_RPAREN) {
+            break; 
+        }
         if(getCurrentToken() != SY_GE && getCurrentToken() != SY_GT 
                 && getCurrentToken() != SY_LE && getCurrentToken() != SY_LT
                 && getCurrentToken() != SY_EQ && getCurrentToken() != SY_NE) {
             panic("SyntaxError: wrong operator at line %d, column %d", line, column); 
-        }else {
-            Parse_expression(scope); 
+        }
+        currentToken = next();
+        Parse_expression(scope); 
 
-            if(getCurrentToken() != SY_RPAREN) 
-                panic("SyntaxError: lack )  at line %d, column %d", line, column);
+        if(getCurrentToken() == SY_AND || getCurrentToken() == SY_OR) {
+            currentToken = next();
+            Parse_expression(scope); 
         }
     }
+
+    if(getCurrentToken() != SY_RPAREN) {
+        panic("SyntaxError: lack )  at line %d, column %d", line, column);
+    }
+
 
     return true;
 }
@@ -1630,6 +1662,7 @@ bool Parser::Parse_loopStmt(std::string scope) {
     if(getCurrentToken() != SY_LPAREN) {
         panic("SyntaxError: lack  ( at line %d, column %d", line, column); 
     }
+    currentToken = next();    //   (
 
     Parse_condition(scope);
 
@@ -1642,13 +1675,11 @@ bool Parser::Parse_loopStmt(std::string scope) {
         panic("SyntaxError: lack  { at line %d, column %d", line, column); 
     }
 
-    Parse_Stmt(scope);
+    Parse_compoundStmt(scope);
 
-    currentToken = next();   //   } 
     if(getCurrentToken() != SY_RBRACE) {
         panic("SyntaxError: lack }  at line %d, column %d", line, column); 
     }
-
     std::cout << "Parse_loopStmt Over..." << std::endl;
     return true;
 }
@@ -1662,7 +1693,7 @@ bool Parser::Parse_scanf(std::string scope) {
     if(getCurrentToken() != KW_SCANF) {
         return false; 
     }
-
+    scope = "";  //检查标识符作用域
     currentToken = next();   //   (
     if(getCurrentToken() != SY_LPAREN) {
         panic("SyntaxError: lack  ( at line %d, column %d", line, column); 
@@ -1732,7 +1763,6 @@ bool Parser::Parse_printf(std::string scope) {
 
 //<返回语句> ::= return ['('<表达式>')']
 bool Parser::Parse_returnStmt(std::string scope) {
-
     if(getCurrentToken() != KW_RETURN) {
         return false; 
     }
@@ -1741,10 +1771,10 @@ bool Parser::Parse_returnStmt(std::string scope) {
     if(getCurrentToken() != SY_LPAREN) {
         panic("SyntaxError: lack  ( at line %d, column %d", line, column); 
     }
+    currentToken = next();
 
     Parse_expression(scope);
 
-    currentToken = next();
     if(getCurrentToken() != SY_RPAREN) {
         panic("SyntaxError: lack  )  at line %d, column %d", line, column); 
     }
@@ -1758,10 +1788,38 @@ bool Parser::Parse_returnStmt(std::string scope) {
 
 
 //<赋值语句> ::= <标识符>=<表达式> | <标识符>'['<表达式>']'=<表达式>
-//实际分析的是  = <表达式> | '['<表达式>']'=<表达式>
 bool Parser::Parse_assignStmt(std::string scope, std::string name) {
 
+    if(getCurrentToken() == SY_ASSIGN) {   //标识符
+        currentToken  = next();
 
+        //std::cout << getCurrentLexeme() << std::endl;
+        Parse_expression(scope); 
+
+        //std::cout << getCurrentLexeme() << std::endl;
+        if(getCurrentToken() != SY_SEMICOLON) {
+            panic("SyntaxError: lack ; at line %d, colunm, %d", line, column); 
+        }
+    }else if(getCurrentToken() == SY_LBRACKET){   //数组元素
+
+        currentToken = next();
+        Parse_expression(scope);     
+
+        if(getCurrentToken() != SY_RBRACKET) {
+            panic("SyntaxError: lack ; at line %d, colunm, %d", line, column); 
+        }
+
+        currentToken = next();
+        if(getCurrentToken() != SY_ASSIGN) {
+            panic("SyntaxError: lack ; at line %d, colunm, %d", line, column); 
+        }
+
+        currentToken = next();
+        Parse_expression(scope);
+
+    }else {
+        panic("SyntaxError:  wrong format of assignment at line %d, column %d", line, column); 
+    }
 
     return true;
 }
@@ -1775,7 +1833,7 @@ int Parser::Parse_integer(std::string value) {
     /*
        符号表内容  判断数字
        wrong format 019
-     */
+       */
     int num = 0;
     if(value.length() > 1 && value[0] == '0') {
         panic("IntegerParserError: wrong format at line %d, column %d", line, column);

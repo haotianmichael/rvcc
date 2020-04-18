@@ -294,13 +294,15 @@ void Parser::parse() {
             __symbolTable->printTable();   //打印符号表
             std::cout << "Starting To Print tmpCodeFile..." << std::endl;
             itgenerator.printTmpItem();   //打印中间代码
+            //std::cout << "Starting To Print RiscvCodeFile..." << std::endl;
             std::cout << "Print Succeeded!" << std::endl << std::endl << "Closing Complier..." << std::endl;
             return;
         }
     }
 }
-/*声明部分*/
 
+
+/*声明部分*/
 //<程序> ::= [<常量说明>][<变量说明>][<函数定义部分>]<主函数>
 bool Parser::Parse_procedure() {
 

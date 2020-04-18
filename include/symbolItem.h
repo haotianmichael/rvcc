@@ -6,8 +6,7 @@
    子类继承方式   root根符号表对多类型符号表用vector管理
    @根符号表(父类)
    @函数符号表
-   @过程符号表 (if-while作用域)
-   @局部变量符号表
+   @局部符号表
    @数组符号表 
 
 */
@@ -72,7 +71,7 @@ class LocalItem : public SymbolItem {
     private:
         localMold _lm;   //常量&变量&参数
         itemType _it;  //具体数据类型
-        bool _isArr;   //是否为数组
+        bool _isArr = false;   //是否为数组
         int _iValue;   //整形值
         char _cValue;   //字符值
         int __length;  //数组类型长度
@@ -98,16 +97,3 @@ class FuncItem : public SymbolItem
         funcReturnType _frt;    //函数返回类型
 
 };
-
-
-//过程
-class ProcItem : public SymbolItem 
-{
-    public:
-        ProcItem(symbolType st, std::string scope, std::string itemname)
-            :SymbolItem(st, scope, itemname) {}
-
-    private:
-
-};
-

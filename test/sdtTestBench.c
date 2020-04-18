@@ -6,10 +6,10 @@ int array[10];
 
 
 int foo(int a, int b) {
-    int vara;
+    int key;
     if(a + b > cosa) {
-        vara = a + b;
-        return (vara);
+        key = a + b;
+        return (key);
     }else {
         array[3] =  a - b;
         return (array[3]);

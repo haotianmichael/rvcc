@@ -22,9 +22,8 @@ class SymbolTable
         bool pushSymbolItem(std::string scope, std::string itemname, localMold mold, itemType it, int value);  //int 类型localItem  
         bool pushSymbolItem(std::string scope, std::string itemname, localMold mold, itemType it, char value);   //char 类型 localItem
         bool pushSymbolItem(std::string scope, std::string itemname, localMold mold, itemType it_array, itemType array_type, int length);  //数组  类型localItem
-        
-        bool pushSymbolItem(std::string scope, std::string funcName, funcReturnType frt);   //funcItem
-        bool pushSymbolItem(std::string scope, std::string proname);  //proItem
+        //funcItem
+        bool pushSymbolItem(std::string scope, std::string funcName, funcReturnType frt);  
 
         /*  上下文有关分析
          *    类型检查

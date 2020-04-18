@@ -87,7 +87,6 @@ enum P_Token{
 //符号表类型
 enum symbolType{
     st_funcType,
-    st_procType,
     st_localType    
 };
 
@@ -102,7 +101,7 @@ enum funcReturnType{
 
 /*localItem 
   大体上分为3种:常量  变量  参数
-  每一种类又分为  整形  字符  数组 
+  每一种类又分为  整形(数组)  字符(数组)   
   */
 //localItem 种类  数据类型直接通过函数重载实现
 enum localMold{

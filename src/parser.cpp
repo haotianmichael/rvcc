@@ -499,7 +499,10 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
             }
             currentToken = next();
             overallSymbol.Name  = getCurrentLexeme();   
-            if(getCurrentToken() == KW_MAIN) return false;  //解析主函数
+            if(getCurrentToken() == KW_MAIN) {
+                overallSymbol.Name  = getCurrentLexeme();   
+                return false;  //解析主函数
+            }
             if(getCurrentToken() == TK_IDENT) {   //全局变量 && 全局数组
                 currentToken = next();
                 if(getCurrentToken() == SY_LPAREN) {
@@ -553,7 +556,10 @@ bool Parser::Parse_varDeclaration(bool isGlobal, std::string scope) {
                     panic("SyntaxError:  unknown dataType at line %d, column %d", line, column);
                 }
                 currentToken = next();
-                if(getCurrentToken() == KW_MAIN)  return false;         //解析主函数
+                if(getCurrentToken() == KW_MAIN)  {
+                    overallSymbol.Name = getCurrentLexeme();
+                    return false;         //解析主函数
+                }
                 if(getCurrentToken() == TK_IDENT) {  //全局变量 && 全局数组
                     overallSymbol.Name = getCurrentLexeme();
                     currentToken = next();
@@ -713,10 +719,11 @@ bool Parser::Parse_functionDefinition() {
     } 
     if(overallSymbol.Name == "main" && overallSymbol.type == frt_intType) {
         return false; 
-    }else if(overallSymbol.Name == "main" && overallSymbol.type!= frt_intType) {
+    }else if(overallSymbol.Name == "main" && overallSymbol.type!= frt_voidType) {
         panic("SyntaxError:  Main return wrong value! at line %d, colunm %d", line, column); 
     }
     if(overallSymbol.type == frt_intType || overallSymbol.type == frt_charType) {  //因为全局变量解析一定会被执行，所以overallSymbol一定会被赋值
+        //std::cout << getCurrentLexeme() << std::endl;
         Parse_haveReturnFuncDefinition();  
     }else if(overallSymbol.type == frt_voidType) {
         Parse_noReturnFuncDefinition(); 
@@ -854,7 +861,8 @@ bool Parser::Parse_functionDeclarHead() {
     frt = (overallSymbol.type == frt_intType) ? frt_intType : frt_charType;
 
     //函数名称
-    std::string funcName = overallSymbol.Name;
+    std::string funcName = overallSymbol.Name; 
+    //std::cout << funcName << std::endl;
     __symbolTable->pushSymbolItem("Global", funcName, frt);
 
     FourYuanInstr tmp;

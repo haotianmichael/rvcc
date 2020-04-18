@@ -117,6 +117,7 @@ bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localM
 //funcitem
 bool SymbolTable::pushSymbolItem(std::string scope, std::string name, funcReturnType frt) {
     if(!ispushSymbolItem(scope, name)){
+        //std::cout << scope << " " << name << std::endl;
         panic("RuntimeError: duplicate symbolTable definition"); 
         return false;
     }

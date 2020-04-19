@@ -62,10 +62,11 @@ enum fourYuanOpcode{
 //后缀表达式
 struct PostfixExpression {
     itemType it;
-    int value;
+    int value;  
+    char cvalue;
     std::string str;
-    bool isCharvar;  //是不是char型变量       char型数组元素
-    bool isOpcode;   //如果是char型变量 那是不是运算符
+    bool isArr;  //是否为数组
+    bool isOpcode;   //是否为运算符
 };
 
 //中间代码四元式
@@ -112,6 +113,8 @@ class FourYuanInstr
         std::string __right = "";  //右操作数
         itemType __paraT;  //参数类型
         funcReturnType __frt;  //函数返回类型
+
+
         bool __targetArr;  //赋值  结果是否为数组
         int __targetindex; //结果数组索引
         bool __srcArr;  //赋值  操作数是否为数组

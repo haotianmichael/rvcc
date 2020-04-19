@@ -140,6 +140,128 @@ bool SymbolTable::pushSymbolItem(std::string scope, std::string name, funcReturn
     return true;
 }
 
+//函数检查
+bool SymbolTable::funCheck(std::string name, bool inExpr, std::vector<itemType> paralist) {
+
+    bool isfun = false;
+    SymbolItem *head = getHead();
+    SymbolItem *tail = getTail();
+    std::vector<itemType> param;
+
+
+    while(head != tail) {
+        if((head->getscope() == "Global") && (head->getname() == name) &&
+                (head->getSt() == st_funcType)) {
+            isfun = true;
+            FuncItem* fci = static_cast<FuncItem *>(head);
+            if(inExpr && fci->getReturnType() == frt_voidType) {
+                panic("CheckError: VoidFunc can't match in expression.");  
+            }
+
+            head = head->next;
+            while(head != tail) {
+                LocalItem* fcii  = static_cast<LocalItem *>(head); 
+                if(fcii->getscope() == name && fcii->getLm() == lm_parameter) {
+                    param.push_back(fcii->getIt());   //参数检查
+                }else {
+                    break; 
+                } 
+            }
+            break; 
+        } 
+        head = head->next; 
+    }
+    if(isfun) {
+        if(paralist.size() == 0) {   //实参数量
+            isfun = false;
+            panic("CheckError:  Actual Para number error."); 
+        } 
+        if(param.size() != paralist.size()) {  //形参数量
+            isfun = false;
+            panic("CheckError:  Formal Para number error.");
+        }
+
+        for(unsigned int i = 0; i < paralist.size(); i ++) {
+            itemType formal = paralist[i];
+            itemType actual = param[i];
+            if(formal != actual) {
+                isfun = false; 
+                panic("CheckError: Para Type bot matched."); 
+            }
+        }
+
+    }
+
+    return isfun;
+}
+
+
+//标识符检查
+bool SymbolTable::identCheck(std::string name, std::string scope) {
+
+    bool is = false;
+    SymbolItem *head = getHead();
+    SymbolItem *tail = getTail();
+
+    /*
+     * 赋值必须为变量  不可为常量或数组
+     */
+    while(head != tail) {
+        if(head->getscope() == scope && head->getname() == name &&
+                head->getSt() == st_localType) {
+            is = true;
+            LocalItem *lm = static_cast<LocalItem *>(head);
+            if(lm->getLm() != lm_variable) {
+                panic("CheckError: lvariable Wrong"); 
+            }
+            break;
+        }
+        head = head->next; 
+    }
+
+    return is;
+}
+
+
+//类型检查(赋值语句)
+bool SymbolTable::typeCheck(std::string name, std::string scope, itemType dtype) {
+
+    SymbolItem *head = getHead();
+    SymbolItem *tail = getTail();
+    while(head != tail) {
+        if(head->getname() == name && head->getscope() == scope) {
+            break; 
+        }
+        head = head->next; 
+    } 
+    
+    if(head->getSt() == st_localType) {
+        LocalItem *lm = static_cast<LocalItem *>(head); 
+        if(lm->getIt() == dtype) {
+            return true; 
+        }else {
+            return false; 
+        }
+    }
+
+    return false;
+}
+
+//标识符[<表达式>]数组检查
+int SymbolTable::arrCheck(std::string name, std::string scope, bool exp, int index ) {
+
+
+    return 0;
+}
+
+//标识符检查
+int SymbolTable::stmtCheck(std::string name) {
+
+
+    return 0;
+}
+
+
 
 //打印符号表
 bool SymbolTable::printTable() {
@@ -260,7 +382,7 @@ bool SymbolTable::printTable() {
                std::cout << "char\t\t" << length << "\t"; 
                }
                std::cout << std::endl;
-             */
+               */
 
         }else if(st == st_funcType){
             FuncItem *fi = static_cast<FuncItem *>(si);
@@ -287,13 +409,13 @@ bool SymbolTable::printTable() {
             out.width(14);
             if(fr == frt_intType) {
                 out << "frt_intType"; 
-            
+
             }else if(fr == frt_charType) {
                 out << "frt_voidType";
-            
+
             }else if(fr == frt_voidType) {
                 out << "frt_voidType";
-            
+
             }
             out << std::endl;
         }

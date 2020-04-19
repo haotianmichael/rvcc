@@ -332,12 +332,12 @@ bool Parser::Parse_procedure() {
         panic("SyntaxError: main lack { at line %d, column %d", line, column);
 
     /*执行语句----------查表，生成中间代码*/
-    __symbolTable->pushSymbolItem("Global", "main", frt_voidType);
+    __symbolTable->pushSymbolItem("Global", "main", frt_intType);
 
     /*中间代码*/
     FourYuanInstr tmp;
     tmp.setopcode(FUNDEC);
-    tmp.setfunct(frt_voidType); 
+    tmp.setfunct(frt_intType); 
     tmp.settarget("main");
     itgenerator.pushIntermediateItem(tmp);
 
@@ -1040,8 +1040,8 @@ bool Parser::Parse_Stmt(std::string scope) {
                 panic("SyntaxError: Statement lack ; at line %d, column %d", line, column);
             break;
         case TK_IDENT:   //调用语句   赋值语句
-            currentToken = next();
             name = getCurrentLexeme();
+            currentToken = next();
             if(getCurrentToken() == SY_ASSIGN || getCurrentToken() == SY_LBRACKET) {
                 //赋值语句
                 Parse_assignStmt(scope, name); 
@@ -1059,7 +1059,7 @@ bool Parser::Parse_Stmt(std::string scope) {
                 }else { //有参数
                     std::cout << "Start FunCall with param..." << std::endl;
                     std::vector<itemType> valueList = Parse_valueParamList(scope);
-                    if(funCheck(name, true, valueList)) {  //函数参数  符号表检查
+                    if(__symbolTable->funCheck(name, true, valueList)) {  //函数参数  符号表检查
                         itgenerator.pushIntermediateItem(tmp); 
                     }else {
                         panic("SyntaxError: FunCall Error at line %d, column %d", line, column); 
@@ -1085,68 +1085,6 @@ bool Parser::Parse_Stmt(std::string scope) {
     //std::cout << getCurrentLexeme() << std::endl;
     return true;
 }
-
-
-//函数检查
-bool Parser::funCheck(std::string name, bool inExpr, std::vector<itemType> paralist) {
-
-    return true;
-    bool isfun = false;
-    SymbolItem *head = __symbolTable->getHead();
-    SymbolItem *tail = __symbolTable->getTail();
-    std::vector<itemType> param;   //从运行栈中读取参数
-
-    //函数名称检查
-    while(head != tail) {
-        if((head->getscope() == "GLOBAL") && (head->getname() == name) 
-                && (head->getSt() == st_funcType)) {   //函数
-            isfun = true; 
-            FuncItem* fci = static_cast<FuncItem *>(head);
-            if(inExpr && fci->getReturnType() == frt_voidType) {
-                panic("RuntimeError: VoidFunc can't match in expression at line %d, column %d", line, column);
-            }
-
-            head = head->next;
-            while(head != tail) {
-                LocalItem *fcii = static_cast<LocalItem *>(head);    
-                if(fcii->getscope() == name && fcii->getLm() == lm_parameter) {
-                    param.push_back(fcii->getIt());    //参数检查
-                }else {
-                    break; 
-                }
-                head = head->next;
-            } 
-            break;    
-        }
-        head = head->next; 
-    }
-
-    //函数参数检查
-    if(isfun) {
-        if(paralist.size() == 0) {  //实参数量
-            isfun = false;
-            panic("RuntimeError: Actual Para number error at line %d, colummn %d", line, column); 
-        } 
-        if(param.size() != paralist.size()) {   //形参数量
-            isfun = false;
-            panic("RuntimeError:  Formal Para number error at line %d, colummn %d", line, column); 
-        }
-
-        for(unsigned int i = 0; i < paralist.size(); i ++) {
-            itemType formal = paralist[i];
-            itemType actual = param[i];
-            if(formal != actual) {
-                isfun = false;
-                panic("RuntimeError: Para Type not matched at line %d, column %d", line, column); 
-            }
-        }
-    }
-    if(isfun == true) {
-        std::cout << "FunCall with para Checking Succeed!..." << std::endl; 
-    }
-    return isfun;
-}
-
 
 
 //<值参数表> ::= <表达式>{,<表达式>}
@@ -1244,18 +1182,17 @@ std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
 exprRet Parser::Parse_expression(std::string scope) {
 
     //std::cout << "Start expression" << std::endl;
-    bool previs = false;   //有前缀项的flag
     exprRet er;
     std::vector<PostfixExpression> pfeListBefore;  //中缀表达式
 
     //[+ | -]
     if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS){
         //生成代码相关
-        previs = true;
         PostfixExpression pfe;
         pfe.it = it_charType;
+        pfe.isArr = false;
         pfe.isOpcode = true;
-        pfe.value = (getCurrentToken() == SY_PLUS)  ? '+' : '-';
+        pfe.cvalue = (getCurrentToken() == SY_PLUS)  ? '+' : '-';
         pfeListBefore.push_back(pfe);
         currentToken = next();
     }
@@ -1267,7 +1204,8 @@ exprRet Parser::Parse_expression(std::string scope) {
             PostfixExpression pfe;
             pfe.it = it_charType; 
             pfe.isOpcode = true;
-            pfe.value = (getCurrentToken() == SY_PLUS)  ? '+' : '-';
+            pfe.isArr = false;
+            pfe.cvalue = (getCurrentToken() == SY_PLUS)  ? '+' : '-';
             pfeListBefore.push_back(pfe); 
             currentToken = next();
             if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
@@ -1280,7 +1218,8 @@ exprRet Parser::Parse_expression(std::string scope) {
         Parse_item(scope, pfeListBefore);
     }
 
-    //表达式计算
+
+    /*表达式计算  中缀表达式  转  后缀表达式*/
     if(pfeListBefore.size() == 0) {
         er.isEmpty = true;  
     }else {
@@ -1293,16 +1232,20 @@ exprRet Parser::Parse_expression(std::string scope) {
     int value;
     er.name = expressEvaluation(pfeListAfter, it, value);
     if(it == it_intType) {
+        er.it = it_intType;
         er.value = value; 
-    } else {
+    } else if(it == it_charType){
+        er.it = it_charType;
         er.cvalue = value; 
+    }else {
+        panic("ExpressionError: unknow type"); 
     }
     return er;
 }
 
 
 //<项> ::= <因子>{<乘法运算符><因子>}
-bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> pfeList) {
+bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> &pfeList) {
 
     //std::cout << "Start item" << std::endl;
     Parse_factor(scope, pfeList);
@@ -1311,8 +1254,9 @@ bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> pfeLis
         if(getCurrentToken() == SY_TIMES || getCurrentToken() == SY_DEV) {
             PostfixExpression pfe;
             pfe.it = it_charType;
-            pfe.str = (getCurrentToken() == SY_TIMES) ? '*' : '/';
+            pfe.cvalue= (getCurrentToken() == SY_TIMES) ? '*' : '/';
             pfe.isOpcode = true;
+            pfe.isArr = false;
             pfeList.push_back(pfe);
             currentToken = next();
             if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
@@ -1337,7 +1281,7 @@ bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> pfeLis
    整数
    字符 
    */
-bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeList) {
+bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> &pfeList) {
 
     //std::cout << "Start factor" << std::endl;
     PostfixExpression pfe;
@@ -1360,14 +1304,14 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
                     fy.setsrcArr(false);
                     fy.settargetArr(false);
                     if(er.it == it_charType) {
-                        index = checkArr(name, scope, true, er.cvalue);                         
+                        index = __symbolTable->arrCheck(name, scope, true, er.cvalue);                         
                         char x[10] = {'\0'}; 
                         sprintf(x, "%d", er.cvalue);
                         fy.setleft(x);
                         fy.setop('+');
                         fy.setright("0");
                     }else {
-                        index = checkArr(name, scope, true, er.value);                         
+                        index = __symbolTable->arrCheck(name, scope, true, er.value);                         
                         char x[10] = {'\0'}; 
                         sprintf(x, "%d", er.value);
                         fy.setleft(x);
@@ -1376,7 +1320,7 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
                     }
                     res = fy.gettarget();
                 }else{
-                    index = checkArr(name, scope, false); 
+                    index = __symbolTable->arrCheck(name, scope, false); 
                     if(er.name.size() > 0 && er.name[0] == 'T') {
                         fy.setopcode(ASS);                
                         fy.settarget(varGenerator());
@@ -1408,9 +1352,9 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
                             pt = pt->next; 
                         } 
                     } 
-                    pfe.isCharvar = false;
+                    //pfe.isCharvar = false;
                     if(static_cast<LocalItem *>(pt)->getIt() == it_charType) {
-                        pfe.isCharvar = true; 
+                        //pfe.isCharvar = true; 
                     }
                     pfe.str = fy.gettarget();
                     pfeList.push_back(pfe);
@@ -1431,7 +1375,7 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
                     break;
                 }
                 std::vector<itemType>  paraTable = Parse_valueParamList(scope);
-                if(!funCheck(name, true, paraTable)) {
+                if(!__symbolTable->funCheck(name, true, paraTable)) {
                     panic("SyntaxError: FunCall Error at line %d, column %d", line, column); 
                 }
                 fy.setopcode(FUNCALL);
@@ -1448,7 +1392,7 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
 
                 pfe.it = it_stringType;
                 pfe.str = fy.gettarget();
-                pfe.isCharvar = false;
+                //pfe.isCharvar = false;
                 pfeList.push_back(pfe); 
 
 
@@ -1457,44 +1401,36 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
                 }else {
                     currentToken = next();
                 }
-            }else {   //变量
-                int index = checkInfactor(name, scope);
-                if(index >= 0) {
-                    SymbolItem * pt = __symbolTable->getHead();
-                    for(int i = 0; i < index; i ++) {
-                        if(pt->next != NULL) {
-                            pt = pt->next; 
-                        } 
-                    } 
-                    if(static_cast<LocalItem*>(pt)->getLm() == lm_constant) {
-                        pfe.it = static_cast<LocalItem*>(pt)->getIt();
-                        pfe.value = (pfe.it == it_intType) ? (static_cast<LocalItem *>(pt)->getInteger()) 
-                            : (static_cast<LocalItem *>(pt)->getCharacter());
-                        if(pfe.it == it_charType) 
-                            pfe.isOpcode = false;
-
-                    }else {
-                        pfe.isCharvar = false;
-                        if((static_cast<LocalItem*>(pt)->getLm() == lm_variable || static_cast<LocalItem*>(pt)->getLm() == lm_parameter) 
-                                || static_cast<LocalItem*>(pt)->getIt() == it_charType){
-                            pfe.isCharvar = true; 
-                        }
-                        pfe.it = it_stringType;
-                        char x[10] = {'\0'};
-                        sprintf(x, "%d", index); 
-                        pfe.str = "G" + std::string(x) + name;
-                    }
-                }else {
-                    pfe.it = it_stringType; 
-                    pfe.isCharvar = false;
-                    pfe.str = name;
-                    itgenerator.pushIntermediateItem(fy); 
+            }else {   //变量 常量  参数
+                bool exist = __symbolTable->identCheck(name, scope);
+                if(!exist) {
+                    panic("CheckError:  undefined symbol"); 
                 }
+                SymbolItem * pt = __symbolTable->getHead();
+                SymbolItem * tail = __symbolTable->getTail();
+                while(pt != tail) {
+                    if(pt->getname() == name && pt->getscope() == scope) {
+                        break; 
+                    } 
+                    pt = pt->next;
+                }
+
+                pfe.it = static_cast<LocalItem*>(pt)->getIt();
+                if(pfe.it == it_intType) {
+                    pfe.value = static_cast<LocalItem *>(pt)->getInteger();
+                }else if(pfe.it == it_charType) {
+                    pfe.cvalue = static_cast<LocalItem *>(pt)->getCharacter(); 
+                }
+                pfe.isArr = false;
+                pfe.isOpcode = false;
+                pfe.it = it_stringType; 
+                pfe.str = name;
+                //itgenerator.pushIntermediateItem(fy); 
                 pfeList.push_back(pfe); 
             }
             break;
         case CONST_INT:
-            factor_symbol(isPre);
+            factor_symbol(isPre, pfeList);
             break;
         case SY_PLUS:
         case SY_MINUS:
@@ -1502,8 +1438,9 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
             break;
         case CONST_CHAR:
             pfe.it  = it_charType;
-            pfe.value = getCurrentLexeme()[0];
+            pfe.cvalue = getCurrentLexeme()[0];
             pfe.isOpcode = false;
+            pfe.isArr = false;
             pfeList.push_back(pfe);
             break;
         case SY_LPAREN:   //  ()括号
@@ -1527,7 +1464,7 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
                 }else {
                     pfe.str = er.name; 
                 }
-                pfe.isCharvar = (er.it == it_intType) ? true : false; 
+                //pfe.isCharvar = (er.it == it_intType) ? true : false; 
             }
             pfeList.push_back(pfe);
             if(getCurrentToken() != SY_RPAREN) {
@@ -1544,15 +1481,22 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> pfeL
 }
 
 //因子中的常量和前驱正负号解析
-void Parser::factor_symbol(int isPre) {
+void Parser::factor_symbol(int isPre, std::vector<PostfixExpression> &preList) {
 
+    std::string str = getCurrentLexeme();
+    int num = Parse_integer(str);
+    PostfixExpression pfe;
+    pfe.it = it_intType;
+    pfe.isArr = false;
+    pfe.isOpcode = false;
     if(isPre == 0) {  //没有前驱符号
-
+        pfe.value = num;
     }else if(isPre == 1) { // + 
-
+        pfe.value = num;
     }else if(isPre == 2) {  // -
-
+        pfe.value = -num;
     }
+    preList.push_back(pfe);
     isPre = 0;
     currentToken = next();  //吃掉该字符
     return ;
@@ -1799,17 +1743,35 @@ bool Parser::Parse_returnStmt(std::string scope) {
 
 //<赋值语句> ::= <标识符>=<表达式> | <标识符>'['<表达式>']'=<表达式>
 bool Parser::Parse_assignStmt(std::string scope, std::string name) {
+    //name为左值
+    FourYuanInstr fy;
+    fy.setopcode(ASS);
 
     if(getCurrentToken() == SY_ASSIGN) {   //标识符
+
         currentToken  = next();
-
         //std::cout << getCurrentLexeme() << std::endl;
-        Parse_expression(scope); 
-
-        //std::cout << getCurrentLexeme() << std::endl;
+        exprRet er = Parse_expression(scope); 
         if(getCurrentToken() != SY_SEMICOLON) {
             panic("SyntaxError: lack ; at line %d, colunm, %d", line, column); 
         }
+
+        bool exist = __symbolTable->identCheck(name, scope);        
+        if(!exist) {
+            panic("CheckError:  undefined symbol"); 
+        }
+        fy.settarget(name);
+        /*静态类型检查*/
+        if(!__symbolTable->typeCheck(name, scope, er.it)) {
+            panic("CheckError:  type not match"); 
+        }
+
+
+
+
+
+        itgenerator.pushIntermediateItem(fy);  //标识符赋值语句
+
     }else if(getCurrentToken() == SY_LBRACKET){   //数组元素
 
         currentToken = next();
@@ -1866,7 +1828,7 @@ int Parser::Parse_integer(std::string value) {
 
 
 //中缀表达式转后缀表达式
-void Parser::postfixReverse(std::vector<PostfixExpression> pfeListBefore, std::vector<PostfixExpression> pfeListAfter) {
+void Parser::postfixReverse(std::vector<PostfixExpression> &pfeListBefore, std::vector<PostfixExpression> &pfeListAfter) {
 
     std::vector<PostfixExpression> tmp;
     if(pfeListBefore.size() == 1) {
@@ -1892,7 +1854,7 @@ void Parser::postfixReverse(std::vector<PostfixExpression> pfeListBefore, std::v
             switch (pfe.value) {
                 case '+':
                 case '-':
-                    if(!pfe.isOpcode) {
+                    if(pfe.isOpcode) {
                         pfeListAfter.push_back(pfe); 
                         break; 
                     } 
@@ -1904,7 +1866,7 @@ void Parser::postfixReverse(std::vector<PostfixExpression> pfeListBefore, std::v
                     break;
                 case '*':
                 case '/':
-                    if(!pfe.isOpcode) {
+                    if(pfe.isOpcode) {
                         pfeListAfter.push_back(pfe); 
                         break; 
                     } 
@@ -1939,6 +1901,7 @@ std::string Parser::expressEvaluation(std::vector<PostfixExpression> &pfeList, i
     PostfixExpression pfeA, pfeB;
     FourYuanInstr fyi;
     std::vector<PostfixExpression> tmp;
+    //std::cout << pfeList.size() <<std::endl;
     if(pfeList.size() == 1) {
         pfeA = pfeList[0]; 
         if(pfeA.it == it_intType) {
@@ -1950,7 +1913,7 @@ std::string Parser::expressEvaluation(std::vector<PostfixExpression> &pfeList, i
             value = pfeA.value;
             return ""; 
         }else {
-            if(pfeA.isCharvar) {  //字符型变量
+            if(pfeA.it != it_charType) {  //字符型变量
                 type = it_charType; 
             } else {
                 type = it_intType; 
@@ -2083,47 +2046,23 @@ std::string Parser::expressEvaluation(std::vector<PostfixExpression> &pfeList, i
 
 //创建临时变量
 std::string Parser::varGenerator() {
-    char x[10] = {'\0'};
-    sprintf(x, "%d", ++varCount);
-    return ("T"+std::string(x));
+    return ("T"+std::to_string(++varCount));
 }
 
 //创建标签
 std::string Parser::labelGenetar() {
-    char x[10] = {'\0'};
-    sprintf(x, "%d", ++labelCount);
-    return ("Label"+std::string(x));
+    return ("LB"+std::to_string(++labelCount));
 }
 
 //创建字符串
 std::string Parser::stringGenetar() {
-    char x[10] = {'\0'};
-    sprintf(x, "%d", ++stringCount);
-    return ("String" + std::string(x));
+    return ("S"+std::to_string(++stringCount));
 }
 
 //语法分析器测试函数
 void Parser::printParser() {
-
     parse();
     return;
 }
 
-
-int Parser::checkInfactor(std::string name, std::string scope)  {
-
-    return 0;
-}
-
-
-int Parser::checkArr(std::string name, std::string scope, bool exp, int index) {
-    return 0;
-}
-
-
-int Parser::checkInStmt(std::string name) {
-
-
-    return 0;
-}
 

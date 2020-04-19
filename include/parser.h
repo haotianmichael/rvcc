@@ -87,9 +87,9 @@ class Parser
         //<表达式> ::= [+ | -]<项>{<加法运算符><项>}
         exprRet Parse_expression(std::string scope);
         //<项> ::= <因子>{<乘法运算符><因子>}
-        bool Parse_item(std::string scope, std::vector<PostfixExpression> pfeList); 
+        bool Parse_item(std::string scope, std::vector<PostfixExpression> &pfeList); 
         //<因子> ::= <标识符>['('<值参数表>')']|<标识符>'['<表达式>']'|'('<表达式>')'|<整数>|<字符>
-        bool Parse_factor(std::string scope, std::vector<PostfixExpression> preList);
+        bool Parse_factor(std::string scope, std::vector<PostfixExpression> &preList);
 
         //<读语句> ::= scanf‘(’<标识符>{,<标识符>}')'
         bool Parse_scanf(std::string scope);
@@ -102,16 +102,12 @@ class Parser
 
     public:
         /*表达式计算*/
-        void postfixReverse(std::vector<PostfixExpression> pfeListBefore, std::vector<PostfixExpression> pfeListAfter);   //中缀表达式转后缀表达式
+        void postfixReverse(std::vector<PostfixExpression> &pfeListBefore, std::vector<PostfixExpression> &pfeListAfter);   //中缀表达式转后缀表达式
         std::string expressEvaluation(std::vector<PostfixExpression> &, itemType &, int &);  //表达式求值
         std::string varGenerator();
         std::string labelGenetar();
         std::string stringGenetar();
-        void factor_symbol(int isPre);
-        bool funCheck(std::string name, bool inExpr, std::vector<itemType> paralist);    //函数参数 检查
-        int checkInfactor(std::string name, std::string scope);  //标识符检查  因子项
-        int checkInStmt(std::string name);   //标识符检查    语句
-        int checkArr(std::string name, std::string scope, bool exp, int index = 0); //标识符[<表达式>]检查   因子项   赋值语句
+        void factor_symbol(int isPre, std::vector<PostfixExpression> &preList);
 
 
     private:

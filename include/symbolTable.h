@@ -25,12 +25,17 @@ class SymbolTable
         //funcItem
         bool pushSymbolItem(std::string scope, std::string funcName, funcReturnType frt);  
 
-        /*  上下文有关分析
-         *    类型检查
-         *    语义分析检查
+        /*  
+         *  查表操作
+         *  上下文有关分析  类型检查   语义分析检查
+         *  
          */
         bool searchTable();  //查表
-        bool typeCheck(itemType stype, itemType dtype);   //类型检查
+        bool typeCheck(std::string name, std::string scope, itemType dtype);   //类型检查
+        bool funCheck(std::string name, bool inExpr, std::vector<itemType> paralist);  //函数参数检查
+        bool identCheck(std::string name, std::string scope);  //标识符检查    因子项
+        int stmtCheck(std::string name);  //标识符检查  赋值语句
+        int arrCheck(std::string name, std::string scope, bool exp, int index = 0);  //标识符[<表达式>]检查  赋值语句  因子项
 
 
     private:

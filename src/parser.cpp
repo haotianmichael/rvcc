@@ -4,6 +4,7 @@
 #include "../include/riscvGenerator.h"
 
 extern IntermediateGenerator itgenerator;   //四元式产生表
+std::vector<PostfixExpression> pfeListBefore;  //中缀表达式
 int varCount = 0;  //临时变量计数器
 static int labelCount = 0;   //标签计数器
 static int stringCount = 0;   //字符串计数器
@@ -1183,7 +1184,6 @@ exprRet Parser::Parse_expression(std::string scope) {
 
     //std::cout << "Start expression" << std::endl;
     exprRet er;
-    std::vector<PostfixExpression> pfeListBefore;  //中缀表达式
 
     //[+ | -]
     if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS){
@@ -1214,6 +1214,8 @@ exprRet Parser::Parse_expression(std::string scope) {
             }else if(getCurrentToken() == SY_TIMES || getCurrentToken() == SY_DEV) {
                 panic("SyntaxError: too many operators at line %d, column %d", line, column);
             }
+        }else if(getCurrentToken() == SY_RPAREN) {
+            return er; 
         }else break; 
         Parse_item(scope, pfeListBefore);
     }
@@ -1252,6 +1254,7 @@ bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> &pfeLi
 
     while(true) {
         if(getCurrentToken() == SY_TIMES || getCurrentToken() == SY_DEV) {
+            //std::cout << getCurrentLexeme() << std::endl;
             PostfixExpression pfe;
             pfe.it = it_charType;
             pfe.cvalue= (getCurrentToken() == SY_TIMES) ? '*' : '/';
@@ -1423,9 +1426,7 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> &pfe
                 }
                 pfe.isArr = false;
                 pfe.isOpcode = false;
-                pfe.it = it_stringType; 
                 pfe.str = name;
-                //itgenerator.pushIntermediateItem(fy); 
                 pfeList.push_back(pfe); 
             }
             break;
@@ -1444,28 +1445,20 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> &pfe
             pfeList.push_back(pfe);
             break;
         case SY_LPAREN:   //  ()括号
+            //std::cout << getCurrentLexeme() << std::endl;
+            pfe.it = it_charType;
+            pfe.cvalue = '(';
+            pfe.isOpcode = true;
+            pfe.isArr = false;
+            pfeList.push_back(pfe);
             currentToken = next();
+
             er = Parse_expression(scope);
-            if(er.isSure) {
-                pfe.it = it_intType;
-                pfe.value = (er.it == it_intType)   ? er.value : er.cvalue;      
-            }else {
-                pfe.it = it_stringType; 
-                if(er.name.size() > 0 && er.name[0] == 'T') {
-                    fy.setopcode(ASS);
-                    fy.settarget(varGenerator());
-                    fy.settargetArr(false);
-                    fy.setsrcArr(false); 
-                    fy.setop('+');
-                    fy.setright("0");
-                    fy.setleft(er.name); 
-                    itgenerator.pushIntermediateItem(fy);
-                    pfe.str = fy.gettarget();
-                }else {
-                    pfe.str = er.name; 
-                }
-                //pfe.isCharvar = (er.it == it_intType) ? true : false; 
-            }
+
+            pfe.it = it_charType;
+            pfe.cvalue = ')';
+            pfe.isOpcode = true;
+            pfe.isArr = false;
             pfeList.push_back(pfe);
             if(getCurrentToken() != SY_RPAREN) {
                 //std::cout << getCurrentLexeme() << std::endl;
@@ -1766,9 +1759,11 @@ bool Parser::Parse_assignStmt(std::string scope, std::string name) {
             panic("CheckError:  type not match"); 
         }
 
-
-
-
+        if(er.it == it_intType) {
+            fy.setleft(std::to_string(er.value));
+        }else if(er.it == it_charType) {
+            fy.setleft(std::string(1, er.cvalue)); 
+        }
 
         itgenerator.pushIntermediateItem(fy);  //标识符赋值语句
 
@@ -1827,10 +1822,39 @@ int Parser::Parse_integer(std::string value) {
 }
 
 
+//后缀表达式输出测试
+void printPost(std::vector<PostfixExpression> &pfelistBefor, std::vector<PostfixExpression> &pfeListAfter) {
+
+    //std::cout << "size is " << pfelist.size() << std::endl;
+    for(unsigned int i = 0; i < pfelistBefor.size(); i ++)  {
+        PostfixExpression pfe = pfelistBefor[i];
+        if(pfe.it == it_intType) {
+            std::cout << pfe.value;
+        }else if(pfe.it == it_charType) {
+            std::cout << pfe.cvalue; 
+        } 
+    }
+    std::cout << std::endl;
+    for(unsigned int i = 0; i < pfeListAfter.size(); i ++)  {
+        PostfixExpression pfe = pfeListAfter[i];
+        if(pfe.it == it_intType) {
+            std::cout << pfe.value;
+        }else if(pfe.it == it_charType) {
+            std::cout << pfe.cvalue; 
+        } 
+    }
+    std::cout << std::endl;
+    
+    panic("DEBUG OUT");
+}
+
+
+
 //中缀表达式转后缀表达式
 void Parser::postfixReverse(std::vector<PostfixExpression> &pfeListBefore, std::vector<PostfixExpression> &pfeListAfter) {
 
-    std::vector<PostfixExpression> tmp;
+    //std::cout << "size is " << pfeListBefore.size() << std::endl;
+    std::vector<PostfixExpression> stack;
     if(pfeListBefore.size() == 1) {
         pfeListAfter.push_back(pfeListBefore[0]); 
         return;
@@ -1849,50 +1873,67 @@ void Parser::postfixReverse(std::vector<PostfixExpression> &pfeListBefore, std::
     }
 
     for(unsigned int i = 0; i < pfeListBefore.size(); i ++) {
-        PostfixExpression pfe = pfeListBefore[i]; 
-        if(pfe.it == it_charType) {   //后缀运算符优先级
-            switch (pfe.value) {
+        PostfixExpression pfe = pfeListBefore[i];
+        if(pfe.it == it_intType) {
+            pfeListAfter.push_back(pfe); 
+        }else if(pfe.it == it_charType && pfe.isOpcode) {
+            switch (pfe.cvalue) {
                 case '+':
                 case '-':
-                    if(pfe.isOpcode) {
-                        pfeListAfter.push_back(pfe); 
-                        break; 
-                    } 
-                    while(tmp.size() != 0) {
-                        pfeListAfter.push_back(tmp[tmp.size() - 1]);                    
-                        tmp.pop_back();
-                    }
-                    tmp.push_back(pfe);
-                    break;
+                    if(stack.size() == 0) {
+                        stack.push_back(pfe); 
+                    }else {
+                        int tmp = stack.size();
+                        while(tmp != 0 &&  (stack[tmp - 1].cvalue == '+' || stack[tmp - 1].cvalue == '-'
+                                    || stack[tmp - 1].cvalue == '*' || stack[tmp - 1].cvalue == '/')) {
+                            pfeListAfter.push_back(stack[tmp - 1]); 
+                            stack.pop_back();
+                            tmp --; 
+                        }
+                        stack.push_back(pfe);
+                    }                         
+                    continue;
                 case '*':
                 case '/':
-                    if(pfe.isOpcode) {
-                        pfeListAfter.push_back(pfe); 
-                        break; 
-                    } 
-                    while(tmp.size() != 0) {
-                        if(tmp[tmp.size() - 1].value == '*' || tmp[tmp.size() - 1].value == '/') {
-                            pfeListAfter.push_back(tmp[tmp.size() - 1]); 
-                            tmp.pop_back();
-                        }else {
-                            break; 
+                    if(stack.size() == 0) {
+                        stack.push_back(pfe); 
+                    }else {
+                        int tmp = stack.size();
+                        while(tmp != 0 && (stack[tmp  - 1].cvalue == '*' || stack[tmp - 1].cvalue == '/')) {
+                            pfeListAfter.push_back(stack[tmp - 1]); 
+                            stack.pop_back();
+                            tmp --; 
                         } 
+                        stack.push_back(pfe); 
+                    } 
+                    continue;
+                case '(':
+                    stack.push_back(pfe);
+                    continue;
+                case ')':
+                    int tmp = stack.size();
+                    while(tmp != 0 && stack[tmp - 1].cvalue != '(') {
+                        pfeListAfter.push_back(stack[tmp - 1]); 
+                        stack.pop_back();
+                        tmp --;
                     }
-                    tmp.push_back(pfe);
-                    break;
-                default: pfeListAfter.push_back(pfe);
-            }        
-        }else {  //运算数直接插入
-            pfeListAfter.push_back(pfe); 
-        } 
+                    if(stack[tmp - 1].cvalue == '(') {
+                        stack.pop_back(); 
+                    }
+                    continue;
+            } 
+        }
+    }
+    while(stack.size() != 0) {
+        pfeListAfter.push_back(stack[stack.size() - 1]); 
+        stack.pop_back(); 
     }
 
-    while(tmp.size() != 0) {
-        pfeListAfter.push_back(tmp[tmp.size() - 1]); 
-        tmp.pop_back(); 
-    }
+    printPost(pfeListBefore, pfeListAfter);
     return;
 }
+
+
 
 
 //表达式求值

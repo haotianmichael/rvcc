@@ -47,7 +47,7 @@ void IntermediateGenerator::printTmpItem() {
                     if(tmp.getissrcArr()) {
                         out << tmp.getleft() << "[" << tmp.getsrcindex() << "]" << std::endl; 
                     }else {
-                        out << tmp.getleft() << " " <<  tmp.getopcode() << " " << tmp.getright() << std::endl;;
+                        out << tmp.getleft() << " " <<  " " << tmp.getright() << std::endl;;
                     }
                 } 
                 break;

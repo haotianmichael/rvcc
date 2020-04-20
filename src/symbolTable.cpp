@@ -219,6 +219,15 @@ bool SymbolTable::identCheck(std::string name, std::string scope) {
         head = head->next; 
     }
 
+    if(tail->getscope() == scope && tail->getname() == name &&
+            tail->getSt() == st_localType) {
+        is = true;
+        LocalItem *lm = static_cast<LocalItem *>(head);
+        if(lm->getLm() != lm_variable) {
+            panic("CheckError: lvariable Wrong"); 
+        }
+    }
+
     return is;
 }
 
@@ -234,7 +243,7 @@ bool SymbolTable::typeCheck(std::string name, std::string scope, itemType dtype)
         }
         head = head->next; 
     } 
-    
+
     if(head->getSt() == st_localType) {
         LocalItem *lm = static_cast<LocalItem *>(head); 
         if(lm->getIt() == dtype) {
@@ -382,7 +391,7 @@ bool SymbolTable::printTable() {
                std::cout << "char\t\t" << length << "\t"; 
                }
                std::cout << std::endl;
-               */
+             */
 
         }else if(st == st_funcType){
             FuncItem *fi = static_cast<FuncItem *>(si);

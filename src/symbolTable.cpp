@@ -257,10 +257,10 @@ bool SymbolTable::typeCheck(std::string name, std::string scope, itemType dtype)
 }
 
 //标识符[<表达式>]数组检查
-int SymbolTable::arrCheck(std::string name, std::string scope, bool exp, int index ) {
+bool SymbolTable::arrCheck(std::string name, std::string scope, bool exp, int index ) {
 
 
-    return 0;
+    return true;
 }
 
 //标识符检查

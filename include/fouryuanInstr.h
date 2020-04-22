@@ -64,10 +64,15 @@ struct PostfixExpression {
     itemType it;
     int value;  
     char cvalue;
-    std::string str;
-    bool isArr;  //是否为数组
+    std::string str;  //变量名称
+    /*
+        if(!isconstant) 
+        then  str
+    */
+    bool isconstant;   //是常量还是变量
     bool isOpcode;   //是否为运算符
 };
+
 
 //中间代码四元式
 class FourYuanInstr
@@ -120,5 +125,5 @@ class FourYuanInstr
         bool __srcArr;  //赋值  操作数是否为数组
         int __srcindex;   //操作数索引
         bool __paraArr;  //参数是否为数组
-        char __op;   
+        char __op;    //运算符
 };

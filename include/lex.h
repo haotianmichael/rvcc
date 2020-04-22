@@ -120,11 +120,11 @@ enum itemType{
 
 
 //语法分析 表达式返回值
-struct exprRet{
+struct exprRet {
     std::string name;  //临时变量
     itemType it;
     int value;
     char cvalue;
     bool isEmpty;
-    bool isSure;
+    bool isconstant;
 };

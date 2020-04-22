@@ -90,7 +90,6 @@ class Parser
         bool Parse_item(std::string scope, std::vector<PostfixExpression> &pfeList); 
         //<因子> ::= <标识符>['('<值参数表>')']|<标识符>'['<表达式>']'|'('<表达式>')'|<整数>|<字符>
         bool Parse_factor(std::string scope, std::vector<PostfixExpression> &preList);
-
         //<读语句> ::= scanf‘(’<标识符>{,<标识符>}')'
         bool Parse_scanf(std::string scope);
         //<写语句> ::= printf'('<字符串>,<表达式>')' | printf'('<字符串>')' | prinntf'('<表达式>')'
@@ -101,9 +100,9 @@ class Parser
         int  Parse_integer(std::string value);
 
     public:
-        /*表达式计算*/
-        void postfixReverse(std::vector<PostfixExpression> &pfeListBefore, std::vector<PostfixExpression> &pfeListAfter);   //中缀表达式转后缀表达式
-        std::string expressEvaluation(std::vector<PostfixExpression> &, itemType &, int &);  //表达式求值
+        /*表达式算法*/
+        std::vector<PostfixExpression> postfixReverse(std::vector<PostfixExpression> &pfeListBefore);   //中缀表达式转后缀表达式
+        exprRet postfixExprTotmpCode(std::vector<PostfixExpression> &);  //表达式中间代码生成
         std::string varGenerator();
         std::string labelGenetar();
         std::string stringGenetar();

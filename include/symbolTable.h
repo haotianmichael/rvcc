@@ -35,7 +35,7 @@ class SymbolTable
         bool funCheck(std::string name, bool inExpr, std::vector<itemType> paralist);  //函数参数检查
         bool identCheck(std::string name, std::string scope);  //标识符检查    因子项
         int stmtCheck(std::string name);  //标识符检查  赋值语句
-        int arrCheck(std::string name, std::string scope, bool exp, int index = 0);  //标识符[<表达式>]检查  赋值语句  因子项
+        bool arrCheck(std::string name, std::string scope, bool exp, int index = 0);  //标识符[<表达式>]检查  赋值语句  因子项
 
 
     private:

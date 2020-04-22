@@ -15,8 +15,6 @@ class IntermediateGenerator
         void pushDataItem(std::string);     //添加.data域元素
 
 
-
-
     private:
 
         std::vector<std::string> dataSet;   //中间代码 .data域

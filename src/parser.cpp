@@ -2,9 +2,9 @@
 #include "../include/utils.h"
 #include "../include/intermediateGenerator.h"
 #include "../include/riscvGenerator.h"
+#include <queue>
 
 extern IntermediateGenerator itgenerator;   //四元式产生表
-std::vector<PostfixExpression> pfeListBefore;  //中缀表达式
 int varCount = 0;  //临时变量计数器
 static int labelCount = 0;   //标签计数器
 static int stringCount = 0;   //字符串计数器
@@ -1102,7 +1102,7 @@ std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
     //}else {
     //return paralist;  
     /*}*/
-    if(er.isSure) {
+    if(er.isconstant) {
         char x[15] = {'\0'}; 
         sprintf(x, "%d", er.it == it_intType ? er.value : er.cvalue); 
         fyi.setopcode(ASS);
@@ -1139,7 +1139,7 @@ std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
         currentToken = next();
         er = Parse_expression(scope);  
         paralist.push_back(er.it); 
-        if(er.isSure) {
+        if(er.isconstant) {
             char x[15] = {'\0'}; 
             sprintf(x, "%d", er.it == it_intType ? er.value : er.cvalue); 
             fyi.setopcode(ASS);
@@ -1180,17 +1180,17 @@ std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
 
 
 //<表达式> ::= [ + | -]<项>{<加法运算符><项>}
-exprRet Parser::Parse_expression(std::string scope) {
+exprRet  Parser::Parse_expression(std::string scope) {
+    std::vector<PostfixExpression> pfeListBefore;  //中缀表达式
+    std::vector<PostfixExpression> pfeListAfter;  //后缀表达式
 
     //std::cout << "Start expression" << std::endl;
-    exprRet er;
-
+    exprRet er; 
     //[+ | -]
     if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS){
         //生成代码相关
         PostfixExpression pfe;
         pfe.it = it_charType;
-        pfe.isArr = false;
         pfe.isOpcode = true;
         pfe.cvalue = (getCurrentToken() == SY_PLUS)  ? '+' : '-';
         pfeListBefore.push_back(pfe);
@@ -1203,8 +1203,8 @@ exprRet Parser::Parse_expression(std::string scope) {
             //生成代码相关
             PostfixExpression pfe;
             pfe.it = it_charType; 
+            pfe.isconstant = true;
             pfe.isOpcode = true;
-            pfe.isArr = false;
             pfe.cvalue = (getCurrentToken() == SY_PLUS)  ? '+' : '-';
             pfeListBefore.push_back(pfe); 
             currentToken = next();
@@ -1214,34 +1214,20 @@ exprRet Parser::Parse_expression(std::string scope) {
             }else if(getCurrentToken() == SY_TIMES || getCurrentToken() == SY_DEV) {
                 panic("SyntaxError: too many operators at line %d, column %d", line, column);
             }
-        }else if(getCurrentToken() == SY_RPAREN) {
-            return er; 
-        }else break; 
-        Parse_item(scope, pfeListBefore);
+            //}else if(getCurrentToken() == SY_RPAREN || getCurrentToken() == SY_RBRACKET) {
+            //break;
+    }else break; 
+    Parse_item(scope, pfeListBefore);
     }
 
 
     /*表达式计算  中缀表达式  转  后缀表达式*/
-    if(pfeListBefore.size() == 0) {
-        er.isEmpty = true;  
-    }else {
-        er.isEmpty = false; 
-    }
+    pfeListAfter = postfixReverse(pfeListBefore);
+    //std::cout << pfeListAfter.size() << std::endl;
+    /*将表达式  生成四元式 然后返回一些属性*/
+    er = postfixExprTotmpCode(pfeListAfter);
+    //std::cout << er.value << std::endl;
 
-    std::vector<PostfixExpression> pfeListAfter;   //后缀表达式
-    postfixReverse(pfeListBefore, pfeListAfter);
-    itemType it;
-    int value;
-    er.name = expressEvaluation(pfeListAfter, it, value);
-    if(it == it_intType) {
-        er.it = it_intType;
-        er.value = value; 
-    } else if(it == it_charType){
-        er.it = it_charType;
-        er.cvalue = value; 
-    }else {
-        panic("ExpressionError: unknow type"); 
-    }
     return er;
 }
 
@@ -1258,8 +1244,8 @@ bool Parser::Parse_item(std::string scope, std::vector<PostfixExpression> &pfeLi
             PostfixExpression pfe;
             pfe.it = it_charType;
             pfe.cvalue= (getCurrentToken() == SY_TIMES) ? '*' : '/';
+            pfe.isconstant = true;
             pfe.isOpcode = true;
-            pfe.isArr = false;
             pfeList.push_back(pfe);
             currentToken = next();
             if(getCurrentToken() == SY_PLUS || getCurrentToken() == SY_MINUS) {
@@ -1288,8 +1274,6 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> &pfe
 
     //std::cout << "Start factor" << std::endl;
     PostfixExpression pfe;
-    exprRet er;
-    FourYuanInstr fy;
     std::string name;
 
     switch (getCurrentToken()) {
@@ -1298,73 +1282,46 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> &pfe
             currentToken = next();
             if(getCurrentToken() == SY_LBRACKET) {   // [  数组
                 currentToken = next();
+                exprRet er;
                 er = Parse_expression(scope);
-                std::string res;
-                int index;
-                if(er.isSure) {
-                    fy.setopcode(ASS); 
-                    fy.settarget(varGenerator()); 
-                    fy.setsrcArr(false);
-                    fy.settargetArr(false);
-                    if(er.it == it_charType) {
-                        index = __symbolTable->arrCheck(name, scope, true, er.cvalue);                         
-                        char x[10] = {'\0'}; 
-                        sprintf(x, "%d", er.cvalue);
-                        fy.setleft(x);
-                        fy.setop('+');
-                        fy.setright("0");
-                    }else {
-                        index = __symbolTable->arrCheck(name, scope, true, er.value);                         
-                        char x[10] = {'\0'}; 
-                        sprintf(x, "%d", er.value);
-                        fy.setleft(x);
-                        fy.setop('+');
-                        fy.setright("0");
-                    }
-                    res = fy.gettarget();
-                }else{
-                    index = __symbolTable->arrCheck(name, scope, false); 
-                    if(er.name.size() > 0 && er.name[0] == 'T') {
-                        fy.setopcode(ASS);                
-                        fy.settarget(varGenerator());
-                        fy.setsrcArr(false);
-                        fy.settargetArr(false);
-                        fy.setop('+');
-                        fy.setright("0");
-                        itgenerator.pushIntermediateItem(fy);
-                        res = fy.gettarget();
-                    }else {
-                        res = er.name; 
-                    }
-                } 
-
-                if(index >= 0) {
-                    fy.setopcode(ASS); 
-                    fy.settarget(varGenerator()); 
-                    fy.setsrcArr(true);
-                    fy.settargetArr(false);
-                    char x[10] = {'\0'};
-                    sprintf(x, "%d", index); 
-                    fy.setleft("G" + std::string(x) + name); 
-                    itgenerator.pushIntermediateItem(fy);
-
-                    pfe.it = it_stringType;
-                    SymbolItem*pt = __symbolTable->getHead();
-                    for(int i = 0; i < index; i ++) {
-                        if(pt->next != NULL) {
-                            pt = pt->next; 
-                        } 
-                    } 
-                    //pfe.isCharvar = false;
-                    if(static_cast<LocalItem *>(pt)->getIt() == it_charType) {
-                        //pfe.isCharvar = true; 
-                    }
-                    pfe.str = fy.gettarget();
-                    pfeList.push_back(pfe);
-                }else {
-                    pfe.it = it_stringType;
-                    pfe.str = name;
+                if(er.isconstant || er.it == it_charType) {
+                    panic("ArrayError"); 
                 }
+                int index = er.value;
+                //std::cout << index << std::endl;
+                bool exist = __symbolTable->arrCheck(name, scope, true, index);
+                if(!exist) {
+                    panic("ArrayError: index out of line"); 
+                }
+
+                FourYuanInstr fy;
+                //数组的四元式生成
+                //$x = name[$a]
+                fy.setopcode(ASS);
+                std::string target = varGenerator();
+                //std::cout << target << std::endl;
+                fy.settarget(target);  
+                fy.settargetindex(er.value);
+                fy.settargetArr(false);
+                fy.setsrcArr(true);
+                fy.setleft(name);
+                fy.setright(er.name);
+                itgenerator.pushIntermediateItem(fy);
+
+                //std::cout << er.value << std::endl; 
+                //factor元素入运算栈
+                pfe.isconstant = false;
+                pfe.isOpcode = false;
+                pfe.str = target;
+                if(er.it == it_intType) {
+                    pfe.it = it_intType;
+                    pfe.value = er.value;
+                }else if(er.it == it_charType) {
+                    pfe.it = it_charType; 
+                    pfe.cvalue = er.cvalue; 
+                }
+
+                pfeList.push_back(pfe);
 
                 if(getCurrentToken() != SY_RBRACKET) {   // ]  
                     panic("SyntaxError:  lack ] at line %d, column %d", line, column); 
@@ -1381,6 +1338,7 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> &pfe
                 if(!__symbolTable->funCheck(name, true, paraTable)) {
                     panic("SyntaxError: FunCall Error at line %d, column %d", line, column); 
                 }
+                FourYuanInstr fy;
                 fy.setopcode(FUNCALL);
                 fy.settarget(name);
                 itgenerator.pushIntermediateItem(fy);
@@ -1406,6 +1364,7 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> &pfe
                 }
             }else {   //变量 常量  参数
                 bool exist = __symbolTable->identCheck(name, scope);
+                //std::cout << name <<  " " << scope<< std::endl;
                 if(!exist) {
                     panic("CheckError:  undefined symbol"); 
                 }
@@ -1424,7 +1383,7 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> &pfe
                 }else if(pfe.it == it_charType) {
                     pfe.cvalue = static_cast<LocalItem *>(pt)->getCharacter(); 
                 }
-                pfe.isArr = false;
+                pfe.isconstant = false;
                 pfe.isOpcode = false;
                 pfe.str = name;
                 pfeList.push_back(pfe); 
@@ -1439,26 +1398,26 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> &pfe
             break;
         case CONST_CHAR:
             pfe.it  = it_charType;
+            pfe.isconstant = true;
             pfe.cvalue = getCurrentLexeme()[0];
             pfe.isOpcode = false;
-            pfe.isArr = false;
             pfeList.push_back(pfe);
             break;
         case SY_LPAREN:   //  ()括号
             //std::cout << getCurrentLexeme() << std::endl;
             pfe.it = it_charType;
             pfe.cvalue = '(';
+            pfe.isconstant = true;
             pfe.isOpcode = true;
-            pfe.isArr = false;
             pfeList.push_back(pfe);
             currentToken = next();
 
-            er = Parse_expression(scope);
+            Parse_expression(scope);
 
             pfe.it = it_charType;
             pfe.cvalue = ')';
             pfe.isOpcode = true;
-            pfe.isArr = false;
+            pfe.isconstant = true;
             pfeList.push_back(pfe);
             if(getCurrentToken() != SY_RPAREN) {
                 //std::cout << getCurrentLexeme() << std::endl;
@@ -1480,7 +1439,7 @@ void Parser::factor_symbol(int isPre, std::vector<PostfixExpression> &preList) {
     int num = Parse_integer(str);
     PostfixExpression pfe;
     pfe.it = it_intType;
-    pfe.isArr = false;
+    pfe.isconstant = true;
     pfe.isOpcode = false;
     if(isPre == 0) {  //没有前驱符号
         pfe.value = num;
@@ -1493,6 +1452,64 @@ void Parser::factor_symbol(int isPre, std::vector<PostfixExpression> &preList) {
     isPre = 0;
     currentToken = next();  //吃掉该字符
     return ;
+}
+
+
+//<赋值语句> ::= <标识符>=<表达式> | <标识符>'['<表达式>']'=<表达式>
+bool Parser::Parse_assignStmt(std::string scope, std::string name) {
+    //name为左值
+    FourYuanInstr fy;
+    fy.setopcode(ASS);
+
+    if(getCurrentToken() == SY_ASSIGN) {   //标识符
+
+        currentToken  = next();
+        //std::cout << getCurrentLexeme() << std::endl;
+        Parse_expression(scope); 
+        if(getCurrentToken() != SY_SEMICOLON) {
+            panic("SyntaxError: lack ; at line %d, colunm, %d", line, column); 
+        }
+
+        bool exist = __symbolTable->identCheck(name, scope);        
+        if(!exist) {
+            panic("CheckError:  undefined symbol"); 
+        }
+        fy.settarget(name);
+        /*[>静态类型检查<]*/
+        //if(!__symbolTable->typeCheck(name, scope, it)) {
+        //panic("CheckError:  type not match"); 
+        //}
+
+        //if(er.it == it_intType) {
+        //fy.setleft(std::to_string(er.value));
+        //}else if(er.it == it_charType) {
+        //fy.setleft(std::string(1, er.cvalue)); 
+        //}
+
+        itgenerator.pushIntermediateItem(fy);  //标识符赋值语句
+
+    }else if(getCurrentToken() == SY_LBRACKET){   //数组元素
+
+        currentToken = next();
+        Parse_expression(scope);     
+
+        if(getCurrentToken() != SY_RBRACKET) {
+            panic("SyntaxError: lack ; at line %d, colunm, %d", line, column); 
+        }
+
+        currentToken = next();
+        if(getCurrentToken() != SY_ASSIGN) {
+            panic("SyntaxError: lack ; at line %d, colunm, %d", line, column); 
+        }
+
+        currentToken = next();
+        Parse_expression(scope);
+
+    }else {
+        panic("SyntaxError:  wrong format of assignment at line %d, column %d", line, column); 
+    }
+
+    return true;
 }
 
 
@@ -1734,64 +1751,6 @@ bool Parser::Parse_returnStmt(std::string scope) {
 }
 
 
-//<赋值语句> ::= <标识符>=<表达式> | <标识符>'['<表达式>']'=<表达式>
-bool Parser::Parse_assignStmt(std::string scope, std::string name) {
-    //name为左值
-    FourYuanInstr fy;
-    fy.setopcode(ASS);
-
-    if(getCurrentToken() == SY_ASSIGN) {   //标识符
-
-        currentToken  = next();
-        //std::cout << getCurrentLexeme() << std::endl;
-        exprRet er = Parse_expression(scope); 
-        if(getCurrentToken() != SY_SEMICOLON) {
-            panic("SyntaxError: lack ; at line %d, colunm, %d", line, column); 
-        }
-
-        bool exist = __symbolTable->identCheck(name, scope);        
-        if(!exist) {
-            panic("CheckError:  undefined symbol"); 
-        }
-        fy.settarget(name);
-        /*静态类型检查*/
-        if(!__symbolTable->typeCheck(name, scope, er.it)) {
-            panic("CheckError:  type not match"); 
-        }
-
-        if(er.it == it_intType) {
-            fy.setleft(std::to_string(er.value));
-        }else if(er.it == it_charType) {
-            fy.setleft(std::string(1, er.cvalue)); 
-        }
-
-        itgenerator.pushIntermediateItem(fy);  //标识符赋值语句
-
-    }else if(getCurrentToken() == SY_LBRACKET){   //数组元素
-
-        currentToken = next();
-        Parse_expression(scope);     
-
-        if(getCurrentToken() != SY_RBRACKET) {
-            panic("SyntaxError: lack ; at line %d, colunm, %d", line, column); 
-        }
-
-        currentToken = next();
-        if(getCurrentToken() != SY_ASSIGN) {
-            panic("SyntaxError: lack ; at line %d, colunm, %d", line, column); 
-        }
-
-        currentToken = next();
-        Parse_expression(scope);
-
-    }else {
-        panic("SyntaxError:  wrong format of assignment at line %d, column %d", line, column); 
-    }
-
-    return true;
-}
-
-
 
 //<整数> ::= [+ | -]<无符号整数> | 0
 //注意。0前面不能有任何正负号
@@ -1829,35 +1788,53 @@ void printPost(std::vector<PostfixExpression> &pfelistBefor, std::vector<Postfix
     for(unsigned int i = 0; i < pfelistBefor.size(); i ++)  {
         PostfixExpression pfe = pfelistBefor[i];
         if(pfe.it == it_intType) {
-            std::cout << pfe.value;
+            if(pfe.isconstant) {
+                std::cout << pfe.value;
+            }else {
+                std::cout << pfe.str; 
+            }
         }else if(pfe.it == it_charType) {
-            std::cout << pfe.cvalue; 
+            if(pfe.isconstant) {
+                std::cout << pfe.cvalue; 
+            }else {
+                std::cout << pfe.str; 
+            }
         } 
     }
     std::cout << std::endl;
     for(unsigned int i = 0; i < pfeListAfter.size(); i ++)  {
         PostfixExpression pfe = pfeListAfter[i];
         if(pfe.it == it_intType) {
-            std::cout << pfe.value;
+            if(pfe.isconstant) {
+                std::cout << pfe.value;
+            }else {
+                std::cout << pfe.str; 
+            }
         }else if(pfe.it == it_charType) {
-            std::cout << pfe.cvalue; 
+            if(pfe.isconstant) {
+                std::cout << pfe.cvalue; 
+            }else {
+                std::cout << pfe.str; 
+            }
         } 
     }
     std::cout << std::endl;
-    
-    panic("DEBUG OUT");
+
+    //panic("DEBUG OUT");
 }
 
 
 
 //中缀表达式转后缀表达式
-void Parser::postfixReverse(std::vector<PostfixExpression> &pfeListBefore, std::vector<PostfixExpression> &pfeListAfter) {
+std::vector<PostfixExpression> Parser::postfixReverse(std::vector<PostfixExpression> &pfeListBefore) {
 
     //std::cout << "size is " << pfeListBefore.size() << std::endl;
+    std::vector<PostfixExpression> pfeListAfter;
     std::vector<PostfixExpression> stack;
     if(pfeListBefore.size() == 1) {
+        //std::cout << "hao" << std::endl;
         pfeListAfter.push_back(pfeListBefore[0]); 
-        return;
+        return pfeListAfter;
     }else if(pfeListBefore.size() > 1) {
         if(pfeListBefore[0].it == it_charType && (pfeListBefore[0].value == '+' || pfeListBefore[0].value == '-') && pfeListBefore[0].isOpcode == true) {
             if(pfeListBefore[0].value == '-') {
@@ -1874,9 +1851,9 @@ void Parser::postfixReverse(std::vector<PostfixExpression> &pfeListBefore, std::
 
     for(unsigned int i = 0; i < pfeListBefore.size(); i ++) {
         PostfixExpression pfe = pfeListBefore[i];
-        if(pfe.it == it_intType) {
+        if((pfe.it == it_intType) || (pfe.it == it_charType && pfe.isOpcode == false && pfe.isconstant == true)) {  //运算数
             pfeListAfter.push_back(pfe); 
-        }else if(pfe.it == it_charType && pfe.isOpcode) {
+        }else if(pfe.it == it_charType && pfe.isOpcode) {  //运算符
             switch (pfe.cvalue) {
                 case '+':
                 case '-':
@@ -1929,165 +1906,193 @@ void Parser::postfixReverse(std::vector<PostfixExpression> &pfeListBefore, std::
         stack.pop_back(); 
     }
 
-    printPost(pfeListBefore, pfeListAfter);
-    return;
+    //printPost(pfeListBefore, pfeListAfter);
+    //panic("DEBUG OUT");
+    return pfeListAfter;
 }
 
 
 
 
-//表达式求值
-std::string Parser::expressEvaluation(std::vector<PostfixExpression> &pfeList, itemType &type, int &value) {
-
-    PostfixExpression pfeA, pfeB;
-    FourYuanInstr fyi;
-    std::vector<PostfixExpression> tmp;
-    //std::cout << pfeList.size() <<std::endl;
+/*
+ *后缀表达式生成四元式
+ */
+exprRet Parser::postfixExprTotmpCode(std::vector<PostfixExpression> &pfeList) {
+    exprRet er;
+    std::vector<PostfixExpression>  stack;   //运算符栈
+    PostfixExpression pfe;
     if(pfeList.size() == 1) {
-        pfeA = pfeList[0]; 
-        if(pfeA.it == it_intType) {
-            type = it_intType; 
-            value = pfeA.value;
-            return "";
-        }else if(pfeA.it == it_charType) {
-            type = it_charType; 
-            value = pfeA.value;
-            return ""; 
+        pfe = pfeList[0]; 
+        //赋值给临时变量
+        std::string target = varGenerator();
+        FourYuanInstr fy;
+        fy.settarget(target);
+        fy.setopcode(ASS);    
+        if(pfe.isconstant) {
+            fy.setleft(std::to_string(pfe.value));
         }else {
-            if(pfeA.it != it_charType) {  //字符型变量
-                type = it_charType; 
-            } else {
-                type = it_intType; 
-            }
-            return pfeA.str; 
-        } 
+            fy.setleft(pfe.str);
+        }
+        fy.setright("0");
+        fy.setop('+'); 
+        fy.settargetArr(false);
+        fy.setsrcArr(false);
+        itgenerator.pushIntermediateItem(fy);
+
+        //返回临时变量
+        er.isconstant = false; 
+        er.name = target;
+        er.isEmpty = false;
+        if(pfe.it == it_intType) {
+            er.value = pfe.value; 
+            er.it = it_intType;
+        }else if(pfe.it == it_charType){
+            er.cvalue = pfe.cvalue; 
+            er.it = it_charType;
+        }
+        return er; 
     }else {
-        for(unsigned int i = 0; i < pfeList.size();  i ++) {
-            pfeA = pfeList[i];
-            if(pfeA.it == it_charType) {
-                char x[15] = {'\0'};    
-                fyi.setopcode(ASS);     
-                fyi.settargetArr(false); 
-                fyi.setsrcArr(false); 
-                switch (pfeA.value) {
+        /*后缀表达式操作数出栈顺序： right —— left*/
+        PostfixExpression op;
+        for(unsigned int i = 0; i < pfeList.size(); i ++) {
+            op = pfeList[i];
+            if(op.it == it_charType && op.isOpcode) {
+                switch (op.cvalue) {
                     case '+':
-                    case '-':{
-                                 if(!pfeA.isOpcode) {
-                                     tmp.push_back(pfeA); 
-                                     break;
-                                 }
-                                 if(tmp.size() > 1) {
-                                     bool isAble = true;
-                                     int leftD, rightD; 
-                                     if(tmp[tmp.size() - 1].it == it_stringType) {
-                                         fyi.setright(tmp[tmp.size()  - 1].str); 
-                                         tmp.pop_back();
-                                         isAble = false;
-                                     }else {
-                                         sprintf(x, "%d", tmp[tmp.size() - 1].value); 
-                                         fyi.setright(x); 
-                                         rightD = tmp[tmp.size() - 1].value;
-                                         tmp.pop_back();
-                                     } 
-                                     memset(x, 0, 15); 
-                                     if(tmp[tmp.size() - 1].it == it_stringType) {
-                                         fyi.setleft(tmp[tmp.size()  - 1].str); 
-                                         tmp.pop_back();
-                                         isAble = false;
-                                     }else {
-                                         sprintf(x, "%d", tmp[tmp.size() - 1].value); 
-                                         fyi.setleft(x); 
-                                         leftD = tmp[tmp.size() - 1].value;
-                                         tmp.pop_back();
-                                     } 
-                                     if(isAble) {
-                                         pfeB.it = it_intType; 
-                                         pfeB.value  = (pfeA.value == '+') ?  (leftD + rightD) : (leftD - rightD);
-                                         tmp.push_back(pfeB);
-                                         break;
-                                     }
-                                     std::string var = varGenerator(); 
-                                     fyi.settarget(var);
-                                     fyi.setop(pfeA.value);  
-                                     itgenerator.pushIntermediateItem(fyi);
-                                     pfeB.it = it_stringType;
-                                     pfeB.str = var;
-                                     tmp.push_back(pfeB);
-                                 }
-                                 break;
-                             }
+                    case '-':
+                        if(stack.size() > 1) {
+                            int lhs, rhs;
+                            FourYuanInstr item;  //表达式四元式
+                            item.setopcode(ASS);
+                            //右操作数
+                            if(stack[stack.size() - 1].isconstant) {  //变量还是字面值
+                                std::string num = std::to_string(stack[stack.size() - 1].value); 
+                                item.setright(num); 
+                                rhs = stack[stack.size() - 1].value;
+                                stack.pop_back();
+                            }else {
+                                item.setright(stack[stack.size() - 1].str);
+                                rhs = stack[stack.size() - 1].value; 
+                                stack.pop_back();
+                            }
+
+                            //左操作数
+                            if(stack[stack.size() - 1].isconstant) {
+                                std::string num = std::to_string(stack[stack.size() - 1].value); 
+                                item.setleft(num); 
+                                lhs = stack[stack.size() - 1].value;
+                                stack.pop_back();
+                            }else {
+                                item.setleft(stack[stack.size() - 1].str); 
+                                lhs = stack[stack.size() - 1].value;
+                                stack.pop_back();
+                            }
+
+                            //结果
+                            std::string target;
+                            target = varGenerator(); 
+                            item.settarget(target); 
+                            item.setop(op.cvalue);
+                            item.setsrcArr(false);
+                            item.settargetArr(false);
+                            itgenerator.pushIntermediateItem(item);
+                            //结果压栈
+                            PostfixExpression bck;  
+                            bck.it = it_intType;
+                            bck.isconstant = false;
+                            bck.isOpcode = false;
+                            bck.str = target;
+                            bck.value = (op.cvalue == '+') ? (lhs + rhs) : (lhs - rhs);
+                            stack.push_back(bck); 
+                            //std::cout << item.gettarget() << " = " << item.getleft() <<  " " << item.getop() << " "<< item.getright() << std::endl;
+                        }
+                        break; 
                     case '*':
-                    case '/':{
-                                 if(!pfeA.isOpcode) {
-                                     tmp.push_back(pfeA); 
-                                     break;
-                                 }
-                                 if(tmp.size() > 1) {
-                                     bool isAble = true;
-                                     int leftD, rightD; 
-                                     if(tmp[tmp.size() - 1].it == it_stringType) {
-                                         fyi.setright(tmp[tmp.size()  - 1].str); 
-                                         tmp.pop_back();
-                                         isAble = false;
-                                     }else {
-                                         sprintf(x, "%d", tmp[tmp.size() - 1].value); 
-                                         fyi.setright(x); 
-                                         rightD = tmp[tmp.size() - 1].value;
-                                         tmp.pop_back();
-                                     } 
-                                     memset(x, 0, 15); 
-                                     if(tmp[tmp.size() - 1].it == it_stringType) {
-                                         fyi.setleft(tmp[tmp.size()  - 1].str); 
-                                         tmp.pop_back();
-                                         isAble = false;
-                                     }else {
-                                         sprintf(x, "%d", tmp[tmp.size() - 1].value); 
-                                         fyi.setleft(x); 
-                                         leftD = tmp[tmp.size() - 1].value;
-                                         tmp.pop_back();
-                                         if(pfeA.value == '/' && fyi.getright() == "0") {
-                                             panic("RuntimeError: div 0 situation"); 
-                                         }
-                                     } 
-                                     if(isAble) {
-                                         pfeB.it = it_intType; 
-                                         pfeB.value  = (pfeA.value == '*') ?  (leftD * rightD) : (leftD / rightD);
-                                         tmp.push_back(pfeB);
-                                         break;
-                                     }
-                                     std::string var = varGenerator(); 
-                                     fyi.settarget(var);
-                                     fyi.setop(pfeA.value);  
-                                     itgenerator.pushIntermediateItem(fyi);
-                                     pfeB.it = it_stringType;
-                                     pfeB.str = var;
-                                     tmp.push_back(pfeB);
-                                 }
-                                 break;
-                             }
-                    default: tmp.push_back(pfeA);
+                    case '/':
+                        if(stack.size() > 1) {
+                            int lhs, rhs;
+                            FourYuanInstr item;   
+                            item.setopcode(ASS);
+                            //右操作数
+                            if(stack[stack.size() - 1].isconstant) {
+                                std::string num = std::to_string(stack[stack.size() - 1].value); 
+                                item.setright(num); 
+                                rhs = stack[stack.size() - 1].value; 
+                                stack.pop_back();
+                            }else {
+                                item.setright(stack[stack.size() - 1].str); 
+                                rhs = stack[stack.size() - 1].value;
+                                stack.pop_back();
+                            }
+
+                            //左操作数
+                            if(stack[stack.size() - 1].isconstant) {
+                                std::string num = std::to_string(stack[stack.size() - 1].value); 
+                                item.setleft(num); 
+                                lhs = stack[stack.size() - 1].value; 
+                                stack.pop_back();
+                            }else {
+                                item.setleft(stack[stack.size() - 1].str); 
+                                lhs = stack[stack.size() - 1].value;
+                                stack.pop_back();
+                            }
+
+                            //结果
+                            std::string target;
+                            target = varGenerator();
+                            item.settarget(target);
+                            item.setsrcArr(false);
+                            item.settargetArr(false);
+                            item.setop(op.cvalue);
+                            itgenerator.pushIntermediateItem(item); 
+
+                            //结果压栈
+                            PostfixExpression bck;
+                            bck.it = it_intType;
+                            bck.isconstant = false;
+                            bck.isOpcode = false;
+                            bck.str = target;
+                            bck.value = (op.cvalue == '*') ? (lhs * rhs) : (lhs / rhs);
+                            stack.push_back(bck); 
+                            //std::cout << item.gettarget() << " = " << item.getleft() <<  " " << item.getop() << " "<< item.getright() << std::endl;
+                        }
+                        break;
+                    default:
+                        stack.push_back(op); 
                 }
             }else {
-                tmp.push_back(pfeA); 
-            } 
-        }    
-        if(tmp.size() >= 1) {
-            if(tmp[0].it == it_intType) {
-                type = it_intType;
-                value = tmp[0].value;
-                return ""; 
-            } 
-            return tmp[0].str;
-        }else {
-            return ""; 
+                stack.push_back(op); 
+            }
         }
+
+        if(stack.size() == 1) {  //后缀表达式的结果(临时变量)
+            pfe = stack[0];
+            if(pfe.isconstant) {
+                panic("ExpressionError:  stack error");    
+            }
+            er.isconstant = false;
+            er.isEmpty = false;
+            er.name = pfe.str; 
+            if(pfe.it == it_intType) {
+                er.value = pfe.value; 
+                er.it = it_intType; 
+            }else if(pfe.it == it_charType){
+                er.it = it_charType; 
+                er.cvalue = pfe.cvalue;
+            }
+            //std::cout << er.name << " " << er.value << std::endl;
+        }else {
+            panic("ExpressionError:  stack error");    
+        }
+        //panic("DEBUG OUT");
+        return er;
     }
 }
 
 
 //创建临时变量
 std::string Parser::varGenerator() {
-    return ("T"+std::to_string(++varCount));
+    return ("$"+std::to_string(++varCount));
 }
 
 //创建标签

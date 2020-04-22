@@ -32,11 +32,12 @@ void IntermediateGenerator::printTmpItem() {
             case ASS:
                 if(tmp.getistargetArr()) {
                     //赋值数组
-                    out << tmp.gettarget() << "= ";
+                    //out << "hao" << std::endl;
+                    out << tmp.gettarget();
                     if(tmp.getissrcArr()) {
-                        out << tmp.getleft() << "[" << tmp.getright() << "]" << std::endl; 
-                    }else {
                         out << tmp.getleft() << " " <<  tmp.getopcode() << " " << tmp.getright() << std::endl;;
+                    }else {
+                        out << "[" << tmp.getleft()  << "] = " <<tmp.getright() << std::endl; 
                     }
                 }else {
                     //临时变量

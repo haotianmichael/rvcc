@@ -1275,6 +1275,9 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> &pfe
     //std::cout << "Start factor" << std::endl;
     PostfixExpression pfe;
     std::string name;
+    FourYuanInstr fy;
+    exprRet er;
+    std::string target;
 
     switch (getCurrentToken()) {
         case TK_IDENT:    //标识符   ————>  变量   函数   数组
@@ -1282,7 +1285,6 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> &pfe
             currentToken = next();
             if(getCurrentToken() == SY_LBRACKET) {   // [  数组
                 currentToken = next();
-                exprRet er;
                 er = Parse_expression(scope);
                 if(er.isconstant || er.it == it_charType) {
                     panic("ArrayError"); 
@@ -1294,14 +1296,13 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> &pfe
                     panic("ArrayError: index out of line"); 
                 }
 
-                FourYuanInstr fy;
                 //数组的四元式生成
                 //$x = name[$a]
                 fy.setopcode(ASS);
-                std::string target = varGenerator();
+                target = varGenerator();
                 //std::cout << target << std::endl;
                 fy.settarget(target);  
-                fy.settargetindex(er.value);
+                //fy.settargetindex(er.value);
                 fy.settargetArr(false);
                 fy.setsrcArr(true);
                 fy.setleft(name);
@@ -1412,7 +1413,23 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> &pfe
             pfeList.push_back(pfe);
             currentToken = next();
 
-            Parse_expression(scope);
+            er  = Parse_expression(scope);
+            
+            pfe.it = it_intType;
+            pfe.isconstant = false;
+            pfe.str = er.name;
+            pfe.isOpcode = false;
+            pfeList.push_back(pfe); 
+            //target = varGenerator();
+            //fy.setopcode(ASS);
+            //fy.settargetArr(false);
+            //fy.setsrcArr(false);
+            //fy.setop('+');
+            //fy.settarget(target);
+            //fy.setleft(er.name);
+            //fy.setright("0");
+
+            //itgenerator.pushIntermediateItem(fy);
 
             pfe.it = it_charType;
             pfe.cvalue = ')';
@@ -1458,14 +1475,15 @@ void Parser::factor_symbol(int isPre, std::vector<PostfixExpression> &preList) {
 //<赋值语句> ::= <标识符>=<表达式> | <标识符>'['<表达式>']'=<表达式>
 bool Parser::Parse_assignStmt(std::string scope, std::string name) {
     //name为左值
-    FourYuanInstr fy;
-    fy.setopcode(ASS);
 
     if(getCurrentToken() == SY_ASSIGN) {   //标识符
 
         currentToken  = next();
         //std::cout << getCurrentLexeme() << std::endl;
-        Parse_expression(scope); 
+        FourYuanInstr fy;
+        fy.setopcode(ASS);
+        exprRet er;
+        er = Parse_expression(scope); 
         if(getCurrentToken() != SY_SEMICOLON) {
             panic("SyntaxError: lack ; at line %d, colunm, %d", line, column); 
         }
@@ -1474,11 +1492,16 @@ bool Parser::Parse_assignStmt(std::string scope, std::string name) {
         if(!exist) {
             panic("CheckError:  undefined symbol"); 
         }
+        /*静态类型检查*/
+        if(!__symbolTable->typeCheck(name, scope, er.it)) {
+            panic("CheckError:  type not match"); 
+        }
         fy.settarget(name);
-        /*[>静态类型检查<]*/
-        //if(!__symbolTable->typeCheck(name, scope, it)) {
-        //panic("CheckError:  type not match"); 
-        //}
+        fy.settargetArr(false);
+        fy.setsrcArr(false);
+        fy.setleft(er.name); 
+        fy.setop('+');
+        fy.setright("0");
 
         //if(er.it == it_intType) {
         //fy.setleft(std::to_string(er.value));
@@ -1491,8 +1514,14 @@ bool Parser::Parse_assignStmt(std::string scope, std::string name) {
     }else if(getCurrentToken() == SY_LBRACKET){   //数组元素
 
         currentToken = next();
-        Parse_expression(scope);     
-
+        exprRet erA  = Parse_expression(scope);     
+        FourYuanInstr fy;
+        fy.setopcode(ASS); 
+        fy.settargetArr(true);
+        fy.setsrcArr(false);
+        fy.settarget(name);
+        fy.setleft(erA.name); 
+        //itgenerator.pushIntermediateItem(fy);
         if(getCurrentToken() != SY_RBRACKET) {
             panic("SyntaxError: lack ; at line %d, colunm, %d", line, column); 
         }
@@ -1503,7 +1532,9 @@ bool Parser::Parse_assignStmt(std::string scope, std::string name) {
         }
 
         currentToken = next();
-        Parse_expression(scope);
+        exprRet erB = Parse_expression(scope);
+        fy.setleft(erB.name);
+        itgenerator.pushIntermediateItem(fy);
 
     }else {
         panic("SyntaxError:  wrong format of assignment at line %d, column %d", line, column); 

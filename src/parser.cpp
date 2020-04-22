@@ -1525,6 +1525,7 @@ bool Parser::Parse_assignStmt(std::string scope, std::string name) {
         if(getCurrentToken() != SY_RBRACKET) {
             panic("SyntaxError: lack ; at line %d, colunm, %d", line, column); 
         }
+        //itgenerator.pushIntermediateItem(fy);
 
         currentToken = next();
         if(getCurrentToken() != SY_ASSIGN) {
@@ -1533,7 +1534,9 @@ bool Parser::Parse_assignStmt(std::string scope, std::string name) {
 
         currentToken = next();
         exprRet erB = Parse_expression(scope);
-        fy.setleft(erB.name);
+        fy.setright(erB.name);
+        //fy.settargetArr(true);
+        //fy.setsrcArr(false);
         itgenerator.pushIntermediateItem(fy);
 
     }else {

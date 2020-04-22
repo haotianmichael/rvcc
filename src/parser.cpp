@@ -1804,13 +1804,66 @@ bool Parser::Parse_loopStmt(std::string scope) {
         return false;
     }
 
+    std::string labA = labelGenetar();
+    std::string labB = labelGenetar();
+    FourYuanInstr fyA;
+
+    fyA.setopcode(LABEL);
+    fyA.settarget(labA);
+    itgenerator.pushIntermediateItem(fyA); 
+
+    
+
     currentToken = next();    //   (
     if(getCurrentToken() != SY_LPAREN) {
         panic("SyntaxError: lack  ( at line %d, column %d", line, column); 
     }
     currentToken = next();    //   (
 
-    Parse_condition(scope);
+    std::string res = Parse_condition(scope);
+
+
+    switch (global_condition_op) {
+        case SY_LT:  // <
+            fyA.setopcode(GT); 
+            fyA.settarget(labB);
+            fyA.setleft(res);
+            itgenerator.pushIntermediateItem(fyA);
+            break;
+        case SY_LE:  // <=
+            fyA.setopcode(GE);
+            fyA.settarget(labB);
+            fyA.setleft(res);
+            itgenerator.pushIntermediateItem(fyA);
+            break;
+        case SY_EQ:  // == 
+            fyA.setopcode(BNE);
+            fyA.settarget(labB);
+            fyA.setleft(res);
+            itgenerator.pushIntermediateItem(fyA);
+            break;
+        case SY_NE:   // !=
+            fyA.setopcode(ENQ);
+            fyA.settarget(labB);
+            fyA.setleft(res);
+            itgenerator.pushIntermediateItem(fyA); 
+            break;
+        case SY_GT:  // >
+            fyA.setopcode(LT);
+            fyA.settarget(labB);
+            fyA.setleft(res);
+            itgenerator.pushIntermediateItem(fyA); 
+            break;
+        case SY_GE:  // >=
+            fyA.setopcode(LE);
+            fyA.settarget(labB); 
+            fyA.setleft(res);
+            itgenerator.pushIntermediateItem(fyA);
+            break;
+        default:
+            break;        
+    }
+
 
     if(getCurrentToken() != SY_RPAREN) {
         panic("SyntaxError: lack  ) at line %d, column %d", line, column); 
@@ -1822,6 +1875,18 @@ bool Parser::Parse_loopStmt(std::string scope) {
     }
 
     Parse_compoundStmt(scope);
+
+    //无条件跳转
+    FourYuanInstr fyJ;
+    fyJ.setopcode(JMP);
+    fyJ.settarget(labA);
+    itgenerator.pushIntermediateItem(fyJ);
+
+    //跳出循环
+    FourYuanInstr fyB;
+    fyB.setopcode(LABEL);
+    fyB.settarget(labB);
+    itgenerator.pushIntermediateItem(fyB);
 
     if(getCurrentToken() != SY_RBRACE) {
         panic("SyntaxError: lack }  at line %d, column %d", line, column); 

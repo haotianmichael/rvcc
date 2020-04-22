@@ -21,4 +21,13 @@ main() {
         res = a -  b;
     }
 
+
+    while(array[(a - 34)*20] != array[N+res]) {
+        array[(5 - a) / 4 * 3] = array[a+(f -array[a + b])* f/ d];
+        array[(5 - a) / 4 * 3] = array[a+(f -array[a + b])* f/ d];
+        res = a -  b;
+    }
+
+
+
 }

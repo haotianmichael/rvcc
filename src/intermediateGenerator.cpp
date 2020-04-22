@@ -96,10 +96,10 @@ void IntermediateGenerator::printTmpItem() {
                 out << "BNE " << tmp.getleft() << " " << tmp.gettarget() << std::endl;
                 break;
             case ReadInt:
-                out << "Read Char " << tmp.gettarget() << std::endl;
+                out << "Read Int " << tmp.gettarget() << std::endl;
                 break;
             case ReadChar:
-                out << "Read Int " << tmp.gettarget() << std::endl;
+                out << "Read Char " << tmp.gettarget() << std::endl;
                 break;
             case PrintStr:
                 out << "Print string " << "\"" << tmp.gettarget() << "\"" << std::endl;

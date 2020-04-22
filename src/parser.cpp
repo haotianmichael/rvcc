@@ -1904,7 +1904,7 @@ bool Parser::Parse_scanf(std::string scope) {
     if(getCurrentToken() != KW_SCANF) {
         return false; 
     }
-    scope = "";  //检查标识符作用域
+
     currentToken = next();   //   (
     if(getCurrentToken() != SY_LPAREN) {
         panic("SyntaxError: lack  ( at line %d, column %d", line, column); 
@@ -1915,6 +1915,31 @@ bool Parser::Parse_scanf(std::string scope) {
         panic("SyntaxError: scanf needs para at line %d, column %d", line, column); 
     }
 
+    std::string name = getCurrentLexeme();
+    bool exist = __symbolTable->identCheck(name, scope);
+    if(!exist) {
+        panic("SyntaxError: undefined symbol"); 
+    }
+
+    SymbolItem *head = __symbolTable->getHead();
+    SymbolItem *tail = __symbolTable->getTail();
+
+    while(head != tail) {
+        if(head->getname() == name && head->getscope() == scope)  {
+            break; 
+        }         
+        head = head->next; 
+    }
+
+    FourYuanInstr fyA;
+    fyA.settarget(name);
+    if(static_cast<LocalItem *>(head)->getIt() == it_intType) {
+        fyA.setopcode(ReadInt); 
+    }else if(static_cast<LocalItem *>(head)->getIt() == it_charType){
+        fyA.setopcode(ReadChar); 
+    } 
+    itgenerator.pushIntermediateItem(fyA);
+
     while(true) {
         currentToken = next(); 
         if(getCurrentToken() != SY_COMMA){    //   ,
@@ -1924,6 +1949,27 @@ bool Parser::Parse_scanf(std::string scope) {
             if(getCurrentToken() != TK_IDENT) {
                 panic("SyntaxError: scanf needs para at line %d, column %d", line, column); 
             }
+            std::string name = getCurrentLexeme();
+            bool exist = __symbolTable->identCheck(name, scope);
+            if(!exist) {
+                panic("SyntaxError: undefined symbol"); 
+            }
+            SymbolItem *head = __symbolTable->getHead();
+            SymbolItem *tail = __symbolTable->getTail();
+            while(head != tail) {
+                if(head->getname() == name && head->getscope() == scope) {
+                    break; 
+                } 
+                head = head->next; 
+            }
+            FourYuanInstr fyB;
+            fyB.settarget(name);
+            if(static_cast<LocalItem *>(head)->getIt() == it_intType) {
+                fyB.setopcode(ReadInt); 
+            }else if(static_cast<LocalItem *>(head)->getIt() == it_charType) {
+                fyB.setopcode(ReadChar); 
+            }
+            itgenerator.pushIntermediateItem(fyB);
         }
     }
 
@@ -1953,9 +1999,30 @@ bool Parser::Parse_printf(std::string scope) {
 
     currentToken = next();
     if(getCurrentToken() == CONST_STRING) {   //字符串常量
+
+        FourYuanInstr fy;
+        fy.setopcode(PrintStr);
+        fy.settarget(getCurrentLexeme()); 
+        itgenerator.pushIntermediateItem(fy);
+
         currentToken = next();    //    )
     }else {
-        Parse_expression(scope);    //  表达式
+        exprRet er;
+        FourYuanInstr fy;
+        er = Parse_expression(scope);    //  表达式
+        if(er.isconstant) {
+            if(er.it == it_charType) {
+                fy.setopcode(PrintChar); 
+                fy.settarget(std::string(1, er.cvalue));
+            }else if(er.it == it_intType) {
+                fy.setopcode(PrintInt); 
+                fy.settarget(std::to_string(er.value)); 
+            }
+        }else {
+            fy.setopcode(PrintId); 
+            fy.settarget(er.name);
+        }
+        itgenerator.pushIntermediateItem(fy);
     }
 
     if(getCurrentToken() != SY_RPAREN) {
@@ -1984,7 +2051,23 @@ bool Parser::Parse_returnStmt(std::string scope) {
     }
     currentToken = next();
 
-    Parse_expression(scope);
+    FourYuanInstr fy;
+    exprRet er = Parse_expression(scope);
+
+    if(er.isconstant) {
+    
+        if(er.it == it_intType) {
+            fy.setopcode(ReturnInt);        
+            fy.settarget(std::to_string(er.value));
+        }else if(er.it == it_charType) {
+            fy.setopcode(ReadChar); 
+            fy.settarget(std::string(1, er.cvalue)); 
+        }
+    }else{
+        fy.setopcode(ReturnId); 
+        fy.settarget(er.name);
+    }
+    itgenerator.pushIntermediateItem(fy);
 
     if(getCurrentToken() != SY_RPAREN) {
         panic("SyntaxError: lack  )  at line %d, column %d", line, column); 

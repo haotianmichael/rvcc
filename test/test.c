@@ -28,6 +28,8 @@ main() {
         res = a -  b;
     }
 
+    printf("haotian is a good man");
+    scanf(a, b);
 
-
+    return ((a - 34) * 20/ 3);
 }

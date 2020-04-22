@@ -9,6 +9,7 @@ int varCount = 0;  //临时变量计数器
 static int labelCount = 0;   //标签计数器
 static int stringCount = 0;   //字符串计数器
 static int isPre = 0;  //表达式计算  是否有前驱符号 0为没有  1为+   2为-
+P_Token global_condition_op;   //<条件>AST中的关系运算符
 
 
 /*
@@ -1564,9 +1565,52 @@ bool Parser::Parse_conditionStmt(std::string scope) {
     currentToken = next();
 
     //识别<条件>
-    Parse_condition(scope);
+    std::string res = Parse_condition(scope);
+    std::string labA = labelGenetar();
+    std::string labB = labelGenetar();
+    FourYuanInstr fyA;
 
-    //代码生成
+    switch (global_condition_op) {
+        case SY_LT:  // <
+            fyA.setopcode(GT); 
+            fyA.settarget(labA);
+            fyA.setleft(res);
+            itgenerator.pushIntermediateItem(fyA);
+            break;
+        case SY_LE:  // <=
+            fyA.setopcode(GE);
+            fyA.settarget(labA);
+            fyA.setleft(res);
+            itgenerator.pushIntermediateItem(fyA);
+            break;
+        case SY_EQ:  // == 
+            fyA.setopcode(BNE);
+            fyA.settarget(labA);
+            fyA.setleft(res);
+            itgenerator.pushIntermediateItem(fyA);
+            break;
+        case SY_NE:   // !=
+            fyA.setopcode(ENQ);
+            fyA.settarget(labA);
+            fyA.setleft(res);
+            itgenerator.pushIntermediateItem(fyA); 
+            break;
+        case SY_GT:  // >
+            fyA.setopcode(LT);
+            fyA.settarget(labA);
+            fyA.setleft(res);
+            itgenerator.pushIntermediateItem(fyA); 
+            break;
+        case SY_GE:  // >=
+            fyA.setopcode(LE);
+            fyA.settarget(labA); 
+            fyA.setleft(res);
+            itgenerator.pushIntermediateItem(fyA);
+            break;
+        default:
+            break;        
+    }
+
 
     // )
     if(getCurrentToken() != SY_RPAREN) {
@@ -1588,6 +1632,18 @@ bool Parser::Parse_conditionStmt(std::string scope) {
         return false; 
     }
 
+    //无条件跳转
+    FourYuanInstr fyJ;
+    fyJ.setopcode(JMP);
+    fyJ.settarget(labA);
+    itgenerator.pushIntermediateItem(fyJ);
+
+    //打标签
+    FourYuanInstr lab;
+    lab.setopcode(LABEL);
+    lab.settarget(labA);
+    itgenerator.pushIntermediateItem(lab);
+
     currentToken = next();
     if(getCurrentToken() != KW_ELSE) {
         return true;    //没有else 条件语句直接退出
@@ -1599,6 +1655,11 @@ bool Parser::Parse_conditionStmt(std::string scope) {
         } 
 
         Parse_compoundStmt(scope);
+
+        FourYuanInstr lab;
+        lab.setopcode(LABEL);
+        lab.settarget(labB);
+        itgenerator.pushIntermediateItem(lab);
 
         if(getCurrentToken() != SY_RBRACE) {
             panic("SytaxError: lack  } at line %d, column %d", line, column); 
@@ -1613,12 +1674,33 @@ bool Parser::Parse_conditionStmt(std::string scope) {
 
 //<条件> ::= <表达式><关系运算符><表达式> | <表达式>
 //<关系运算符> ::= < | <= | > | >= | != | ==
-bool Parser::Parse_condition(std::string scope) {
+std::string Parser::Parse_condition(std::string scope) {
 
-    Parse_expression(scope);
+    FourYuanInstr fyA, fyB, res;
+    exprRet erA, erB;
+    erA = Parse_expression(scope);
     if(getCurrentToken() == SY_RPAREN) {   //表达式
-        return true;
+        return "false";
     }
+
+    std::string target = varGenerator();
+    fyA.settarget(target);
+    fyA.setopcode(ASS); 
+    fyA.setop('+');
+    fyA.setright("0");
+    fyA.settargetArr(false);
+    fyA.setsrcArr(false);
+    if(erA.isconstant) {
+        if(erA.it == it_intType) {
+            fyA.setleft(std::to_string(erA.value));
+        }else if(erA.it == it_charType) {
+            fyA.setleft(std::string(1, erA.cvalue));
+        }
+    }else {
+        fyA.setleft(erA.name); 
+    }
+
+    itgenerator.pushIntermediateItem(fyA);
 
     while(true) {
         if(getCurrentToken() == SY_RPAREN) {
@@ -1629,21 +1711,87 @@ bool Parser::Parse_condition(std::string scope) {
                 && getCurrentToken() != SY_EQ && getCurrentToken() != SY_NE) {
             panic("SyntaxError: wrong operator at line %d, column %d", line, column); 
         }
+        global_condition_op = getCurrentToken();
         currentToken = next();
-        Parse_expression(scope); 
+        erB = Parse_expression(scope); 
+        target = varGenerator();
+        fyB.settarget(target);
+        fyB.setopcode(ASS);
+        fyB.setop('+');
+        fyB.setright("0");
+        fyB.settargetArr(false);
+        fyB.setsrcArr(false);
+        if(erB.isconstant) {
+            if(erB.it == it_charType) {
+                fyB.setleft(std::to_string(erB.value)); 
+            }else if(erB.it == it_charType) {
+                fyB.setleft(std::string(1, erB.cvalue)) ; 
+            } 
+        }else {
+            fyB.setleft(erB.name); 
+        }
+        itgenerator.pushIntermediateItem(fyB);
+
+
+        //将表达式之差压栈 - 
+        target = varGenerator();
+        res.settarget(target);
+        res.setopcode(ASS);
+        res.settargetArr(false);
+        res.setsrcArr(false);
+        res.setop('-');
+        if(erA.isconstant) {
+            if(erA.it == it_intType) {
+                res.setleft(std::to_string(erA.value));
+            }else if(erA.it == it_charType){
+                res.setleft(std::string(1, erA.cvalue)); 
+            }
+        }else {
+            res.setleft(erA.name); 
+        }
+
+        if(erB.isconstant) {
+            if(erB.it == it_intType) {
+                res.setright(std::to_string(erB.value)); 
+            }else if(erB.it == it_charType){
+                res.setright(std::string(1, erB.cvalue)); 
+            } 
+        }else {
+           res.setright(fyB.gettarget()); 
+        }
+        itgenerator.pushIntermediateItem(res);
+
 
         if(getCurrentToken() == SY_AND || getCurrentToken() == SY_OR) {
             currentToken = next();
-            Parse_expression(scope); 
+            erA = Parse_expression(scope); 
+            target = varGenerator();
+            fyA.settarget(target);
+            fyA.setopcode(ASS);
+            fyA.setsrcArr(false);
+            fyA.settargetArr(false);
+            fyA.setop('+');
+            fyA.setright("0");
+            if(erA.isconstant) {
+                if(erA.it == it_intType) {
+                    fyA.setleft(std::to_string(erA.value));         
+                }else if(erA.it == it_charType) {
+                    fyA.setleft(std::string(1, erA.cvalue)); 
+                } 
+            }else {
+                fyA.setleft(erA.name); 
+            }
+
+            itgenerator.pushIntermediateItem(fyA);
         }
+
     }
 
     if(getCurrentToken() != SY_RPAREN) {
         panic("SyntaxError: lack )  at line %d, column %d", line, column);
     }
 
-
-    return true;
+    return res.gettarget();
 }
 
 
@@ -2131,7 +2279,7 @@ std::string Parser::varGenerator() {
 
 //创建标签
 std::string Parser::labelGenetar() {
-    return ("LB"+std::to_string(++labelCount));
+    return ("LB"+std::to_string(++labelCount)+".");
 }
 
 //创建字符串

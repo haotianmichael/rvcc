@@ -78,7 +78,7 @@ class Parser
         //<条件语句> ::= if'('<条件>')'<语句>else<语句>
         bool Parse_conditionStmt(std::string scope);
         //<条件> ::= <表达式><关系运算符><表达式> | <表达式>
-        bool Parse_condition(std::string scope);
+        std::string Parse_condition(std::string scope);
         //<循环语句> ::= while'('<条件>')'<语句>
         bool Parse_loopStmt(std::string scope);
         //<值参数表> ::= <表达式>{, <表达式>}

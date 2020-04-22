@@ -89,8 +89,6 @@ class FourYuanInstr
         inline std::string gettarget() { return __target;}
         inline itemType getparat() { return __paraT;}
         inline funcReturnType getfunct() { return __frt;}
-        inline int gettargetindex() { return __targetindex;}
-        inline int getsrcindex() { return __srcindex;}
         inline bool getistargetArr() { return __targetArr;}
         inline bool getissrcArr() { return __srcArr;}
         inline bool getparaArr() { return __paraArr;}
@@ -103,8 +101,6 @@ class FourYuanInstr
         inline void settarget(std::string target) { __target = target;}
         inline void setparat(itemType it) { __paraT = it;}
         inline void setfunct(funcReturnType frt) { __frt = frt;}
-        inline void settargetindex(int index) { __targetindex = index;}
-        inline void setsrcindex(int index) { __srcindex = index;}
         inline void settargetArr(bool is) { __targetArr = is;}
         inline void setsrcArr(bool is) { __srcArr = is;}
         inline void setparaArr(bool is) { __paraArr = is;}
@@ -121,9 +117,7 @@ class FourYuanInstr
 
 
         bool __targetArr;  //赋值  结果是否为数组
-        int __targetindex; //结果数组索引
         bool __srcArr;  //赋值  操作数是否为数组
-        int __srcindex;   //操作数索引
         bool __paraArr;  //参数是否为数组
         char __op;    //运算符
 };

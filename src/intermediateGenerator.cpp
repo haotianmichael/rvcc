@@ -50,7 +50,7 @@ void IntermediateGenerator::printTmpItem() {
                 } 
                 break;
             case LABEL:
-                out << tmp.gettarget() << ":" << std::endl;
+                out << tmp.gettarget()  << std::endl;
                 break;
             case FUNDEC:
                 if(tmp.getfunct() == frt_voidType) {

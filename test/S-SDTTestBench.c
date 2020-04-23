@@ -25,11 +25,11 @@ int partion(int q[], int l, int r) {
     i = l;
     while(i != j) {
 
-        while(q[j] > q[key] && i < j) {
+        while(q[j] > q[key]) {
             j = j - 1; 
         } 
 
-        while(q[i] < q[key] && i < j) {
+        while(q[i] < q[key]) {
             i = i + 1; 
         }
 

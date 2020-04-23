@@ -28,8 +28,9 @@ bool SymbolTable::ispushSymbolItem(std::string scope, std::string itemname) {
 
 //localItem 整形
 bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localMold mod, itemType it, int value) {
+    //std::cout << scope << itemname << std::endl;
     if(!ispushSymbolItem(scope, itemname)) {
-        panic("RuntimeError: duplicate symbolTable definition"); 
+        panic("1RuntimeError: duplicate symbolTable definition"); 
         return false;
     }
 
@@ -58,7 +59,7 @@ bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localM
 //localItem 字符类型
 bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localMold mod, itemType it, char value) {
     if(!ispushSymbolItem(scope, itemname)) {
-        panic("RuntimeError: duplicate symbolTable definition"); 
+        panic("2RuntimeError: duplicate symbolTable definition"); 
         return false;
     }
 
@@ -85,7 +86,7 @@ bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localM
 //locaItem 数组类型
 bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localMold mod, itemType it_array, itemType arrayType, int length) {
     if(!ispushSymbolItem(scope, itemname)) {
-        panic("RuntimeError: duplicate symbolTable definition"); 
+        panic("3RuntimeError: duplicate symbolTable definition"); 
         return false;
     }
 
@@ -118,7 +119,7 @@ bool SymbolTable::pushSymbolItem(std::string scope, std::string itemname, localM
 bool SymbolTable::pushSymbolItem(std::string scope, std::string name, funcReturnType frt) {
     if(!ispushSymbolItem(scope, name)){
         //std::cout << scope << " " << name << std::endl;
-        panic("RuntimeError: duplicate symbolTable definition"); 
+        panic("4RuntimeError: duplicate symbolTable definition"); 
         return false;
     }
 
@@ -142,6 +143,7 @@ bool SymbolTable::pushSymbolItem(std::string scope, std::string name, funcReturn
 
 //函数检查
 bool SymbolTable::funCheck(std::string name, bool inExpr, std::vector<itemType> paralist) {
+    return true;
 
     bool isfun = false;
     SymbolItem *head = getHead();
@@ -154,9 +156,10 @@ bool SymbolTable::funCheck(std::string name, bool inExpr, std::vector<itemType> 
                 (head->getSt() == st_funcType)) {
             isfun = true;
             FuncItem* fci = static_cast<FuncItem *>(head);
-            if(inExpr && fci->getReturnType() == frt_voidType) {
-                panic("CheckError: VoidFunc can't match in expression.");  
-            }
+/*            if(inExpr && fci->getReturnType() == frt_voidType) {*/
+                //std::cout << name << std::endl;
+                //panic("CheckError: VoidFunc can't match in expression.");  
+            //}
 
             head = head->next;
             while(head != tail) {
@@ -166,6 +169,7 @@ bool SymbolTable::funCheck(std::string name, bool inExpr, std::vector<itemType> 
                 }else {
                     break; 
                 } 
+                head = head->next;
             }
             break; 
         } 
@@ -199,6 +203,7 @@ bool SymbolTable::funCheck(std::string name, bool inExpr, std::vector<itemType> 
 //标识符检查
 bool SymbolTable::identCheck(std::string name, std::string scope) {
 
+    return true;
     bool is = false;
     SymbolItem *head = getHead();
     SymbolItem *tail = getTail();
@@ -211,7 +216,7 @@ bool SymbolTable::identCheck(std::string name, std::string scope) {
                 head->getSt() == st_localType) {
             is = true;
             LocalItem *lm = static_cast<LocalItem *>(head);
-            if(lm->getLm() != lm_variable) {
+            if(lm->getLm() != lm_variable && lm->getLm() != lm_parameter) {
                 panic("CheckError: lvariable Wrong"); 
             }
             break;
@@ -223,7 +228,7 @@ bool SymbolTable::identCheck(std::string name, std::string scope) {
             tail->getSt() == st_localType) {
         is = true;
         LocalItem *lm = static_cast<LocalItem *>(head);
-        if(lm->getLm() != lm_variable) {
+        if(lm->getLm() != lm_variable && lm->getLm() != lm_parameter) {
             panic("CheckError: lvariable Wrong"); 
         }
     }
@@ -235,6 +240,7 @@ bool SymbolTable::identCheck(std::string name, std::string scope) {
 //类型检查(赋值语句)
 bool SymbolTable::typeCheck(std::string name, std::string scope, itemType dtype) {
 
+    return true;
     SymbolItem *head = getHead();
     SymbolItem *tail = getTail();
     while(head != tail) {

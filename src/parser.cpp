@@ -1052,7 +1052,7 @@ bool Parser::Parse_Stmt(std::string scope) {
                 }
             }else if(getCurrentToken() == SY_LPAREN) {
                 //函数调用 
-                name = getCurrentLexeme();  //函数名称
+                //name = getCurrentLexeme();  //函数名称
                 tmp.setopcode(FUNCALL);
                 tmp.settarget(name);
                 currentToken = next();
@@ -1060,7 +1060,9 @@ bool Parser::Parse_Stmt(std::string scope) {
                     itgenerator.pushIntermediateItem(tmp); 
                 }else { //有参数
                     std::cout << "Start FunCall with param..." << std::endl;
+                    //std::cout << name << std::endl;
                     std::vector<itemType> valueList = Parse_valueParamList(scope);
+                    //std::cout << valueList.size() << std::endl;
                     if(__symbolTable->funCheck(name, true, valueList)) {  //函数参数  符号表检查
                         itgenerator.pushIntermediateItem(tmp); 
                     }else {
@@ -1092,31 +1094,32 @@ bool Parser::Parse_Stmt(std::string scope) {
 //<值参数表> ::= <表达式>{,<表达式>}
 std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
 
+    //std::cout << "hao" << std::endl;
     std::vector<itemType> paralist;
     std::vector<std::string> paramTable;
     FourYuanInstr fyi;
 
 
     exprRet er = Parse_expression(scope);
-    /*if(!er.isEmpty) {*/
-    //paralist.push_back(er.it);
-    //}else {
-    //return paralist;  
-    /*}*/
+    paralist.push_back(er.it); 
+    if(er.isEmpty) {
+        return paralist; 
+    }
     if(er.isconstant) {
-        char x[15] = {'\0'}; 
-        sprintf(x, "%d", er.it == it_intType ? er.value : er.cvalue); 
         fyi.setopcode(ASS);
         fyi.setsrcArr(false);
         fyi.settargetArr(false);
         fyi.settarget(varGenerator());
         fyi.setop('+'); 
         fyi.setright("0");
-        fyi.setleft(x);
+        if(er.it == it_charType) {
+            fyi.setleft(std::string(1, er.cvalue));
+        }else if(er.it == it_intType) {
+            fyi.setleft(std::to_string(er.value)); 
+        }
         itgenerator.pushIntermediateItem(fyi);
         paramTable.push_back(fyi.gettarget());
     }else {
-        if(er.name.size() > 0 && er.name[0] == 'T') {
             FourYuanInstr tmp;
             tmp.setopcode(ASS);
             tmp.settarget(varGenerator()); 
@@ -1127,9 +1130,6 @@ std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
             tmp.setright("0");
             itgenerator.pushIntermediateItem(tmp);
             paramTable.push_back(tmp.gettarget());
-        }else {
-            paramTable.push_back(er.name); 
-        } 
     }
 
     while(true) {
@@ -1141,19 +1141,20 @@ std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
         er = Parse_expression(scope);  
         paralist.push_back(er.it); 
         if(er.isconstant) {
-            char x[15] = {'\0'}; 
-            sprintf(x, "%d", er.it == it_intType ? er.value : er.cvalue); 
             fyi.setopcode(ASS);
             fyi.setsrcArr(false);
             fyi.settargetArr(false);
             fyi.settarget(varGenerator());
             fyi.setop('+'); 
             fyi.setright("0");
-            fyi.setleft(x);
+            if(er.it == it_intType) {
+                fyi.setleft(std::string(1, er.cvalue)); 
+            }else if(er.it == it_charType) {
+                fyi.setleft(std::to_string(er.value)); 
+            }
             itgenerator.pushIntermediateItem(fyi);
             paramTable.push_back(fyi.gettarget());
         }else {
-            if(er.name.size() > 0 && er.name[0] == 'T') {
                 FourYuanInstr tmp;
                 tmp.setopcode(ASS);
                 tmp.settarget(varGenerator()); 
@@ -1164,9 +1165,6 @@ std::vector<itemType> Parser::Parse_valueParamList(std::string scope) {
                 tmp.setright("0");
                 itgenerator.pushIntermediateItem(tmp);
                 paramTable.push_back(tmp.gettarget());
-            }else {
-                paramTable.push_back(er.name); 
-            } 
         }
     }
 
@@ -1224,6 +1222,7 @@ exprRet  Parser::Parse_expression(std::string scope) {
 
     /*表达式计算  中缀表达式  转  后缀表达式*/
     pfeListAfter = postfixReverse(pfeListBefore);
+    //std::cout << pfeListAfter.size() << std::endl;
     //std::cout << pfeListAfter.size() << std::endl;
     /*将表达式  生成四元式 然后返回一些属性*/
     er = postfixExprTotmpCode(pfeListAfter);
@@ -2249,9 +2248,13 @@ std::vector<PostfixExpression> Parser::postfixReverse(std::vector<PostfixExpress
  */
 exprRet Parser::postfixExprTotmpCode(std::vector<PostfixExpression> &pfeList) {
     exprRet er;
+    er.isEmpty = false;
     std::vector<PostfixExpression>  stack;   //运算符栈
     PostfixExpression pfe;
-    if(pfeList.size() == 1) {
+    if(pfeList.size() == 0){
+        er.isEmpty = true; 
+        return er;
+    }else if(pfeList.size() == 1){
         pfe = pfeList[0]; 
         //赋值给临时变量
         std::string target = varGenerator();

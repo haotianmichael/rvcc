@@ -15,14 +15,14 @@ int func(int a, int b, char c[]) {
     int vara, varb, varc;
     int vard;
 
-    if(cosA > cosB) {
+    if(vara > varb) {
     
     }else {
     
     }
 
 
-    while(coC != cosB) {
+    while(vara + varb!= varc) {
     
     
     }
@@ -31,7 +31,7 @@ int func(int a, int b, char c[]) {
     printf("haotian is a good man");
     printf("he have bad life");
 
-    scanf(x, y, z);
+    scanf(a, b, c);
 
 }
 
@@ -45,14 +45,13 @@ int main() {
     printf("haotian is a good man");
     printf("he have bad life");
 
-    if() {
+    if(mainvara + mainavrb > mainvarc) {
     
     }else {
     
     }
 
-    scanf(x, y, z);    
-    while() {
+    while(mainvara>mainvarc) {
     
     
     }

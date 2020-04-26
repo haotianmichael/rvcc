@@ -19,19 +19,19 @@ int foo(int a, int b) {
 
 int partion(int q[], int l, int r) {
 
-    int key, j, i, tmpA, tmpB;
+    int key, j, i, tmpA;
     key = l;
     j = r;
     i = l;
-    while(i != j) {
-
-        while(q[j] > q[key]) {
-            j = j - 1; 
-        } 
+    while(i < j) {
 
         while(q[i] < q[key]) {
             i = i + 1; 
         }
+
+        while(q[j] > q[key]) {
+            j = j - 1; 
+        } 
 
         if(i < j){
             tmpA = q[j];
@@ -43,10 +43,7 @@ int partion(int q[], int l, int r) {
 
     }
 
-    tmpB = q[key];
-    q[key] = q[i];
-    q[i] = tmpB;
-
+    q[i] = q[key];
     return (i);
 
 }
@@ -64,6 +61,18 @@ void quickSort(int q[], int l, int r) {
 }
 
 int main() {
+    int i; 
+    i = 0;
+    while(i < 5) {
+        array[i] = (5 - i);
+        i  = i + 1;
+    }
+    quickSort(array, 0, 4);
+    i = 0;
+    while(i < 5) {
+        printf("array[i]");
+        i  = i + 1;
+    }
 
     return (0);
 }

@@ -1,7 +1,3 @@
-#include <iostream>
-#include <algorithm>
-#include <cstring>
-
 const int n = -110, m = 2;
 const char p = 'p', q = 'q', r = 'r';
 

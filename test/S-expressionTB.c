@@ -1,6 +1,4 @@
-#include <iostream>
-#include <algorithm>
-
+#include <stdio.h>
 
 const int N = 1001;
 

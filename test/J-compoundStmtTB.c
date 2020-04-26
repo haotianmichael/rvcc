@@ -1,4 +1,3 @@
-#include<iostream>
 #include <stdio.h>
 
 
@@ -31,7 +30,6 @@ int func(int a, int b, char c[]) {
     printf("haotian is a good man");
     printf("he have bad life");
 
-    scanf(a, b, c);
 
 }
 

@@ -1,5 +1,4 @@
-#include <iostream>
-#include <algorithm>
+#include<stdio.h>
 
 int 
 main() {
@@ -29,7 +28,6 @@ main() {
     }
 
     printf("haotian is a good man");
-    scanf(a, b);
 
     return ((a - 34) * 20/ 3);
 }

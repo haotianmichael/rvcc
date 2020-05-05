@@ -6,7 +6,6 @@
 
 extern IntermediateGenerator itgenerator;   //四元式产生表
 
-
 void riscvGenerator::printAsmCode(Parser &p) {
     
     p.printParser();  //打印符号表和四元式
@@ -45,7 +44,7 @@ void riscvGenerator::printAsmCode(Parser &p) {
                 if(it == it_intType) {
                     int value = li->getInteger();
                     if(!flag) {
-                        out << "    .section    .sradata,\"a\"" << std::endl;;
+                        out << "    .section    .srodata,\"a\"" << std::endl;;
                         flag = true; 
                     }
                     out << "    .align  2" << std::endl; 
@@ -77,6 +76,12 @@ void riscvGenerator::printAsmCode(Parser &p) {
     } 
     out << "    .text" << std::endl;
     /*函数*/
+
+
+
+
+
+
 
     return ;
 }

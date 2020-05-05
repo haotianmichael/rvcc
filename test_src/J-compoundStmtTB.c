@@ -1,56 +1,37 @@
 #include <stdio.h>
 
 
-const int N = 100010, M = 10010; 
+const int N = 100010, M = 110;
 int a, b, c, d;
 
-void funa() {}
-void funb(char x[], int y[]) {}
 
-int func(int a, int b, char c[]) {
-    const int cosA = 10, cosB = 110;
-    const int cosC = 100010;
+int fun(int a, int b, int c[]) {
 
-    int vara, varb, varc;
-    int vard;
+    int vara, varb;
+    vara = a + c[0];
+    varb = b;
 
     if(vara > varb) {
-    
+        printf("haotian is a good man\n");
     }else {
-    
+        printf("he have bad life\n");
     }
 
-
-    while(vara + varb!= varc) {
-    
-    
-    }
-
-
-    printf("haotian is a good man");
-    printf("he have bad life");
-
-    return (0);
+    return (vara - c[0]);
 }
-
 
 
 
 int main() {
 
-    const int mainA = 10, mainB = 110, mainC = 10010;
-    int mainvara, mainavrb, mainvarc;
-    printf("haotian is a good man");
-    printf("he have bad life");
+    int mainvara, mainavrb, mainvarc[10];
+    mainvara = 10;
+    mainavrb = 80;
+    mainvarc[0] = 10;
 
-    if(mainvara + mainavrb > mainvarc) {
-    
-    }else {
-    
+    while(mainvara < M) {
+        a = fun(mainvara, mainavrb, mainvarc); 
+        mainvara  = a + mainvarc[0]; 
     }
-
-    while(mainvara>mainvarc) {
-    
-    
-    }
+    return (0);
 }

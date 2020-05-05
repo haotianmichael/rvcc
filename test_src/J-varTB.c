@@ -9,3 +9,8 @@ int x, y;
 
 int array, str[10];
 char ctr[10], s, o;
+
+int 
+main() {
+
+}

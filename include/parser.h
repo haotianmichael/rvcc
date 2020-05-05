@@ -41,6 +41,9 @@ class Parser
         SymbolTable *__symbolTable;
 
     public:
+        SymbolTable* getSymbolTable() {return this->__symbolTable;}
+
+    public:
         /*递归下降子程序定义的分析过程 
           语法分析，直接生成中间代码——四元式 
           */

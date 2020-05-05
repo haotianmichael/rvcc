@@ -1,6 +1,7 @@
 	.file	"J-varTB.c"
 	.option nopic
 	.text
+
 	.globl	n
 	.section	.srodata,"a"
 	.align	2
@@ -8,27 +9,32 @@
 	.size	n, 4
 n:
 	.word	-110
+
 	.globl	m
 	.align	2
 	.type	m, @object
 	.size	m, 4
 m:
 	.word	2
+
 	.globl	p
 	.type	p, @object
 	.size	p, 1
 p:
 	.byte	112
+
 	.globl	q
 	.type	q, @object
 	.size	q, 1
 q:
 	.byte	113
+
 	.globl	r
 	.type	r, @object
 	.size	r, 1
 r:
 	.byte	114
+
 	.comm	a,8,4
 	.comm	b,12,4
 	.comm	d,8,4

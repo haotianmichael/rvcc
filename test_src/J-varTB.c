@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 const int n = -110, m = 2;
 const char p = 'p', q = 'q', r = 'r';
 
@@ -12,5 +14,6 @@ char ctr[10], s, o;
 
 int 
 main() {
-
+    printf("haotian is good\n");
+    return (0); 
 }

@@ -3,6 +3,7 @@
 #include "../include/intermediateGenerator.h"
 #include "../include/riscvGenerator.h"
 #include <queue>
+#include <map>
 
 extern IntermediateGenerator itgenerator;   //四元式产生表
 int varCount = 0;  //临时变量计数器
@@ -626,6 +627,7 @@ bool Parser::Parse_varDefinition(std::string scope) {
             if(num == 0)  
                 panic("SyntaxError: elements of array must be positive at line %d, column %d", line, column);
             length = num;   //数组长度
+            num  = 0;
         }
         currentToken = next();
         if(getCurrentToken() != SY_RBRACKET)    //   ] 
@@ -680,6 +682,7 @@ bool Parser::Parse_varDefinition(std::string scope) {
                 if(num == 0) 
                     panic("SyntaxError: elements of array must be positive at line %d, column %d", line, column);
                 length = num;   //数组长度
+                num = 0;
             }
             currentToken = next();
             if(getCurrentToken() != SY_RBRACKET) 
@@ -2000,8 +2003,20 @@ bool Parser::Parse_printf(std::string scope) {
     if(getCurrentToken() == CONST_STRING) {   //字符串常量
 
         FourYuanInstr fy;
+        std::string label;
+        std::string name = getCurrentLexeme();
+        /*.data域 无重复*/
+        std::map<std::string, std::string>::iterator it_find;
+        it_find = itgenerator.dataSet.find(name);
+        if(it_find != itgenerator.dataSet.end()) {
+            label = itgenerator.dataSet.at(name); 
+        }else {
+            label = stringGenetar();
+            itgenerator.dataSet.insert(std::pair<std::string, std::string>(name, label)); 
+        }
+
         fy.setopcode(PrintStr);
-        fy.settarget(getCurrentLexeme()); 
+        fy.settarget(label); 
         itgenerator.pushIntermediateItem(fy);
 
         currentToken = next();    //    )
@@ -2430,12 +2445,12 @@ std::string Parser::varGenerator() {
 
 //创建标签
 std::string Parser::labelGenetar() {
-    return ("LB"+std::to_string(++labelCount)+".");
+    return (".L"+std::to_string(++labelCount));
 }
 
 //创建字符串
 std::string Parser::stringGenetar() {
-    return ("S"+std::to_string(++stringCount));
+    return (".LC"+std::to_string(stringCount++));
 }
 
 //语法分析器测试函数

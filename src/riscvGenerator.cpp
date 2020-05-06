@@ -14,7 +14,7 @@ void riscvGenerator::printAsmCode(Parser &p) {
     out << "    .file  " << "\"" << this->filename << "\"" << std::endl;
     out << "    .option nopic" << std::endl; 
 
-    /*全局变量  变量 常量 数组*/
+    /*全局变量 .srodataa  变量 常量 数组*/
     out << "    .text" << std::endl;
     SymbolItem *head = p.getSymbolTable()->getHead();
     SymbolItem *tail = p.getSymbolTable()->getTail();
@@ -74,6 +74,16 @@ void riscvGenerator::printAsmCode(Parser &p) {
         }
         head = head->next;
     } 
+
+    /*.rodata*/
+    out << "    .section    .rodata" << std::endl;
+    std::map<std::string, std::string>::iterator iter;  //遍历.data
+    for(iter = itgenerator.dataSet.begin(); iter != itgenerator.dataSet.end(); iter++) {
+        out << "    .align  2" << std::endl; 
+        out << iter->second <<  ":" << std::endl;
+        out << "    .string\"" << iter->first << "\"" << std::endl;
+    }
+
     out << "    .text" << std::endl;
     /*函数*/
 

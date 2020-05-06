@@ -11,11 +11,6 @@ void IntermediateGenerator::pushIntermediateItem(FourYuanInstr& tmp) {
     return;
 }
 
-void IntermediateGenerator::pushDataItem(std::string tmp) {
-    
-    this->dataSet.push_back(tmp);
-    return;
-}
 
 void IntermediateGenerator::printTmpItem() {
 
@@ -103,7 +98,6 @@ void IntermediateGenerator::printTmpItem() {
                 break;
             case PrintStr:
                 out << "Print string " << "\"" << tmp.gettarget() << "\"" << std::endl;
-                this->pushDataItem(tmp.gettarget());
                 break;
             case PrintInt:
                 out << "Print int " << sToi(tmp.gettarget()) << std::endl;

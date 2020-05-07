@@ -1,13 +1,14 @@
 #include "../include/riscvGenerator.h"
 #include "../include/intermediateGenerator.h"
 #include "../include/symbolTable.h"
+#include "../include/utils.h"
 #include <fstream>
 
 
 extern IntermediateGenerator itgenerator;   //四元式产生表
 
 void riscvGenerator::printAsmCode(Parser &p) {
-    
+
     p.printParser();  //打印符号表和四元式
 
     std::ofstream out("riscvcodeFile.s");
@@ -34,7 +35,7 @@ void riscvGenerator::printAsmCode(Parser &p) {
             }else if(it == it_charType) {
                 out << "    .comm   " << name << "," << length << ",4" << std::endl;
             }
-        
+
         }else {
             if(li->getLm() == lm_constant) {  //常量
                 // 名字   数据类型  值
@@ -60,7 +61,7 @@ void riscvGenerator::printAsmCode(Parser &p) {
                     out << name << ":" << std::endl;
                     out << "    .byte   " << cvalue << std::endl;
                 }
-            
+
             }else if(li->getLm() == lm_variable) {  // 变量
                 //名字  类型
                 std::string name = li->getname();
@@ -76,22 +77,101 @@ void riscvGenerator::printAsmCode(Parser &p) {
     } 
 
     /*.rodata*/
-    out << "    .section    .rodata" << std::endl;
+    if(!itgenerator.dataSet.empty()) {
+        out << "    .section    .rodata" << std::endl;
+    }
     std::map<std::string, std::string>::iterator iter;  //遍历.data
     for(iter = itgenerator.dataSet.begin(); iter != itgenerator.dataSet.end(); iter++) {
         out << "    .align  2" << std::endl; 
         out << iter->second <<  ":" << std::endl;
-        out << "    .string\"" << iter->first << "\"" << std::endl;
+        out << "    .string \"" << iter->first << "\"" << std::endl;
     }
 
+    /* 函数模型
+     * 1. 有main函数  无自定义函数  无系统函数(指printf scanf)   ismain == true && isfunc == false
+     * 2. 有main函数  无自定义函数  有系统函数(指printf scanf)   ismain == true && isfunc == true
+     * 3. 有main函数  有自定义函数  有系统函数(指printf scanf)   ismain == false 
+     * 
+     */
     out << "    .text" << std::endl;
-    /*函数*/
+    bool ismain = true, isfunc = false;
+    if(itgenerator.getIntermediateList()[0].gettarget() == "main") {  
+        for(unsigned int i = 0; i < itgenerator.getIntermediateList().size(); i ++) {
+            FourYuanInstr tmp = itgenerator.getIntermediateList()[i];
+            fourYuanOpcode fy = tmp.getopcode();
+            if(fy == PrintId || fy == PrintInt || fy == PrintStr || fy == PrintChar || fy == ReadInt || fy == ReadChar) {
+                isfunc = true;
+            }
+        }
+    }else if(itgenerator.getIntermediateList()[0].gettarget() != "main") {
+        ismain = false; 
+    }
+
+    if(ismain && !isfunc) {   //无系统函数  无自定义函数
+        /*只需要维护main函数栈*/
+        out << "    .align  1" << std::endl;
+        out << "    .global main"  << std::endl;
+        out << "    .type   main" << ", @function" << std::endl;
+        out << "main:" << std::endl; 
+        out << "    addi sp, sp, -16" << std::endl;
+        out << "    sw s0, 12(sp)" << std::endl;
+        out << "    addi s0, sp, 16" << std::endl;
+
+        /*函数内部翻译*/
+        nofun_asmCodeGen();
+
+        out << "    li a5, 0" << std::endl;
+        out << "    mv a0, a5" << std::endl;
+        out << "    lw s0, 12(sp)" << std::endl;
+        out << "    addi sp, sp, 16" << std::endl;
+        out << "    jr ra" << std::endl;
+        out << "    .size   main, .-main" << std::endl;
+    }else if(ismain && isfunc){     //有系统函数  无自定义函数
+
+        out << "    .align  1" << std::endl;
+        out << "    .global main"  << std::endl;
+        out << "    .type   main" << ", @function" << std::endl;
+        out << "main:" << std::endl; 
+        out << "    addi sp, sp, -16" << std::endl;
+        out << "    sw ra, 12(sp)" << std::endl;
+        out << "    sw s0, 8(sp)" << std::endl;
+        out << "    addi s0, sp, 16" << std::endl;
+
+        for(unsigned int i = 1; i < itgenerator.getIntermediateList().size(); i ++) {
+            FourYuanInstr   tmp = itgenerator.getIntermediateList()[i]; 
+        }
+        /*函数内部翻译*/
+        nofun_asmCodeGen();
 
 
-
-
-
-
-
+        out << "    li a5, 0" << std::endl;
+        out << "    mv a0, a5" << std::endl;
+        out << "    lw ra, 12(sp)" << std::endl;
+        out << "    lw s0, 8(sp)" << std::endl;
+        out << "    addi sp, sp, 16" << std::endl;
+        out << "    jr ra" << std::endl;
+        out << "    .size   main, .-main" << std::endl;
+    }else if(!ismain) {  //有系统函数   有自定义函数
+    
+       fun_asmCodeGen(); 
+    
+    }
+    
+    out << "    .ident  \"GCC: (GNU) 8.3.0\"" << std::endl;
     return ;
 }
+
+
+
+void nofun_asmCodeGen() {
+
+}
+
+
+
+
+void fun_asmCodeGen() {
+
+
+}
+

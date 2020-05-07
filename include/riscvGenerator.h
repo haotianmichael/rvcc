@@ -6,7 +6,13 @@ class riscvGenerator
 {
     public:
         riscvGenerator (std::string str) {filename = str;}
-        void printAsmCode(Parser &p);  //输出汇编代码
+
+        /*输出汇编代码*/
+        void printAsmCode(Parser &p);  
+
+        /*汇编代码生成函数*/
+        void fun_asmCodeGen();
+        void nofun_asmCodeGen();
     private:
         std::string filename;
 };

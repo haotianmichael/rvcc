@@ -50,7 +50,7 @@ main:
 
     /*有函数调用版本
         int a, b, sum; int sum(int a, int b) {sum = a + b; return (sum);}
-        int main() {a = 10; b = 10; sum = fun(a, b)}
+        int main() {a = 10; b = 10; sum = fun(a, b);}
     */
 
     .align 1

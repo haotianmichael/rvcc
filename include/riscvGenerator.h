@@ -1,6 +1,7 @@
 #pragma  once
 #include <iostream>
 #include "../include/parser.h"
+#include <fstream>
 
 class riscvGenerator
 {
@@ -11,8 +12,8 @@ class riscvGenerator
         void printAsmCode(Parser &p);  
 
         /*汇编代码生成函数*/
-        void fun_asmCodeGen();
-        void nofun_asmCodeGen();
+        void fun_asmCodeGen(std::ofstream &out);
+        void nofun_asmCodeGen(std::ofstream &out, int fp);
     private:
         std::string filename;
 };

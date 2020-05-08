@@ -10,8 +10,8 @@ extern IntermediateGenerator itgenerator;   //四元式产生表
 void riscvGenerator::printAsmCode(Parser &p) {
 
     p.printParser();  //打印符号表和四元式
-
-    std::ofstream out("riscvcodeFile.s");
+    std::cout << "Starting To Print RiscvCodeFile..." << std::endl;
+    std::ofstream out("riscvCodeFile.s");
     out << "    .file  " << "\"" << this->filename << "\"" << std::endl;
     out << "    .option nopic" << std::endl; 
 
@@ -94,6 +94,10 @@ void riscvGenerator::printAsmCode(Parser &p) {
      * 
      */
     out << "    .text" << std::endl;
+    if(itgenerator.getIntermediateList()[0].getopcode() != FUNDEC) {  //四元式一定以函数开始
+        panic("CodeGenError: Wrong Instruction!"); 
+    }
+
     bool ismain = true, isfunc = false;
     if(itgenerator.getIntermediateList()[0].gettarget() == "main") {  
         for(unsigned int i = 0; i < itgenerator.getIntermediateList().size(); i ++) {
@@ -108,70 +112,158 @@ void riscvGenerator::printAsmCode(Parser &p) {
     }
 
     if(ismain && !isfunc) {   //无系统函数  无自定义函数
-        /*只需要维护main函数栈*/
+        /*  只需要维护main函数栈
+         *  变量作用域：
+         *     1. main函数内部  压栈
+         *     2. main函数外部(全局变量) 使用Label
+         *  四元式类型：
+         *      赋值语句   运算语句  控制语句
+         * */
+        int fp = 16;
+        //计算栈帧
+        SymbolItem *head = p.getSymbolTable()->getHead();
+        SymbolItem *tail = p.getSymbolTable()->getTail();
+        int tmp = 0;
+        while(head != tail) {
+            if(head->getSt() == st_localType && head->getscope() == "main") {   //寻找main函数中的局部变量
+                tmp++; 
+            } 
+            head = head->next; 
+        }
+        if(head->getSt() == st_localType && head->getscope() == "main"){
+            tmp++; 
+        }
+
+        if(tmp%4 != 0) {
+            tmp = tmp/4+1; 
+        }else {
+            tmp = tmp / 4; 
+        }
+        fp += tmp*16; 
         out << "    .align  1" << std::endl;
         out << "    .global main"  << std::endl;
         out << "    .type   main" << ", @function" << std::endl;
         out << "main:" << std::endl; 
-        out << "    addi sp, sp, -16" << std::endl;
-        out << "    sw s0, 12(sp)" << std::endl;
-        out << "    addi s0, sp, 16" << std::endl;
+        out << "    addi sp, sp, -" << fp << std::endl;
+        out << "    sw s0, " << fp-4 <<"(sp)" << std::endl;
+        out << "    addi s0, sp, "<< fp << std::endl;
 
         /*函数内部翻译*/
-        nofun_asmCodeGen();
+        nofun_asmCodeGen(out, fp);
 
         out << "    li a5, 0" << std::endl;
         out << "    mv a0, a5" << std::endl;
-        out << "    lw s0, 12(sp)" << std::endl;
-        out << "    addi sp, sp, 16" << std::endl;
+        out << "    lw s0, "<< fp-4 << "(sp)" << std::endl;
+        out << "    addi sp, sp, "<< fp << std::endl;
         out << "    jr ra" << std::endl;
         out << "    .size   main, .-main" << std::endl;
     }else if(ismain && isfunc){     //有系统函数  无自定义函数
+        int fp = 16;
+        //计算栈帧
+        SymbolItem *head = p.getSymbolTable()->getHead();
+        SymbolItem *tail = p.getSymbolTable()->getTail();
+        int tmp = 0;
+        while(head != tail) {
+            if(head->getSt() == st_localType && head->getscope() == "main") {   //寻找main函数中的局部变量
+                LocalItem *li = static_cast<LocalItem *>(head); 
+                if(li->getisArr()) {
+                    tmp += li->getLength(); 
+                }else {
+                    tmp++; 
+                }
+            } 
+            head = head->next; 
+        }
+        if(head->getSt() == st_localType && head->getscope() == "main"){
+            LocalItem *li = static_cast<LocalItem *>(head);
+            if(li->getisArr()) {
+                tmp += li->getLength(); 
+            }else {
+                tmp ++; 
+            }
+        }
 
+        if(tmp%4 != 0) {
+            tmp = tmp/4+1; 
+        }else {
+            tmp = tmp / 4; 
+        }
+        fp += tmp*16; 
         out << "    .align  1" << std::endl;
         out << "    .global main"  << std::endl;
         out << "    .type   main" << ", @function" << std::endl;
         out << "main:" << std::endl; 
-        out << "    addi sp, sp, -16" << std::endl;
-        out << "    sw ra, 12(sp)" << std::endl;
-        out << "    sw s0, 8(sp)" << std::endl;
-        out << "    addi s0, sp, 16" << std::endl;
+        out << "    addi sp, sp, -" << fp << std::endl;
+        out << "    sw ra, " << fp-4<< "(sp)" << std::endl;
+        out << "    sw s0, "<< fp-8<< "(sp)" << std::endl;
+        out << "    addi s0, sp, " << fp << std::endl;
 
-        for(unsigned int i = 1; i < itgenerator.getIntermediateList().size(); i ++) {
-            FourYuanInstr   tmp = itgenerator.getIntermediateList()[i]; 
-        }
         /*函数内部翻译*/
-        nofun_asmCodeGen();
+        nofun_asmCodeGen(out, fp);
 
 
         out << "    li a5, 0" << std::endl;
         out << "    mv a0, a5" << std::endl;
-        out << "    lw ra, 12(sp)" << std::endl;
-        out << "    lw s0, 8(sp)" << std::endl;
-        out << "    addi sp, sp, 16" << std::endl;
+        out << "    lw ra, " << fp-4<< "(sp)" << std::endl;
+        out << "    lw s0, " << fp-8 << "(sp)" << std::endl;
+        out << "    addi sp, sp, "<< fp << std::endl;
         out << "    jr ra" << std::endl;
         out << "    .size   main, .-main" << std::endl;
     }else if(!ismain) {  //有系统函数   有自定义函数
     
-       fun_asmCodeGen(); 
+       fun_asmCodeGen(out); 
     
     }
     
     out << "    .ident  \"GCC: (GNU) 8.3.0\"" << std::endl;
+    std::cout << "Print Succeeded!" << std::endl << std::endl << "Closing Complier..." << std::endl;
     return ;
 }
 
 
 
-void nofun_asmCodeGen() {
+void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, int fp) {
+
+    //第零项为main函数
+    for(unsigned int i = 1;  i < itgenerator.getIntermediateList().size(); i ++) {
+    
+        FourYuanInstr fy = itgenerator.getIntermediateList()[i];
+        std::string name;
+        switch (fy.getopcode()) {
+            case PrintStr:
+                name = fy.gettarget();
+                out << "    lui a5,%hi(" << name << ")" << std::endl;            
+                out << "    addi    a0, a5,%lo(" << name << ")" << std::endl;
+                out << "    call printf" << std::endl;
+                break;
+            case PrintId:
+
+                break;
+            case PrintInt:
+
+                break;
+            case PrintChar:
+
+                break;
+            default:
+                    return;                
+        } 
+    }
 
 }
 
 
 
 
-void fun_asmCodeGen() {
+void riscvGenerator::fun_asmCodeGen(std::ofstream &out) {
 
+    for(unsigned int i = 0; i < itgenerator.getIntermediateList().size(); i ++)  {
+        FourYuanInstr fy = itgenerator.getIntermediateList()[i]; 
+        std::string name;
+
+
+
+    }
 
 }
 

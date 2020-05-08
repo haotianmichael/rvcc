@@ -1,7 +1,6 @@
 #include <stdio.h>
 
 const int N = 1001;
-
 void fun(int a, int b[], char c, char d[]) {
 
 }

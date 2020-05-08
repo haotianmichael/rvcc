@@ -295,10 +295,8 @@ void Parser::parse() {
             std::cout << std::endl<< std::endl << "###########################SyntaxAnalysis Succeeded!..." << std::endl;
             std::cout  << "Starting To Print SymbolTableFile..." << std::endl;
             __symbolTable->printTable();   //打印符号表
-            std::cout << "Starting To Print tmpCodeFile..." << std::endl;
+            std::cout << "Starting To Print TmpCodeFile..." << std::endl;
             itgenerator.printTmpItem();   //打印中间代码
-            //std::cout << "Starting To Print RiscvCodeFile..." << std::endl;
-            std::cout << "Print Succeeded!" << std::endl << std::endl << "Closing Complier..." << std::endl;
             return;
         }
     }

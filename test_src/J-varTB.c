@@ -15,5 +15,6 @@ char ctr[10], s, o;
 int 
 main() {
     printf("haotian is good\n");
+    printf("he have a bad life\n");
     return (0); 
 }

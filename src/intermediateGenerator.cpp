@@ -97,20 +97,20 @@ void IntermediateGenerator::printTmpItem() {
                 out << "Read Char " << tmp.gettarget() << std::endl;
                 break;
             case PrintStr:
-                out << "Print string " << "\"" << tmp.gettarget() << "\"" << std::endl;
+                out << "PrintString " << "\"" << tmp.gettarget() << "\"" << std::endl;
                 break;
             case PrintInt:
-                out << "Print int " << sToi(tmp.gettarget()) << std::endl;
+                out << "PrintInt " << sToi(tmp.gettarget()) << std::endl;
                 break;
             case PrintChar:
                 if(tmp.gettarget() == "\n") {
                     out << "New Line" << std::endl; 
                 }else {
-                    out << "Print char \'" << tmp.gettarget()[0] << "\'" << std::endl;
+                    out << "PrintChar \'" << tmp.gettarget()[0] << "\'" << std::endl;
                 }
                 break;
             case PrintId:
-                out << "Print id " << tmp.gettarget() << std::endl;
+                out << "PrintId " << tmp.gettarget() << std::endl;
                 break;
             case ReturnChar:
                 out << "Ret char \'" << tmp.gettarget()[0] << std::endl;

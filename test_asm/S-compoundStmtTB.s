@@ -14,6 +14,7 @@ main:
 	sw	ra,444(sp)
 	sw	s0,440(sp)
 	addi	s0,sp,448
+
 	lw	a4,-304(s0)
 	li	a5,3
 	div	a5,a4,a5

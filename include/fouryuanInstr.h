@@ -40,8 +40,6 @@ enum fourYuanOpcode{
     FUNDEC,    //声明
     RET,   //返回
     PARAM,  //参数表
-    BEGIN,  //函数入口
-    END,  //函数出口
 
     /*命令*/
     ReadChar,
@@ -93,7 +91,8 @@ class FourYuanInstr
         inline bool getissrcArr() { return __srcArr;}
         inline bool getparaArr() { return __paraArr;}
         inline char getop() { return __op;}
-
+        inline char getcvalue() {return __cvalue;}
+        inline int getvalue() { return __value;}
         /*set*/
         inline void setleft(std::string left) { __left = left;}
         inline void setright(std::string right) { __right = right;}
@@ -105,7 +104,8 @@ class FourYuanInstr
         inline void setsrcArr(bool is) { __srcArr = is;}
         inline void setparaArr(bool is) { __paraArr = is;}
         inline void setop(char op) { __op = op;}
-
+        inline void setcvalue(char cvalue) { __cvalue = cvalue;}
+        inline void setvalue(int value) { __value = value;}
     private:
         /*element*/
         fourYuanOpcode __opcode;   //中间代码操作符
@@ -114,7 +114,8 @@ class FourYuanInstr
         std::string __right = "";  //右操作数
         itemType __paraT;  //参数类型
         funcReturnType __frt;  //函数返回类型
-
+        int __value;  //值
+        char __cvalue; //值
 
         bool __targetArr;  //赋值  结果是否为数组
         bool __srcArr;  //赋值  操作数是否为数组

@@ -13,7 +13,7 @@ class riscvGenerator
 
         /*汇编代码生成函数*/
         void fun_asmCodeGen(std::ofstream &out);
-        void nofun_asmCodeGen(std::ofstream &out, int fp);
+        void nofun_asmCodeGen(std::ofstream &out, Parser &p, int fp);
     private:
         std::string filename;
 };

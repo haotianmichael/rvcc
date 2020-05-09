@@ -93,7 +93,6 @@ void riscvGenerator::printAsmCode(Parser &p) {
      * 3. 有main函数  有自定义函数  有系统函数(指printf scanf)   ismain == false 
      * 
      */
-    out << "    .text" << std::endl;
     if(itgenerator.getIntermediateList()[0].getopcode() != FUNDEC) {  //四元式一定以函数开始
         panic("CodeGenError: Wrong Instruction!"); 
     }
@@ -140,6 +139,7 @@ void riscvGenerator::printAsmCode(Parser &p) {
             tmp = tmp / 4; 
         }
         fp += tmp*16; 
+        out << "    .text" << std::endl;
         out << "    .align  1" << std::endl;
         out << "    .global main"  << std::endl;
         out << "    .type   main" << ", @function" << std::endl;
@@ -149,7 +149,7 @@ void riscvGenerator::printAsmCode(Parser &p) {
         out << "    addi s0, sp, "<< fp << std::endl;
 
         /*函数内部翻译*/
-        nofun_asmCodeGen(out, fp);
+        nofun_asmCodeGen(out, p, fp);
 
         out << "    li a5, 0" << std::endl;
         out << "    mv a0, a5" << std::endl;
@@ -189,6 +189,15 @@ void riscvGenerator::printAsmCode(Parser &p) {
             tmp = tmp / 4; 
         }
         fp += tmp*16; 
+        //为系统函数分配标签
+        if(itgenerator.dataSet.empty()) {
+            out << "    .section    .rodata" << std::endl;
+        }
+        out << "    .align 2" << std::endl; 
+        out << ".PL0:" << std::endl;
+        out << "    .string \"%d\"" << std::endl;    
+        out << "    .text" << std::endl;
+
         out << "    .align  1" << std::endl;
         out << "    .global main"  << std::endl;
         out << "    .type   main" << ", @function" << std::endl;
@@ -199,7 +208,7 @@ void riscvGenerator::printAsmCode(Parser &p) {
         out << "    addi s0, sp, " << fp << std::endl;
 
         /*函数内部翻译*/
-        nofun_asmCodeGen(out, fp);
+        nofun_asmCodeGen(out, p, fp);
 
 
         out << "    li a5, 0" << std::endl;
@@ -210,11 +219,11 @@ void riscvGenerator::printAsmCode(Parser &p) {
         out << "    jr ra" << std::endl;
         out << "    .size   main, .-main" << std::endl;
     }else if(!ismain) {  //有系统函数   有自定义函数
-    
-       fun_asmCodeGen(out); 
-    
+
+        fun_asmCodeGen(out); 
+
     }
-    
+
     out << "    .ident  \"GCC: (GNU) 8.3.0\"" << std::endl;
     std::cout << "Print Succeeded!" << std::endl << std::endl << "Closing Complier..." << std::endl;
     return ;
@@ -222,13 +231,16 @@ void riscvGenerator::printAsmCode(Parser &p) {
 
 
 
-void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, int fp) {
+void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p, int fp) {
 
     //第零项为main函数
     for(unsigned int i = 1;  i < itgenerator.getIntermediateList().size(); i ++) {
-    
+
         FourYuanInstr fy = itgenerator.getIntermediateList()[i];
         std::string name;
+        itemType it;
+        int  isglobal = -1;  // 1 Global  0 local  -1 不存在
+        SymbolItem *head, *tail;
         switch (fy.getopcode()) {
             case PrintStr:
                 name = fy.gettarget();
@@ -237,16 +249,119 @@ void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, int fp) {
                 out << "    call printf" << std::endl;
                 break;
             case PrintId:
+                it = fy.getparat();
+                name = fy.gettarget();
+                //判断ID是全局还是局部变量
+                head =  p.getSymbolTable()->getHead();
+                tail =  p.getSymbolTable()->getTail();
+                while(head != tail) {
+                    if(head->getname() == name && head->getSt() == st_localType) {
+                        LocalItem *li = static_cast<LocalItem *>(head);
+                        it = li->getIt();
+                        if(head->getscope() == "Global"){
+                            isglobal = 1; 
+                        }else {
+                            isglobal = 0;
+                        }
+                        break;
+                    } 
+                    head = head->next; 
+                } 
+                if(head->getname() == name && head->getSt() == st_localType) {
+                    LocalItem *li = static_cast<LocalItem *>(head);
+                    it = li->getIt();
+                    if(head->getname() == "Global") {
+                        isglobal = 1;
+                    }else {
+                        isglobal = 0; 
+                    }
+                }           
+
+                if(isglobal == 1) {   //全局变量   标签寻址
+                    if(it == it_intType) {
+                        out << "lui a5, %hi(" << name << ")" << std::endl;
+                        out << "lw a5, %lo(" << name << ")(a5)"  << std::endl;
+                        out << "mv a1, a5" << std::endl;
+                        out << "lui a5, %hi(.PL0)" << std::endl; 
+                        out << "addi a0, a5, %lo(.PL0)" << std::endl;
+                    }else if(it == it_charType){
+
+                    }
+
+                }else if(isglobal == 0){  //main中的局部变量  在栈中寻址
+
+
+
+                }else if(isglobal == -1) {  //表达式
+
+
+                }
+
 
                 break;
             case PrintInt:
-
+                out << "    li a1, " << std::stoi(fy.gettarget())<< std::endl;
+                out << "    lui a5, %hi(.PL0)" << std::endl; 
+                out << "    addi a0, a5, %lo(.PL0)" << std::endl;
+                out << "    call printf" << std::endl;
                 break;
             case PrintChar:
+                
+                out << "    li a0, " << static_cast<int>(fy.gettarget()[0]) << std::endl;
+                out << "    call putchar" << std::endl;
+                break;
+            case ReadInt:
 
                 break;
+            case ReadChar:
+
+                break;
+            case ADD:
+
+                break;
+            case SUB:
+
+                break;
+            case MUL:
+
+                break;
+            case DIV:
+
+                break;
+            case NEG:
+
+                break;
+            case ASS:
+
+                break;
+            case JMP:
+
+                break;
+            case LABEL:
+                break;
+            case JT:
+                break;
+            case JNT:
+                break;
+            case GT:
+                break;
+            case GE:
+                break;
+            case LT:
+                break;
+            case LE:
+                break;
+            case ENQ:
+                break;
+            case BNE:
+                break;
+            case FUNDEC:
+            case FUNCALL:
+            case PARAM:
+                panic("CodeGenError: Wrong Instruction!");
+                break; 
             default:
-                    return;                
+                return;                
         } 
     }
 

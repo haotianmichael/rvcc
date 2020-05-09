@@ -278,6 +278,7 @@ int SymbolTable::stmtCheck(std::string name) {
 
 
 
+
 //打印符号表
 bool SymbolTable::printTable() {
 

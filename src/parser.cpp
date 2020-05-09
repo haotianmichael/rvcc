@@ -1404,6 +1404,7 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> &pfe
             pfe.cvalue = getCurrentLexeme()[0];
             pfe.isOpcode = false;
             pfeList.push_back(pfe);
+            currentToken = next();  //吃掉该字符
             break;
         case SY_LPAREN:   //  ()括号
             //std::cout << getCurrentLexeme() << std::endl;
@@ -1452,7 +1453,8 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> &pfe
 
 //因子中的常量和前驱正负号解析
 void Parser::factor_symbol(int isPre, std::vector<PostfixExpression> &preList) {
-
+    
+    //std::cout << "hao" << std::endl;
     std::string str = getCurrentLexeme();
     int num = Parse_integer(str);
     PostfixExpression pfe;
@@ -2032,6 +2034,13 @@ bool Parser::Parse_printf(std::string scope) {
             }
         }else {
             fy.setopcode(PrintId); 
+            if(er.it == it_intType) {
+                fy.setparat(it_intType);
+                fy.setvalue(er.value);
+            }else {
+                fy.setparat(it_charType);
+                fy.setcvalue(er.cvalue); 
+            }
             fy.settarget(er.name);
         }
         itgenerator.pushIntermediateItem(fy);
@@ -2174,7 +2183,9 @@ std::vector<PostfixExpression> Parser::postfixReverse(std::vector<PostfixExpress
     std::vector<PostfixExpression> pfeListAfter;
     std::vector<PostfixExpression> stack;
     if(pfeListBefore.size() == 1) {
-        //std::cout << "hao" << std::endl;
+        /*if(pfeListBefore[0].isconstant) {*/
+            //std::cout << "haoii" << std::endl;
+        /*}*/
         pfeListAfter.push_back(pfeListBefore[0]); 
         return pfeListAfter;
     }else if(pfeListBefore.size() > 1) {
@@ -2286,7 +2297,11 @@ exprRet Parser::postfixExprTotmpCode(std::vector<PostfixExpression> &pfeList) {
         itgenerator.pushIntermediateItem(fy);
 
         //返回临时变量
-        er.isconstant = false; 
+        if(pfe.isconstant) {
+            er.isconstant = true; 
+        }else {
+            er.isconstant = false; 
+        }
         er.name = target;
         er.isEmpty = false;
         if(pfe.it == it_intType) {

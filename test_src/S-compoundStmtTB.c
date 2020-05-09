@@ -26,7 +26,6 @@ main() {
         array[(5 - a) / 4 * 3] = array[a+(f -array[a + b])* f/ d];
         res = a -  b;
     }
-
     printf("haotian is a good man");
 
     return ((a - 34) * 20/ 3);

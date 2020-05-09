@@ -1287,9 +1287,9 @@ bool Parser::Parse_factor(std::string scope, std::vector<PostfixExpression> &pfe
             if(getCurrentToken() == SY_LBRACKET) {   // [  数组
                 currentToken = next();
                 er = Parse_expression(scope);
-                if(er.isconstant || er.it == it_charType) {
-                    panic("ArrayError"); 
-                }
+                /*if(er.isconstant || er.it == it_charType) {*/
+                    //panic("ArrayError"); 
+                /*}*/
                 int index = er.value;
                 //std::cout << index << std::endl;
                 bool exist = __symbolTable->arrCheck(name, scope, true, index);
@@ -1927,7 +1927,7 @@ bool Parser::Parse_scanf(std::string scope) {
     SymbolItem *tail = __symbolTable->getTail();
 
     while(head != tail) {
-        if(head->getname() == name && head->getscope() == scope)  {
+        if(head->getname() == name)  {
             break; 
         }         
         head = head->next; 
@@ -1935,12 +1935,14 @@ bool Parser::Parse_scanf(std::string scope) {
 
     FourYuanInstr fyA;
     fyA.settarget(name);
-    if(static_cast<LocalItem *>(head)->getIt() == it_intType) {
+    LocalItem *li = static_cast<LocalItem *>(head);
+    if(li->getIt() == it_intType) {
         fyA.setopcode(ReadInt); 
-    }else if(static_cast<LocalItem *>(head)->getIt() == it_charType){
+    }else if(li->getIt() == it_charType){
         fyA.setopcode(ReadChar); 
-    } 
+    }
     itgenerator.pushIntermediateItem(fyA);
+    //std::cout << fyA.getopcode() << std::endl;
 
     while(true) {
         currentToken = next(); 
@@ -2302,7 +2304,7 @@ exprRet Parser::postfixExprTotmpCode(std::vector<PostfixExpression> &pfeList) {
         }else {
             er.isconstant = false; 
         }
-        er.name = target;
+        er.name = pfe.str;
         er.isEmpty = false;
         if(pfe.it == it_intType) {
             er.value = pfe.value; 

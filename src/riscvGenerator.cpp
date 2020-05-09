@@ -149,7 +149,7 @@ void riscvGenerator::printAsmCode(Parser &p) {
         out << "    addi s0, sp, "<< fp << std::endl;
 
         /*函数内部翻译*/
-        nofun_asmCodeGen(out, p, fp);
+        nofun_asmCodeGen(out, p);
 
         out << "    li a5, 0" << std::endl;
         out << "    mv a0, a5" << std::endl;
@@ -208,7 +208,7 @@ void riscvGenerator::printAsmCode(Parser &p) {
         out << "    addi s0, sp, " << fp << std::endl;
 
         /*函数内部翻译*/
-        nofun_asmCodeGen(out, p, fp);
+        nofun_asmCodeGen(out, p);
 
 
         out << "    li a5, 0" << std::endl;
@@ -231,7 +231,7 @@ void riscvGenerator::printAsmCode(Parser &p) {
 
 
 
-void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p, int fp) {
+void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p) {
 
     //第零项为main函数
     for(unsigned int i = 1;  i < itgenerator.getIntermediateList().size(); i ++) {
@@ -240,6 +240,7 @@ void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p, int fp) {
         std::string name;
         itemType it;
         int  isglobal = -1;  // 1 Global  0 local  -1 不存在
+        int tmp;  //临时计数器
         SymbolItem *head, *tail;
         switch (fy.getopcode()) {
             case PrintStr:
@@ -267,30 +268,54 @@ void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p, int fp) {
                     } 
                     head = head->next; 
                 } 
-                if(head->getname() == name && head->getSt() == st_localType) {
+                if(head == tail && head->getname() == name && head->getSt() == st_localType) {
                     LocalItem *li = static_cast<LocalItem *>(head);
                     it = li->getIt();
-                    if(head->getname() == "Global") {
+                    if(head->getscope() == "Global") {
                         isglobal = 1;
                     }else {
                         isglobal = 0; 
                     }
                 }           
-
                 if(isglobal == 1) {   //全局变量   标签寻址
                     if(it == it_intType) {
-                        out << "lui a5, %hi(" << name << ")" << std::endl;
-                        out << "lw a5, %lo(" << name << ")(a5)"  << std::endl;
-                        out << "mv a1, a5" << std::endl;
-                        out << "lui a5, %hi(.PL0)" << std::endl; 
-                        out << "addi a0, a5, %lo(.PL0)" << std::endl;
-                    }else if(it == it_charType){
-
+                        out << "    lui a5, %hi(" << name << ")" << std::endl;
+                        out << "    lw a5, %lo(" << name << ")(a5)"  << std::endl;
+                        out << "    mv a1, a5" << std::endl;
+                        out << "    lui a5, %hi(.PL0)" << std::endl; 
+                        out << "    addi a0, a5, %lo(.PL0)" << std::endl;
+                        out << "    call printf" << std::endl;
+                    }else if(it == it_charType) {
+                        out << "    lui a5, %hi(" << name << ")" << std::endl;
+                        out << "    lbu a5, %lo(" << name << ")(a5)"  << std::endl;
+                        out << "    mv a0, a5" << std::endl;
+                        out << "    call putchar" << std::endl;                         
                     }
 
-                }else if(isglobal == 0){  //main中的局部变量  在栈中寻址
-
-
+                }else if(isglobal == 0) {  //main中的局部变量  在栈中寻址
+                    
+                    head = p.getSymbolTable()->getHead();
+                    tail = p.getSymbolTable()->getTail();         
+                    tmp  = 0;
+                    while(head != tail) {
+                        if(head->getscope() == "main" && head->getSt() == st_localType) {
+                            tmp++;
+                            if(head->getname() == name) {
+                                break; 
+                            } 
+                        } 
+                        head = head->next; 
+                    }
+                    if(head == tail && head->getscope() == "main" && head->getSt() == st_localType) {
+                        if(head->getname() == name) {
+                            tmp++; 
+                        } 
+                    }
+                    tmp = 16 + tmp*4;
+                    out << "    lw  a1, -" << tmp << "(s0)" << std::endl;
+                    out << "    lui a5, %hi(.PL0)" << std::endl;
+                    out << "    addi  a0, a5, %lo(.PL0)"  << std::endl;
+                    out << "    call printf" << std::endl;
 
                 }else if(isglobal == -1) {  //表达式
 
@@ -306,15 +331,70 @@ void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p, int fp) {
                 out << "    call printf" << std::endl;
                 break;
             case PrintChar:
-                
                 out << "    li a0, " << static_cast<int>(fy.gettarget()[0]) << std::endl;
                 out << "    call putchar" << std::endl;
                 break;
             case ReadInt:
-
-                break;
             case ReadChar:
-
+                /*判断变量是全局变量还是局部变量*/
+                name = fy.gettarget();
+                head = p.getSymbolTable()->getHead();
+                tail = p.getSymbolTable()->getTail();
+                while(head != tail) {
+                    if(head->getname() == name && head->getSt() == st_localType) {
+                        if(head->getscope() == "Global") {
+                            isglobal = 1;    
+                        } else {
+                            isglobal = 0; 
+                        }
+                        break; 
+                    }
+                    head = head->next; 
+                } 
+                if(head->getname() == name && head->getSt() == st_localType) {
+                    if(head->getscope() == "Global") {
+                        isglobal = 1; 
+                    }else {
+                        isglobal = 0; 
+                    } 
+                }
+                if(isglobal == 1) {  //全局变量
+                    out << "    lui a5, %hi(" << name << ")" << std::endl;
+                    out << "    addi a1, a5, %lo(" << name << ")" << std::endl;
+                    out << "    lui a5, %hi(.PL0)" << std::endl; 
+                    out << "    addi a0, a5, %lo(.PL0)" << std::endl;
+                    out << "    call scanf" << std::endl;
+                }else if(isglobal == 0) {  //局部变量
+                   /*
+                    * 局部变量在运行栈中完成
+                    *   注意压栈的顺序
+                    */ 
+                    head = p.getSymbolTable()->getHead();
+                    tail = p.getSymbolTable()->getTail();         
+                    tmp  = 0;
+                    while(head != tail) {
+                        if(head->getscope() == "main" && head->getSt() == st_localType) {
+                            tmp++;
+                            if(head->getname() == name) {
+                                break; 
+                            } 
+                        } 
+                        head = head->next; 
+                    }
+                    if(head == tail && head->getscope() == "main" && head->getSt() == st_localType) {
+                        if(head->getname() == name) {
+                            tmp++; 
+                        } 
+                    }
+                    tmp = 16 + tmp*4;
+                    out << "    addi a5, s0, -" << tmp << std::endl;
+                    out << "    mv a1, a5" << std::endl;
+                    out << "    lui a5, %hi(.PL0)" << std::endl; 
+                    out << "    addi a0, a5, %lo(.PL0)" << std::endl;
+                    out << "    call scanf" << std::endl;
+                }else if(isglobal == -1) {
+                    panic("CodeGenError: Wrong Instruction!");
+                }
                 break;
             case ADD:
 

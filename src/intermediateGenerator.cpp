@@ -17,6 +17,7 @@ void IntermediateGenerator::printTmpItem() {
     std::ofstream out("tmpCodeFile.txt");
     for(unsigned int i = 0; i < this->intermediateList.size(); i ++)  {
         FourYuanInstr tmp = this->intermediateList[i]; 
+        //std::cout << tmp.getopcode() <<  std::endl; 
         switch (tmp.getopcode()) {
             case PUSH:
                 out << "Push " << tmp.gettarget() << std::endl;        

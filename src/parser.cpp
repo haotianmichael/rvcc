@@ -1637,7 +1637,7 @@ bool Parser::Parse_conditionStmt(std::string scope) {
     //无条件跳转
     FourYuanInstr fyJ;
     fyJ.setopcode(JMP);
-    fyJ.settarget(labA);
+    fyJ.settarget(labB);
     itgenerator.pushIntermediateItem(fyJ);
 
     //打标签
@@ -2283,28 +2283,30 @@ exprRet Parser::postfixExprTotmpCode(std::vector<PostfixExpression> &pfeList) {
     }else if(pfeList.size() == 1){
         pfe = pfeList[0]; 
         //赋值给临时变量
-        std::string target = varGenerator();
-        FourYuanInstr fy;
-        fy.settarget(target);
-        fy.setopcode(ASS);    
-        if(pfe.isconstant) {
-            fy.setleft(std::to_string(pfe.value));
-        }else {
-            fy.setleft(pfe.str);
-        }
-        fy.setright("0");
-        fy.setop('+'); 
-        fy.settargetArr(false);
-        fy.setsrcArr(false);
-        itgenerator.pushIntermediateItem(fy);
+        /*std::string target = varGenerator();*/
+        //FourYuanInstr fy;
+        //fy.settarget(target);
+        //fy.setopcode(ASS);    
+        //if(pfe.isconstant) {
+            //fy.setleft(std::to_string(pfe.value));
+        //}else {
+            //fy.setleft(pfe.str);
+        //}
+        //fy.setright("0");
+        //fy.setop('+'); 
+        //fy.settargetArr(false);
+        //fy.setsrcArr(false);
+        //itgenerator.pushIntermediateItem(fy);
 
         //返回临时变量
         if(pfe.isconstant) {
             er.isconstant = true; 
+            er.name = std::to_string(pfe.value);
         }else {
             er.isconstant = false; 
+            er.name = pfe.str;
         }
-        er.name = pfe.str;
+        //er.name = target;
         er.isEmpty = false;
         if(pfe.it == it_intType) {
             er.value = pfe.value; 
@@ -2366,7 +2368,9 @@ exprRet Parser::postfixExprTotmpCode(std::vector<PostfixExpression> &pfeList) {
                             bck.isOpcode = false;
                             bck.str = target;
                             bck.value = (op.cvalue == '+') ? (lhs + rhs) : (lhs - rhs);
+                            item.setvalue(bck.value);
                             stack.push_back(bck); 
+                            //std::cout << lhs << rhs << std::endl;
                             //std::cout << item.gettarget() << " = " << item.getleft() <<  " " << item.getop() << " "<< item.getright() << std::endl;
                         }
                         break; 
@@ -2430,9 +2434,9 @@ exprRet Parser::postfixExprTotmpCode(std::vector<PostfixExpression> &pfeList) {
 
         if(stack.size() == 1) {  //后缀表达式的结果(临时变量)
             pfe = stack[0];
-            if(pfe.isconstant) {
-                panic("ExpressionError:  stack error");    
-            }
+            /*if(pfe.isconstant) {*/
+                //panic("ExpressionError0:  stack error");    
+            /*}*/
             er.isconstant = false;
             er.isEmpty = false;
             er.name = pfe.str; 

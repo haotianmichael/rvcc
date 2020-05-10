@@ -6,20 +6,6 @@ void FourYuanInstr::printFourYuan() {
 
     std::string opcode = "";
     switch (__opcode) {
-        case ADD:
-            opcode = "ADD";
-            break;
-        case SUB:
-            opcode = "SUB";
-        case MUL:
-            opcode = "MUL";
-            break;
-        case DIV:
-            opcode = "DIV";
-            break;
-        case NEG:
-            opcode = "NEG";
-            break;
         case ASS:
             opcode = "ASS";
             break;

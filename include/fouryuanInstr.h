@@ -13,11 +13,11 @@
 enum fourYuanOpcode{
 
     /*计算指令*/
-    ADD,    //res = src1 + src2
-    SUB,    //res = src1 - src2
-    MUL,    //res = src1 * src2
-    DIV,    //res = src1 / src2
-    NEG,    //res = -src1
+/*    ADD,    //res = src1 + src2*/
+    //SUB,    //res = src1 - src2
+    //MUL,    //res = src1 * src2
+    /*DIV,    //res = src1 / src2*/
+    //NEG,    //res = -src1
     ASS,    //res = src1
 
 

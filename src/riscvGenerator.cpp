@@ -318,6 +318,7 @@ void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p) {
                     out << "    call printf" << std::endl;
 
                 }else if(isglobal == -1) {  //表达式
+                    //std::cout << fy.getvalue() << std::endl;                     
 
 
                 }
@@ -396,21 +397,14 @@ void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p) {
                     panic("CodeGenError: Wrong Instruction!");
                 }
                 break;
-            case ADD:
-
-                break;
-            case SUB:
-
-                break;
-            case MUL:
-
-                break;
-            case DIV:
-
-                break;
-            case NEG:
-
-                break;
+/*            case ADD:*/
+                //break;
+            //case SUB:
+                //break;
+            //case MUL:
+                //break;
+            //case DIV:
+                //break;
             case ASS:
 
                 break;

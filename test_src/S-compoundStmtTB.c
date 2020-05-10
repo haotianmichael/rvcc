@@ -1,32 +1,37 @@
-#include<stdio.h>
+#include <stdio.h>
 
-int 
-main() {
 
-    int a, b, c, d, f, N, res;
-    int array[100];
-    a = 2 * (9 + array[3+4*8]/  3 - 5)  + 4;
-    c = 2 * (9 + a/  3 - 5)  + 4;
-    b = 4 / c;
-    d = 5;
-    f = (a - 34) * 20/ 3;
-    N = 9;
+const int N = 100010, M = 110;
+int a, b, c, d;
 
-    if(a + b > N + array[4]) {
-        array[a + b + c + d + f]  = a;
-        res = a + b;
+
+int fun(int a, int b, int c[]) {
+
+    int vara, varb;
+    vara = a + c[0];
+    varb = b;
+
+    if(vara > varb) {
+        printf("haotian is a good man\n");
     }else {
-        array[(5 - a) / 4 * 3] = array[a+(f -array[a + b])* f/ d];
-        res = a -  b;
+        printf("he have bad life\n");
     }
 
+    return (vara - c[0]);
+}
 
-    while(array[(a - 34)*20] != array[N+res]) {
-        array[(5 - a) / 4 * 3] = array[a+(f -array[a + b])* f/ d];
-        array[(5 - a) / 4 * 3] = array[a+(f -array[a + b])* f/ d];
-        res = a -  b;
+
+
+int main() {
+
+    int mainvara, mainavrb, mainvarc[10];
+    mainvara = 10;
+    mainavrb = 80;
+    mainvarc[0] = 10;
+
+    while(mainvara < M) {
+        a = fun(mainvara, mainavrb, mainvarc); 
+        mainvara  = a + mainvarc[0]; 
     }
-    printf("haotian is a good man");
-
-    return ((a - 34) * 20/ 3);
+    return (0);
 }

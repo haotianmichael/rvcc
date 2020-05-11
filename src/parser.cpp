@@ -1991,7 +1991,6 @@ bool Parser::Parse_scanf(std::string scope) {
 
 //<写语句> ::= printf'('<字符串>')' | printf '('<表达式>')'
 bool Parser::Parse_printf(std::string scope) {
-
     if(getCurrentToken() != KW_PRINTF) {
         return false; 
     }
@@ -2051,7 +2050,6 @@ bool Parser::Parse_printf(std::string scope) {
     if(getCurrentToken() != SY_RPAREN) {
         panic("SyntaxError: lack  )  at line %d, column %d", line, column); 
     } 
-
     currentToken = next();   //   ;
     if(getCurrentToken() != SY_SEMICOLON) {
         panic("SyntaxError: lack  ; at line %d, column %d", line, column); 

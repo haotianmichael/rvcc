@@ -18,21 +18,25 @@ main:
 	lw	a4,-304(s0)
 	li	a5,3
 	div	a5,a4,a5
-	addi	a5,a5,6
+	addi	a5,a5,11
 	slli	a5,a5,1
 	sw	a5,-24(s0)
+
+	li	a4,4
+	lw	a5,-24(s0)
+	div	a5,a4,a5
+	sw	a5,-28(s0)
+
 	lw	a4,-24(s0)
 	li	a5,3
 	div	a5,a4,a5
-	addi	a5,a5,6
+	addi	a5,a5,9
 	slli	a5,a5,1
-	sw	a5,-28(s0)
-	li	a4,4
-	lw	a5,-28(s0)
-	div	a5,a4,a5
 	sw	a5,-32(s0)
+
 	li	a5,5
 	sw	a5,-36(s0)
+
 	lw	a5,-24(s0)
 	addi	a4,a5,-34
 	mv	a5,a4
@@ -43,19 +47,21 @@ main:
 	li	a5,3
 	div	a5,a4,a5
 	sw	a5,-40(s0)
+
 	li	a5,9
 	sw	a5,-44(s0)
+
 	lw	a4,-24(s0)
-	lw	a5,-32(s0)
+	lw	a5,-28(s0)
 	add	a4,a4,a5
 	lw	a3,-428(s0)
 	lw	a5,-44(s0)
 	add	a5,a3,a5
 	ble	a4,a5,.L2
 	lw	a4,-24(s0)
-	lw	a5,-32(s0)
-	add	a4,a4,a5
 	lw	a5,-28(s0)
+	add	a4,a4,a5
+	lw	a5,-32(s0)
 	add	a4,a4,a5
 	lw	a5,-36(s0)
 	add	a4,a4,a5
@@ -67,13 +73,13 @@ main:
 	lw	a4,-24(s0)
 	sw	a4,-428(a5)
 	lw	a4,-24(s0)
-	lw	a5,-32(s0)
+	lw	a5,-28(s0)
 	add	a5,a4,a5
 	sw	a5,-20(s0)
 	j	.L4
 .L2:
 	lw	a4,-24(s0)
-	lw	a5,-32(s0)
+	lw	a5,-28(s0)
 	add	a5,a4,a5
 	slli	a5,a5,2
 	addi	a4,s0,-16
@@ -107,13 +113,13 @@ main:
 	add	a5,a3,a5
 	sw	a4,-428(a5)
 	lw	a4,-24(s0)
-	lw	a5,-32(s0)
+	lw	a5,-28(s0)
 	sub	a5,a4,a5
 	sw	a5,-20(s0)
 	j	.L4
 .L5:
 	lw	a4,-24(s0)
-	lw	a5,-32(s0)
+	lw	a5,-28(s0)
 	add	a5,a4,a5
 	slli	a5,a5,2
 	addi	a4,s0,-16
@@ -147,7 +153,7 @@ main:
 	add	a5,a3,a5
 	sw	a4,-428(a5)
 	lw	a4,-24(s0)
-	lw	a5,-32(s0)
+	lw	a5,-28(s0)
 	add	a5,a4,a5
 	slli	a5,a5,2
 	addi	a4,s0,-16
@@ -181,7 +187,7 @@ main:
 	add	a5,a3,a5
 	sw	a4,-428(a5)
 	lw	a4,-24(s0)
-	lw	a5,-32(s0)
+	lw	a5,-28(s0)
 	sub	a5,a4,a5
 	sw	a5,-20(s0)
 .L4:

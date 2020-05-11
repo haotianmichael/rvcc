@@ -43,24 +43,46 @@ r:
 	.section	.rodata
 	.align	2
 .LC0:
-	.string	"haotian is good"
+	.string	"%d"
 	.text
 	.align	1
 	.globl	main
 	.type	main, @function
 main:
-	addi	sp,sp,-16
-	sw	ra,12(sp)
-	sw	s0,8(sp)
-	addi	s0,sp,16
+	addi	sp,sp,-32
+	sw	ra,28(sp)
+	sw	s0,24(sp)
+	addi	s0,sp,32
+	lui	a5,%hi(g)
+	addi	a1,a5,%lo(g)
 	lui	a5,%hi(.LC0)
 	addi	a0,a5,%lo(.LC0)
-	call	puts
+	call	scanf
+	addi	a5,s0,-20
+	mv	a1,a5
+	lui	a5,%hi(.LC0)
+	addi	a0,a5,%lo(.LC0)
+	call	scanf
+	li	a0,10
+	call	putchar
+	lw	a5,-20(s0)
+	mv	a1,a5
+	lui	a5,%hi(.LC0)
+	addi	a0,a5,%lo(.LC0)
+	call	printf
+	li	a0,10
+	call	putchar
+	lui	a5,%hi(g)
+	lw	a5,%lo(g)(a5)
+	mv	a1,a5
+	lui	a5,%hi(.LC0)
+	addi	a0,a5,%lo(.LC0)
+	call	printf
 	li	a5,0
 	mv	a0,a5
-	lw	ra,12(sp)
-	lw	s0,8(sp)
-	addi	sp,sp,16
+	lw	ra,28(sp)
+	lw	s0,24(sp)
+	addi	sp,sp,32
 	jr	ra
 	.size	main, .-main
 	.ident	"GCC: (GNU) 8.3.0"

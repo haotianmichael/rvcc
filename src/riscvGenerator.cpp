@@ -7,6 +7,24 @@
 
 extern IntermediateGenerator itgenerator;   //四元式产生表
 
+riscvGenerator::riscvGenerator(std::string name) {
+    this->filename = name;
+
+
+    this->Reg[0] = true;
+    this->Reg[1] = true;
+
+    /* 初始化临时寄存器组*/
+    this->Reg[2] = false;
+    this->Reg[3] = false;
+    this->Reg[4] = false;
+    this->Reg[5] = false;
+    this->Reg[6] = false;
+    this->Reg[7] = false;
+}
+
+
+
 void riscvGenerator::printAsmCode(Parser &p) {
 
     p.printParser();  //打印符号表和四元式
@@ -149,7 +167,7 @@ void riscvGenerator::printAsmCode(Parser &p) {
         out << "    addi s0, sp, "<< fp << std::endl;
 
         /*函数内部翻译*/
-        nofun_asmCodeGen(out, p);
+        nofun_asmCodeGen(out, p, fp);
 
         out << "    li a5, 0" << std::endl;
         out << "    mv a0, a5" << std::endl;
@@ -208,7 +226,7 @@ void riscvGenerator::printAsmCode(Parser &p) {
         out << "    addi s0, sp, " << fp << std::endl;
 
         /*函数内部翻译*/
-        nofun_asmCodeGen(out, p);
+        nofun_asmCodeGen(out, p, fp);
 
 
         out << "    li a5, 0" << std::endl;
@@ -231,7 +249,7 @@ void riscvGenerator::printAsmCode(Parser &p) {
 
 
 
-void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p) {
+void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p, int sp) {
 
     //第零项为main函数
     for(unsigned int i = 1;  i < itgenerator.getIntermediateList().size(); i ++) {
@@ -241,6 +259,15 @@ void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p) {
         itemType it;
         int  isglobal = -1;  // 1 Global  0 local  -1 不存在
         int tmp;  //临时计数器
+
+        /*ASS局部变量*/
+        int reg;
+        std::string target;
+        std::string left;
+        std::string right;
+        int tmpsp = sp + 4;
+        /*ASS局部变量*/
+
         SymbolItem *head, *tail;
         switch (fy.getopcode()) {
             case PrintStr:
@@ -293,7 +320,6 @@ void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p) {
                     }
 
                 }else if(isglobal == 0) {  //main中的局部变量  在栈中寻址
-                    
                     head = p.getSymbolTable()->getHead();
                     tail = p.getSymbolTable()->getTail();         
                     tmp  = 0;
@@ -308,7 +334,7 @@ void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p) {
                     }
                     if(head == tail && head->getscope() == "main" && head->getSt() == st_localType) {
                         if(head->getname() == name) {
-                            tmp++; 
+                            tmp ++; 
                         } 
                     }
                     tmp = 16 + tmp*4;
@@ -319,7 +345,10 @@ void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p) {
 
                 }else if(isglobal == -1) {  //表达式
                     //std::cout << fy.getvalue() << std::endl;                     
-
+                    /*
+                     * 数组 
+                     * 表达式
+                     * */
 
                 }
 
@@ -337,7 +366,7 @@ void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p) {
                 break;
             case ReadInt:
             case ReadChar:
-                /*判断变量是全局变量还是局部变量*/
+                /*判断变量是全局变量还是局部变量  scanf目前不支持数组读*/
                 name = fy.gettarget();
                 head = p.getSymbolTable()->getHead();
                 tail = p.getSymbolTable()->getTail();
@@ -366,10 +395,10 @@ void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p) {
                     out << "    addi a0, a5, %lo(.PL0)" << std::endl;
                     out << "    call scanf" << std::endl;
                 }else if(isglobal == 0) {  //局部变量
-                   /*
-                    * 局部变量在运行栈中完成
-                    *   注意压栈的顺序
-                    */ 
+                    /*
+                     * 局部变量在运行栈中完成
+                     *   注意压栈的顺序
+                     */ 
                     head = p.getSymbolTable()->getHead();
                     tail = p.getSymbolTable()->getTail();         
                     tmp  = 0;
@@ -397,16 +426,59 @@ void riscvGenerator::nofun_asmCodeGen(std::ofstream &out, Parser &p) {
                     panic("CodeGenError: Wrong Instruction!");
                 }
                 break;
-/*            case ADD:*/
+                /*            case ADD:*/
                 //break;
-            //case SUB:
+                //case SUB:
                 //break;
-            //case MUL:
+                //case MUL:
                 //break;
-            //case DIV:
+                //case DIV:
                 //break;
             case ASS:
+                /*
+                 *  寄存器分配和内存访问策略:
+                 *      a2-a7共6个寄存器
+                 *      加上从sp指针向下的栈空间
+                 * */
+                tmpsp += 4;  //分配临时变量的内存地址从sp下一个地址开始
+                target = fy.gettarget();
+                left = fy.getleft();
+                right = fy.getright();
+                if(assCheckType(target, p) == intermediaT) {  //赋值语句是中间变量
+                    intermedia_TargetCodeGen(fy, out);
+                }else {
+                    //赋值语句是内存有效地址， 复制结束之后回复寄存器状态和内存栈空间
+                    head = p.getSymbolTable()->getHead();
+                    tail = p.getSymbolTable()->getTail();
+                    while(head != tail) {
+                        if(head->getname() == name && head->getSt() == st_localType) {
+                            if(head->getscope() == "Global") {
+                                isglobal = 1;    
+                            } else {
+                                isglobal = 0; 
+                            }
+                            break; 
+                        }
+                        head = head->next; 
+                    } 
+                    if(head->getname() == name && head->getSt() == st_localType) {
+                        if(head->getscope() == "Global") {
+                            isglobal = 1; 
+                        }else {
+                            isglobal = 0; 
+                        } 
+                    }
 
+                    if(isglobal == 1) {  //全局变量
+                        nointermedia_globalTargetCodeGen(fy, out); 
+                    }else if(isglobal == 0) {  //局部变量
+                        nointermedia_localTargetCodeGen(fy, out);
+                    }
+
+                    registerFree();
+                    tmpsp = sp + 4;
+                }
+                //panic("DEBUG");
                 break;
             case JMP:
 
@@ -449,10 +521,167 @@ void riscvGenerator::fun_asmCodeGen(std::ofstream &out) {
     for(unsigned int i = 0; i < itgenerator.getIntermediateList().size(); i ++)  {
         FourYuanInstr fy = itgenerator.getIntermediateList()[i]; 
         std::string name;
+        out << "TODO " << std::endl;
+    }
+}
 
 
+/* 数组地址分配
+ * name 数组名称  length下标 */
+int riscvGenerator::arrayAlloc(std::string name, int length, Parser &p) {
 
+    int res = -1, tmp = 0,len = 0;
+    SymbolItem *head = p.getSymbolTable()->getHead();
+    SymbolItem *tail = p.getSymbolTable()->getTail();
+    while(head != tail) {
+        if(head->getscope() == "main" && head->getSt() == st_localType) {
+            LocalItem *li = static_cast<LocalItem *>(head); 
+            if(li->getisArr() && li->getname() == name){  
+                len  = li->getLength();
+                break;
+            }else {
+                tmp ++; 
+            }
+        } 
+        head = head->next;
+    }
+    if(head == tail && head->getscope() == "main" && head->getSt() == st_localType) {
+        LocalItem *li = static_cast<LocalItem *>(head); 
+        if(li->getisArr() && li->getname() == name) {
+            len = li->getLength(); 
+        }
     }
 
+    tmp *= 4; 
+    tmp += 20;  //数组的基地址
+    res = tmp + 4 * (len - 1 - length);
+    return res;
 }
+
+
+/*
+ * 寄存器分配   num 中间变量序号
+ * */
+bool riscvGenerator::registerAlloc(int num) {
+
+    if(!this->Reg[2]) {
+        this->Reg[2] = true;
+        intermediaToReg.insert({num, 2});
+        return true; 
+    }else if(!this->Reg[3]){
+        this->Reg[3] = true;
+        intermediaToReg.insert({num, 3});
+        return true; 
+    }else if(!this->Reg[4]) {
+        this->Reg[4] = true;
+        intermediaToReg.insert({num, 4});
+        return true; 
+    }else if(!this->Reg[5]) {
+        this->Reg[5] = true;
+        intermediaToReg.insert({num, 5});
+        return true; 
+    }else if(!this->Reg[6]) {
+        this->Reg[6] = true;
+        intermediaToReg.insert({num, 6});
+        return true; 
+    }else if(!this->Reg[7]) {
+        this->Reg[7] = true;
+        intermediaToReg.insert({num, 7});
+        return true; 
+    }else {
+        return -1;      //寄存器组已满
+    }
+}
+
+
+/*临时运行栈分配 num 中间变量序号   sp临时栈帧*/
+void riscvGenerator::stackAlloc(int num, int &sp) {
+    intermediaToStack.insert({num, sp + 4});
+}
+
+
+/*
+ * 寄存器释放 (将寄存器恢复原值)
+ * */
+void riscvGenerator::registerFree() {
+
+    this->Reg[2] = false;
+    this->Reg[3] = false;
+    this->Reg[4] = false;
+    this->Reg[5] = false;
+    this->Reg[6] = false;
+    this->Reg[7] = false;
+
+    /*清空映射表*/
+    intermediaToReg.clear();
+}
+
+
+/*临时栈空间释放*/
+void riscvGenerator::stackFree() {
+    intermediaToStack.clear();
+}
+
+
+/*赋值变量类型判断*/
+riscvGenerator::TYPE riscvGenerator::assCheckType(std::string name, Parser &p) {
+    bool isarray = false;
+    SymbolItem *head = p.getSymbolTable()->getHead();
+    SymbolItem *tail = p.getSymbolTable()->getTail();
+
+
+    if(name[0] == '$') {
+        return intermediaT; 
+    }else {
+        while(head != tail) {
+            if(head->getname() == name && head->getSt() == st_localType) {
+                LocalItem *li = static_cast<LocalItem *>(head); 
+                if(li->getisArr()) {
+                    isarray = true; 
+                }
+                break;
+            } 
+            head = head->next;
+        }
+        if(head == tail && head->getname() == name && head->getSt() == st_localType) {
+            LocalItem *li = static_cast<LocalItem *>(head);
+            if(li->getisArr()) {
+                isarray = true; 
+            } 
+        }
+
+        if(isarray) {
+            return variableArrayT; 
+        }else{
+            return variableNoArrayT; 
+        }
+    }
+}
+
+
+
+
+/*赋值汇编生成*/
+void riscvGenerator::intermedia_TargetCodeGen(FourYuanInstr &fy, std::ofstream &out) {
+   out << "     intermedia_TargetCodeGen" << std::endl; 
+
+}
+
+
+void riscvGenerator::nointermedia_localTargetCodeGen(FourYuanInstr &fy, std::ofstream &out) {
+    out << "    nointermedia_localTargetCodeGen" << std::endl;
+
+}
+
+
+void riscvGenerator::nointermedia_globalTargetCodeGen(FourYuanInstr &fy, std::ofstream &out) {
+    out << "nointermedia_globalTargetCodeGen" << std::endl;
+
+
+}
+
+
+
+
+
 

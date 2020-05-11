@@ -14,7 +14,13 @@ char ctr[10], s, o;
 
 int 
 main() {
-    printf("haotian is good\n");
-    printf("he have a bad life\n");
+    int res;
+    scanf(g);
+    scanf(res);
+    printf("\n");
+    printf(res);
+    printf("\n");
+    printf(g);
+
     return (0); 
 }

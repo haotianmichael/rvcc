@@ -46,23 +46,32 @@ w:
 	.size	g, 1
 g:
 	.byte	97
-	.comm	sum,4,4
+	.section	.rodata
+	.align	2
+.LC0:
+	.string	"hello world"
+	.align	2
+.LC1:
+	.string	"hello buaa"
 	.text
 	.align	1
 	.globl	main
 	.type	main, @function
 main:
 	addi	sp,sp,-16
-	sw	s0,12(sp)
+	sw	ra,12(sp)
+	sw	s0,8(sp)
 	addi	s0,sp,16
-	li	a4,2
-	li	a5,3
-	add	a4,a4,a5
-	lui	a5,%hi(sum)
-	sw	a4,%lo(sum)(a5)
+	lui	a5,%hi(.LC0)
+	addi	a0,a5,%lo(.LC0)
+	call	puts
+	lui	a5,%hi(.LC1)
+	addi	a0,a5,%lo(.LC1)
+	call	puts
 	li	a5,0
 	mv	a0,a5
-	lw	s0,12(sp)
+	lw	ra,12(sp)
+	lw	s0,8(sp)
 	addi	sp,sp,16
 	jr	ra
 	.size	main, .-main

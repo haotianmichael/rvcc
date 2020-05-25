@@ -5,7 +5,7 @@ const int N = 100010, M = 110;
 int a, b, c, d;
 
 
-int fun(int a, int b, int c[]) {
+int fun(char a, int b, int c[]) {
 
     int vara, varb;
     vara = a + c[0];

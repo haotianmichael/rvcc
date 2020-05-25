@@ -16,6 +16,8 @@ class riscvGenerator
         void nofun_asmCodeGen(std::ofstream &out, Parser &p, int sp);
         enum TYPE{intermediaT, variableArrayT, variableNoArrayT};
         TYPE assCheckType(std::string name, Parser &p); 
+        int getsp() {return riscvsp;}
+        void setsp(int sp) { riscvsp = sp;}
         
         
         /*寄存器，内存分配*/
@@ -24,11 +26,16 @@ class riscvGenerator
         void stackAlloc(int num, int &tmpsp);  //运行栈地址分配
         void  registerFree();
         void stackFree(); 
+        std::pair<bool, int > addressAlloc(int num, int &tmpsp);  //用户分配函数  bool 表示是否为寄存器组  int为序号
+        void addressFree();
+         
+
+
 
         /*赋值语句汇编生成*/
-        void intermedia_TargetCodeGen(FourYuanInstr &fy, std::ofstream &out);
-        void nointermedia_globalTargetCodeGen(FourYuanInstr &fy, std::ofstream &out);
-        void nointermedia_localTargetCodeGen(FourYuanInstr &fy, std::ofstream &out);
+        void intermedia_TargetCodeGen(FourYuanInstr &fy, std::ofstream &out, int &sp);
+        void nointermedia_globalTargetCodeGen(FourYuanInstr &fy, std::ofstream &out, int &sp);
+        void nointermedia_localTargetCodeGen(FourYuanInstr &fy, std::ofstream &out, int &sp);
 
         /*中间变量-寄存器映射表*/
         std::map<int, int> intermediaToReg;        //<中间变量序号, 寄存器序号>
@@ -38,5 +45,7 @@ class riscvGenerator
     private:
         std::string filename;
         std::vector<bool> Reg;  //临时寄存器  false 表示可使用  true  表示不可使用
+        int riscvsp = -1;   //临时运行栈顶
+        int riscvs0 = -1;   //临时运行栈底
 
 }; 

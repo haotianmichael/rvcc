@@ -10,3 +10,23 @@
 
 * [RiscvInstrDesign](docs/3RiscvInstrDesign.md)
 
+
+
+# Build
+
+* `git clone https://github.com/haotianmichael/TinyComplier.git`
+* `mkdir build && cd build`
+* `cmake ../`
+* `make ./`  
+* `./release   ../test_src/**TB.c`
+
+
+
+# Output
+
+* `riscvCodeFile.s`          
+* `symbolTableFile.txt `     
+* `tmpCodeFile.txt`         
+
+
+

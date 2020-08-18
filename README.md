@@ -15,9 +15,9 @@
 # Build
 
 * `git clone https://github.com/haotianmichael/TinyComplier.git`
-* `mkdir build && cd build`
+* `cd TinyCompiler && mkdir build && cd build`
 * `cmake ../`
-* `make ./`  
+* `make`  
 * `./release   ../test_src/**TB.c`
 
 
